@@ -99,6 +99,27 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
 .links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 .links a,.links button{flex:1;text-align:center;text-decoration:none;color:var(--fg);border:1px solid var(--line);background:var(--raise);border-radius:10px;padding:10px;font-weight:600;font-size:14px;cursor:pointer;min-width:120px}
 .links .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+/* flip log */
+.log-sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 4px}
+.log-sum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.log-sum dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.log-sum dd{margin:2px 0 0;font-size:18px;font-weight:600}
+.h3{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 2px 8px;font-weight:600}
+.lcard{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.lrow{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0}
+.lrow img{width:28px;height:28px;object-fit:contain;image-rendering:pixelated;flex:none}
+.lrow .name{flex:1}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--raise);border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer;color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--bg);border-radius:10px;padding:10px}
+.form .field input{background:var(--surface)}
+.form .full{grid-column:1 / -1}
+.limit-line{font-size:12.5px;color:var(--muted);margin-top:10px}
+textarea.backup{width:100%;min-height:90px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px var(--f-num);color:var(--fg)}
+.msg{font-size:12.5px;color:var(--good)}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
 @media (max-width:380px){.grid{grid-template-columns:1fr}.plan-sum dd{font-size:15px}}
 </style>
@@ -111,9 +132,10 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
       <button class="icon-btn" id="refresh" type="button">Refresh</button>
     </div>
     <div class="tabs" role="tablist">
-      <button class="tab" role="tab" id="tab-picks" aria-selected="true" type="button">Top picks</button>
-      <button class="tab" role="tab" id="tab-plan" aria-selected="false" type="button">8-slot plan</button>
-      <button class="tab" role="tab" id="tab-watch" aria-selected="false" type="button">Watchlist</button>
+      <button class="tab" role="tab" id="tab-picks" aria-selected="true" type="button">Picks</button>
+      <button class="tab" role="tab" id="tab-plan" aria-selected="false" type="button">Slots</button>
+      <button class="tab" role="tab" id="tab-watch" aria-selected="false" type="button">Watch</button>
+      <button class="tab" role="tab" id="tab-log" aria-selected="false" type="button">Flip log</button>
     </div>
   </div>
 </header>
@@ -145,6 +167,22 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
     <div class="list" id="plan"></div>
   </section>
   <section id="view-watch" hidden><div class="list" id="watch"></div></section>
+  <section id="view-log" hidden>
+    <dl class="log-sum" id="log-sum"></dl>
+    <div class="h3">Open flips</div>
+    <div class="list" id="log-open" style="padding-bottom:0"></div>
+    <div class="h3">Completed</div>
+    <div class="list" id="log-done" style="padding-bottom:0"></div>
+    <details class="settings" style="margin-bottom:32px">
+      <summary>Backup &amp; restore <span>log is saved on this phone only</span></summary>
+      <div style="padding:0 14px 14px;display:grid;gap:10px">
+        <p class="note" style="margin:0">Copy a backup now and then and paste it somewhere safe, like your Notes app. To move the log to another device, paste the backup below and tap Restore.</p>
+        <div class="btns"><button class="btn" type="button" id="bk-copy">Copy backup</button><span class="msg" id="bk-msg"></span></div>
+        <textarea class="backup" id="bk-text" aria-label="Backup text" placeholder="Paste a backup here to restore it"></textarea>
+        <div class="btns"><button class="btn danger" type="button" id="bk-restore">Restore from pasted backup</button></div>
+      </div>
+    </details>
+  </section>
 </main>
 
 <div class="scrim" id="scrim" hidden></div>
@@ -154,8 +192,16 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
     <dl class="kv" id="sh-kv"></dl>
     <svg class="chart" id="sh-chart" viewBox="0 0 360 180" role="img" aria-label="24 hour price chart"></svg>
     <div class="legend"><span><i style="background:var(--gp-m)"></i>Sell (instant-buy)</span><span><i style="background:var(--accent)"></i>Buy (instant-sell)</span></div>
+    <div class="limit-line num" id="sh-limit"></div>
+    <form class="form" id="buy-form" hidden style="margin-top:12px">
+      <div class="field"><label for="bf-qty">Quantity</label><input id="bf-qty" inputmode="numeric"></div>
+      <div class="field"><label for="bf-price">Buy price each</label><input id="bf-price" inputmode="text"></div>
+      <div class="field full"><label for="bf-target">Planned sell price each</label><input id="bf-target" inputmode="text"></div>
+      <div class="btns full"><button class="btn primary" type="submit">Save to flip log</button><button class="btn" type="button" id="bf-cancel">Cancel</button></div>
+    </form>
     <div class="links">
-      <button id="sh-star" type="button" class="primary">Add to watchlist</button>
+      <button id="sh-log" type="button" class="primary">Log a buy</button>
+      <button id="sh-star" type="button">Add to watchlist</button>
       <a id="sh-wiki" target="_blank" rel="noopener">Wiki page</a>
       <a id="sh-prices" target="_blank" rel="noopener">Full price history</a>
     </div>
@@ -311,12 +357,14 @@ function card(r, extra){
 }
 function render(){
   saveSettings();
+  $("sortwrap").hidden = view !== "picks";
+  if (view === "log") { $("count").textContent = "Your flips"; renderLog(); }
   if (!mapping) return;
   const s = settings();
   const age = (Date.now() - lastLoad) / 1000;
   $("updated").textContent = `Live OSRS Wiki prices · updated ${ago(age)}`;
   const picks = ranked(s);
-  $("count").textContent = view === "picks" ? `${picks.length} flips match` : view === "plan" ? "Best use of your slots" : `${watch.size} watched`;
+  $("count").textContent = view === "picks" ? `${picks.length} flips match` : view === "plan" ? "Best use of your slots" : view === "log" ? "Your flips" : `${watch.size} watched`;
   $("sortwrap").hidden = view !== "picks";
 
   if (view === "picks") {
@@ -367,6 +415,12 @@ async function openSheet(id){
   $("sh-wiki").href = `https://oldschool.runescape.wiki/w/${slug}`;
   $("sh-prices").href = `https://prices.runescape.wiki/osrs/item/${id}`;
   syncStar();
+  openRow = r;
+  $("buy-form").hidden = true; $("sh-log").hidden = false;
+  const used = limitUsed(id);
+  $("sh-limit").textContent = r.limit
+    ? (used.qty ? `Buy limit: ${comma(used.qty)} of ${comma(r.limit)} used, resets in ${until(used.resetAt)}` : `Buy limit: 0 of ${comma(r.limit)} used in the last 4h`)
+    : (used.qty ? `You've bought ${comma(used.qty)} in the last 4h` : "");
   $("sh-chart").innerHTML = `<text x="180" y="94" text-anchor="middle" fill="var(--muted)" font-size="12">Loading 24h chart…</text>`;
   $("scrim").hidden = false; $("sheet").hidden = false; $("sheet").scrollTop = 0;
   try {
@@ -405,15 +459,138 @@ function drawChart(pts){
     `<path d="${line("avgLowPrice")}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/>`;
 }
 
+// ---- flip log ----
+let openRow = null, sellOpen = null, armed = null, armTimer = null;
+let flips = store.get("ff.flips", []);
+if (!Array.isArray(flips)) flips = [];
+const saveFlips = () => store.set("ff.flips", flips);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const LIMIT_MS = 4 * 3600 * 1000;
+function until(ts){
+  const m = Math.max(0, Math.round((ts - Date.now()) / 60000));
+  return m >= 60 ? `${Math.floor(m/60)}h ${m%60}m` : `${m}m`;
+}
+function limitUsed(itemId){
+  const cut = Date.now() - LIMIT_MS;
+  const recent = flips.filter(f => f.itemId === itemId && f.boughtAt > cut);
+  return { qty: recent.reduce((a, f) => a + f.qty, 0), resetAt: recent.length ? Math.min(...recent.map(f => f.boughtAt)) + LIMIT_MS : 0 };
+}
+function since(ts){ return ago((Date.now() - ts) / 1000); }
+function dateStr(ts){ return new Date(ts).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
+const iconImg = icon => icon ? `<img src="${iconUrl(icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
+
+function renderLog(){
+  // Don't redraw while a sell form is open or someone is typing in the log
+  if (sellOpen && document.activeElement && $("view-log").contains(document.activeElement)) return;
+  const open = flips.filter(f => f.status === "open").sort((a, b) => b.boughtAt - a.boughtAt);
+  const done = flips.filter(f => f.status === "done").sort((a, b) => b.soldAt - a.soldAt);
+  const total = done.reduce((a, f) => a + f.profit, 0);
+  const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+  const today = done.filter(f => f.soldAt >= dayStart.getTime()).reduce((a, f) => a + f.profit, 0);
+  const tied = open.reduce((a, f) => a + f.qty * f.buy, 0);
+  const sign = n => `<span class="${n < 0 ? "neg" : ""}">${n < 0 ? "-" : ""}${gp(Math.abs(n))}</span>`;
+  $("log-sum").innerHTML =
+    `<div><dt>Profit all time</dt><dd>${sign(total)}</dd></div><div><dt>Profit today</dt><dd>${sign(today)}</dd></div>` +
+    `<div><dt>Cash in flips</dt><dd>${gp(tied)}</dd></div><div><dt>Open flips</dt><dd class="num">${open.length}<span style="color:var(--muted);font-size:13px"> / 8 slots</span></dd></div>`;
+
+  $("log-open").innerHTML = open.length ? open.map(f => {
+    const live = latest[f.itemId]?.high;
+    const ref = live || f.target;
+    const est = (ref - tax(ref) - f.buy) * f.qty;
+    const resetAt = f.boughtAt + LIMIT_MS;
+    const sellForm = sellOpen === f.id ? `
+      <form class="form" data-sell="${f.id}">
+        <div class="field"><label for="sp-${f.id}">Sold at each</label><input id="sp-${f.id}" inputmode="text" value="${f.target}"></div>
+        <div class="field"><label for="sq-${f.id}">Qty sold</label><input id="sq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
+        <div class="btns full"><button class="btn primary" type="submit">Confirm sale</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
+      </form>` : "";
+    return `<div class="lcard">
+      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${est < 0 ? "neg" : ""}" title="Profit if sold at the live price">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
+      <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → plan ${gp(f.target, true)}${live ? ` · live ${gp(live, true)}` : ""}</div>
+      <div class="sub">Bought ${since(f.boughtAt)} · ${resetAt > Date.now() ? `limit resets in ${until(resetAt)}` : "limit has reset"}</div>
+      ${sellForm || `<div class="btns"><button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Mark sold</button><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again to delete" : "Delete"}</button></div>`}
+    </div>`;
+  }).join("") : `<div class="empty">No open flips. Tap any item in Picks, then “Log a buy” after you place the offer in-game.</div>`;
+
+  $("log-done").innerHTML = done.length ? done.slice(0, 40).map(f => `<div class="lcard">
+      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${f.profit < 0 ? "neg" : "pos"}">${f.profit < 0 ? "-" : "+"}${gp(Math.abs(f.profit))}</div></div>
+      <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${gp(f.sell, true)} · tax ${gp(f.taxPaid, true)}</div>
+      <div class="lrow"><div class="sub">Sold ${dateStr(f.soldAt)} · held ${since(f.boughtAt).replace(" ago", "")}</div><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again" : "Delete"}</button></div>
+    </div>`).join("") + (done.length > 40 ? `<p class="note">Showing your latest 40 of ${done.length}. All of them count toward your totals.</p>` : "")
+    : `<div class="empty">Sold flips show up here with profit after tax.</div>`;
+}
+
+$("sh-log").onclick = () => {
+  const r = openRow; if (!r) return;
+  const s = settings(), used = limitUsed(r.id);
+  const left = r.limit ? Math.max(0, r.limit - used.qty) : Infinity;
+  const q = Math.min(left, Math.floor(Math.min(s.cash, s.cap) / r.buy)) || r.qty || 1;
+  $("bf-qty").value = isFinite(q) ? q : 1;
+  $("bf-price").value = r.buy; $("bf-target").value = r.sell;
+  $("buy-form").hidden = false; $("sh-log").hidden = true;
+  $("bf-qty").focus();
+};
+$("bf-cancel").onclick = () => { $("buy-form").hidden = true; $("sh-log").hidden = false; };
+$("buy-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const r = openRow; if (!r) return;
+  const qty = parseGp($("bf-qty").value), buy = parseGp($("bf-price").value), target = parseGp($("bf-target").value);
+  if (!(qty > 0) || !(buy > 0)) { $("bf-qty").focus(); return; }
+  flips.push({ id: uid(), itemId: r.id, name: r.it.name, icon: r.it.icon, qty, buy, target: target > 0 ? target : r.sell, boughtAt: Date.now(), status: "open" });
+  saveFlips(); closeSheet(); setView("log");
+});
+
+$("view-log").addEventListener("click", e => {
+  const b = e.target.closest("button[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act;
+  if (act === "sell") { sellOpen = id; armed = null; renderLog(); const i = $("sp-" + id); if (i) i.focus(); }
+  if (act === "cancel") { sellOpen = null; renderLog(); }
+  if (act === "del") {
+    if (armed === id) { flips = flips.filter(f => f.id !== id); saveFlips(); armed = null; }
+    else { armed = id; clearTimeout(armTimer); armTimer = setTimeout(() => { armed = null; renderLog(); }, 3000); }
+    renderLog();
+  }
+});
+$("view-log").addEventListener("submit", e => {
+  const form = e.target.closest("form[data-sell]"); if (!form) return;
+  e.preventDefault();
+  const f = flips.find(x => x.id === form.dataset.sell); if (!f) return;
+  const sell = parseGp($("sp-" + f.id).value), q = Math.min(f.qty, parseGp($("sq-" + f.id).value));
+  if (!(sell > 0) || !(q > 0)) return;
+  const taxPaid = tax(sell) * q, profit = (sell * q) - taxPaid - (f.buy * q);
+  flips.push({ id: uid(), itemId: f.itemId, name: f.name, icon: f.icon, qty: q, buy: f.buy, sell, taxPaid, profit, boughtAt: f.boughtAt, soldAt: Date.now(), status: "done" });
+  if (q >= f.qty) flips = flips.filter(x => x.id !== f.id); else f.qty -= q;
+  saveFlips(); sellOpen = null; renderLog();
+});
+
+$("bk-copy").onclick = async () => {
+  const text = JSON.stringify({ app: "ge-flip-finder", v: 1, flips });
+  $("bk-text").value = text;
+  try { await navigator.clipboard.writeText(text); $("bk-msg").textContent = "Copied. Paste it into Notes."; }
+  catch { $("bk-text").select(); $("bk-msg").textContent = "Text selected below. Tap Copy."; }
+};
+let restoreArmed = false;
+$("bk-restore").onclick = () => {
+  let data;
+  try { data = JSON.parse($("bk-text").value); } catch { $("bk-msg").textContent = "That backup text isn't valid. Paste the whole thing."; return; }
+  const list = Array.isArray(data) ? data : data && data.flips;
+  if (!Array.isArray(list) || list.some(f => !f || !f.id || !f.itemId || !f.qty)) { $("bk-msg").textContent = "That doesn't look like a flip log backup."; return; }
+  if (!restoreArmed) { restoreArmed = true; $("bk-restore").textContent = `Tap again to replace your log with ${list.length} flips`; setTimeout(() => { restoreArmed = false; $("bk-restore").textContent = "Restore from pasted backup"; }, 4000); return; }
+  flips = list; saveFlips(); restoreArmed = false;
+  $("bk-restore").textContent = "Restore from pasted backup"; $("bk-msg").textContent = `Restored ${list.length} flips.`; renderLog();
+};
+
 // ---- events ----
 function setView(v){
-  view = v;
-  for (const t of ["picks","plan","watch"]) { $("tab-"+t).setAttribute("aria-selected", t === v); $("view-"+t).hidden = t !== v; }
+  view = v; sellOpen = null;
+  $("q").hidden = v === "log";
+  for (const t of ["picks","plan","watch","log"]) { $("tab-"+t).setAttribute("aria-selected", t === v); $("view-"+t).hidden = t !== v; }
   render();
 }
 $("tab-picks").onclick = () => setView("picks");
 $("tab-plan").onclick = () => setView("plan");
 $("tab-watch").onclick = () => setView("watch");
+$("tab-log").onclick = () => setView("log");
 for (const id of ["cash","cap","minvol","share","members","hidestale","sort"]) $(id).addEventListener("change", render);
 let qt; $("q").addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(render, 150); });
 document.addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openSheet(+c.dataset.id); });
