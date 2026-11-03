@@ -120,6 +120,10 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
 .limit-line{font-size:12.5px;color:var(--muted);margin-top:10px}
 textarea.backup{width:100%;min-height:90px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px var(--f-num);color:var(--fg)}
 .msg{font-size:12.5px;color:var(--good)}
+.chip.good{color:var(--good)}
+.lcard.hinted{border-color:var(--good)}
+.toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;max-width:688px;margin:0 auto;display:grid;gap:2px;text-align:left;background:var(--raise);color:var(--fg);border:1px solid var(--good);border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast small{font-weight:400;color:var(--muted);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
 @media (max-width:380px){.grid{grid-template-columns:1fr}.plan-sum dd{font-size:15px}}
 </style>
@@ -151,6 +155,7 @@ textarea.backup{width:100%;min-height:90px;background:var(--bg);border:1px solid
         <select id="share"><option value="0.1">10% (busy item)</option><option value="0.25" selected>25%</option><option value="0.5">50%</option><option value="1">100% (optimistic)</option></select></div>
       <label class="check"><input type="checkbox" id="members" checked> Members items</label>
       <label class="check"><input type="checkbox" id="hidestale" checked> Hide stale prices</label>
+      <label class="check"><input type="checkbox" id="sound" checked> Chime on fills</label>
     </div>
   </details>
 
@@ -185,6 +190,7 @@ textarea.backup{width:100%;min-height:90px;background:var(--bg);border:1px solid
   </section>
 </main>
 
+<button class="toast" id="toast" type="button" hidden><span id="toast-text"></span><small>Tap to open your flip log</small></button>
 <div class="scrim" id="scrim" hidden></div>
 <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sh-name">
   <div class="wrap">
@@ -226,7 +232,7 @@ let watch = new Set(store.get("ff.watch", []));
 // ---- settings ----
 const S = store.get("ff.settings", null);
 if (S) for (const k of ["cash","cap","minvol","share"]) if (S[k] != null) $(k).value = S[k];
-if (S) { $("members").checked = S.members !== false; $("hidestale").checked = S.hidestale !== false; }
+if (S) { $("members").checked = S.members !== false; $("hidestale").checked = S.hidestale !== false; $("sound").checked = S.sound !== false; }
 if (S && S.sort) $("sort").value = S.sort;
 
 function parseGp(s){
@@ -247,7 +253,7 @@ function settings(){
 }
 function saveSettings(){
   const s = settings();
-  store.set("ff.settings", {cash:$("cash").value, cap:$("cap").value, minvol:$("minvol").value, share:$("share").value, members:s.members, hidestale:s.hidestale, sort:s.sort});
+  store.set("ff.settings", {cash:$("cash").value, cap:$("cap").value, minvol:$("minvol").value, share:$("share").value, members:s.members, hidestale:s.hidestale, sound:$("sound").checked, sort:s.sort});
   $("settings-sum").textContent = `${short(s.cash)} stack · ${short(s.cap)}/item · ${s.members ? "P2P" : "F2P"}`;
 }
 
@@ -290,6 +296,7 @@ async function load(force){
     latest = l.data || {}; hour = h.data || {};
     if (m) { mapping = {}; for (const it of m) mapping[it.id] = it; }
     lastLoad = Date.now();
+    checkFills();
     render();
   } catch (e) {
     $("updated").textContent = "Couldn't load prices. Check your connection and tap Refresh.";
@@ -461,9 +468,26 @@ function drawChart(pts){
 
 // ---- flip log ----
 let openRow = null, sellOpen = null, armed = null, armTimer = null;
-let flips = store.get("ff.flips", []);
-if (!Array.isArray(flips)) flips = [];
-const saveFlips = () => store.set("ff.flips", flips);
+let storageOk = true, flips = [];
+// Saved copy wins; if this phone won't store data, keep using what's in memory
+function readFlips(){
+  if (!storageOk) return flips;
+  try {
+    const raw = localStorage.getItem("ff.flips");
+    if (raw == null) return flips;
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : flips;
+  } catch { return flips; }
+}
+flips = readFlips();
+// Always start a change from what's saved, so another open copy of the app can't overwrite newer flips
+function changeFlips(fn){ flips = readFlips(); fn(); saveFlips(); }
+function saveFlips(){
+  try { localStorage.setItem("ff.flips", JSON.stringify(flips)); storageOk = localStorage.getItem("ff.flips") !== null; }
+  catch { storageOk = false; }
+}
+window.addEventListener("storage", e => { if (e.key === "ff.flips") { flips = readFlips(); if (view === "log") renderLog(); } });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { flips = readFlips(); if (view === "log") renderLog(); } });
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const LIMIT_MS = 4 * 3600 * 1000;
 function until(ts){
@@ -479,45 +503,137 @@ function since(ts){ return ago((Date.now() - ts) / 1000); }
 function dateStr(ts){ return new Date(ts).toLocaleString([], {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}); }
 const iconImg = icon => icon ? `<img src="${iconUrl(icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">` : "";
 
+// Flip stages: buying (offer placed) → holding (bought, not listed) → selling (listed) → done
+const STAGE = { buying: "Buy offer placed", holding: "Bought, not listed", selling: "Listed for sale" };
+let formKind = null;
+function normalize(list){
+  for (const f of list) {
+    if (f.status === "open") { f.status = "buying"; f.placedAt = f.boughtAt; }
+    if (!f.placedAt) f.placedAt = f.boughtAt;
+  }
+  return list;
+}
+// Likely-filled check from public trades: a buy fills when someone sells at or below your price after you placed it;
+// a sale fills when someone buys at or above your price after you listed it.
+function likelyFilled(f){
+  const p = latest[f.itemId]; if (!p) return false;
+  const lowAfter = p.low && p.lowTime * 1000 > (f.status === "buying" ? f.placedAt : f.listedAt);
+  const highAfter = p.high && p.highTime * 1000 > (f.status === "buying" ? f.placedAt : f.listedAt);
+  if (f.status === "buying") return (lowAfter && p.low <= f.buy) || (highAfter && p.high <= f.buy);
+  if (f.status === "selling") return (highAfter && p.high >= f.target) || (lowAfter && p.low >= f.target);
+  return false;
+}
+function checkFills(){
+  const list = normalize(readFlips()), fresh = [];
+  for (const f of list) {
+    if ((f.status === "buying" || f.status === "selling") && !f.hint && likelyFilled(f)) { f.hint = true; f.hintAt = Date.now(); fresh.push(f); }
+  }
+  if (fresh.length) { flips = list; saveFlips(); alertFills(fresh); }
+  updateBadge();
+}
+function updateBadge(){
+  const n = flips.filter(f => f.hint && f.status !== "done" && f.status !== "holding").length;
+  document.title = n ? `(${n}) GE Flip Finder` : "GE Flip Finder";
+  $("tab-log").textContent = n ? `Flip log (${n})` : "Flip log";
+}
+let audioCtx = null;
+document.addEventListener("pointerdown", () => {
+  try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch {}
+}, { passive: true });
+function chime(){
+  if (!$("sound").checked || !audioCtx) return;
+  try {
+    const t = audioCtx.currentTime;
+    [880, 1320].forEach((hz, i) => {
+      const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.frequency.value = hz; o.type = "sine";
+      g.gain.setValueAtTime(0.0001, t + i * 0.15); g.gain.exponentialRampToValueAtTime(0.25, t + i * 0.15 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.15 + 0.3);
+      o.connect(g).connect(audioCtx.destination); o.start(t + i * 0.15); o.stop(t + i * 0.15 + 0.32);
+    });
+  } catch {}
+}
+let toastTimer = null;
+function alertFills(list){
+  const buys = list.filter(f => f.status === "buying"), sells = list.filter(f => f.status === "selling");
+  const parts = [];
+  if (buys.length) parts.push(`${buys.length === 1 ? esc(buys[0].name) + " buy" : buys.length + " buys"} likely filled`);
+  if (sells.length) parts.push(`${sells.length === 1 ? esc(sells[0].name) : sells.length + " items"} likely sold`);
+  $("toast-text").innerHTML = parts.join(" · ");
+  $("toast").hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("toast").hidden = true; }, 15000);
+  chime();
+  try { if (navigator.vibrate) navigator.vibrate([120, 80, 120]); } catch {}
+  if (view === "log") renderLog();
+}
+
 function renderLog(){
-  // Don't redraw while a sell form is open or someone is typing in the log
+  // Don't redraw while a form is open and someone is typing in it
   if (sellOpen && document.activeElement && $("view-log").contains(document.activeElement)) return;
-  const open = flips.filter(f => f.status === "open").sort((a, b) => b.boughtAt - a.boughtAt);
+  flips = normalize(readFlips());
+  const order = { buying: 1, selling: 1, holding: 2 };
+  const open = flips.filter(f => f.status !== "done")
+    .sort((a, b) => ((b.hint ? 1 : 0) - (a.hint ? 1 : 0)) || (order[a.status] - order[b.status]) || (b.placedAt - a.placedAt));
   const done = flips.filter(f => f.status === "done").sort((a, b) => b.soldAt - a.soldAt);
   const total = done.reduce((a, f) => a + f.profit, 0);
   const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
   const today = done.filter(f => f.soldAt >= dayStart.getTime()).reduce((a, f) => a + f.profit, 0);
   const tied = open.reduce((a, f) => a + f.qty * f.buy, 0);
+  const slots = open.filter(f => f.status !== "holding").length;
   const sign = n => `<span class="${n < 0 ? "neg" : ""}">${n < 0 ? "-" : ""}${gp(Math.abs(n))}</span>`;
   $("log-sum").innerHTML =
     `<div><dt>Profit all time</dt><dd>${sign(total)}</dd></div><div><dt>Profit today</dt><dd>${sign(today)}</dd></div>` +
-    `<div><dt>Cash in flips</dt><dd>${gp(tied)}</dd></div><div><dt>Open flips</dt><dd class="num">${open.length}<span style="color:var(--muted);font-size:13px"> / 8 slots</span></dd></div>`;
+    `<div><dt>Cash in flips</dt><dd>${gp(tied)}</dd></div><div><dt>GE slots in use</dt><dd class="num">${slots}<span style="color:var(--muted);font-size:13px"> / 8</span></dd></div>` +
+    (storageOk ? "" : `<div style="grid-column:1 / -1;border-color:var(--bad);color:var(--bad);font-size:13px">This browser isn't saving data, so your log will be lost when the app closes. Turn off Private Browsing, or open the app from your home screen icon.</div>`);
 
   $("log-open").innerHTML = open.length ? open.map(f => {
     const live = latest[f.itemId]?.high;
-    const ref = live || f.target;
+    const ref = f.status === "selling" ? f.target : (live || f.target);
     const est = (ref - tax(ref) - f.buy) * f.qty;
-    const resetAt = f.boughtAt + LIMIT_MS;
-    const sellForm = sellOpen === f.id ? `
-      <form class="form" data-sell="${f.id}">
-        <div class="field"><label for="sp-${f.id}">Sold at each</label><input id="sp-${f.id}" inputmode="text" value="${f.target}"></div>
-        <div class="field"><label for="sq-${f.id}">Qty sold</label><input id="sq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
+    const resetAt = f.placedAt + LIMIT_MS;
+    const hint = f.hint && f.status === "buying" ? `<span class="chip good">Likely filled · check GE</span>`
+               : f.hint && f.status === "selling" ? `<span class="chip good">Likely sold · check GE</span>` : "";
+    let form = "";
+    if (sellOpen === f.id && formKind === "bought") form = `
+      <form class="form" data-form="bought" data-id="${f.id}">
+        <div class="field"><label for="fq-${f.id}">Qty bought</label><input id="fq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
+        <div class="field"><label for="fp-${f.id}">Listed at each</label><input id="fp-${f.id}" inputmode="text" value="${f.target}"></div>
+        <div class="btns full"><button class="btn primary" type="submit" data-then="selling">Bought &amp; listed</button><button class="btn" type="submit" data-then="holding">Bought, not listed yet</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
+      </form>`;
+    if (sellOpen === f.id && formKind === "list") form = `
+      <form class="form" data-form="list" data-id="${f.id}">
+        <div class="field full"><label for="fp-${f.id}">Listed at each</label><input id="fp-${f.id}" inputmode="text" value="${f.target}"></div>
+        <div class="btns full"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
+      </form>`;
+    if (sellOpen === f.id && formKind === "sell") form = `
+      <form class="form" data-form="sell" data-id="${f.id}">
+        <div class="field"><label for="fp-${f.id}">Sold at each</label><input id="fp-${f.id}" inputmode="text" value="${f.target}"></div>
+        <div class="field"><label for="fq-${f.id}">Qty sold</label><input id="fq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
         <div class="btns full"><button class="btn primary" type="submit">Confirm sale</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
-      </form>` : "";
-    return `<div class="lcard">
-      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${est < 0 ? "neg" : ""}" title="Profit if sold at the live price">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
-      <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → plan ${gp(f.target, true)}${live ? ` · live ${gp(live, true)}` : ""}</div>
-      <div class="sub">Bought ${since(f.boughtAt)} · ${resetAt > Date.now() ? `limit resets in ${until(resetAt)}` : "limit has reset"}</div>
-      ${sellForm || `<div class="btns"><button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Mark sold</button><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again to delete" : "Delete"}</button></div>`}
+      </form>`;
+    const del = `<button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again to delete" : f.status === "buying" ? "Cancelled" : "Delete"}</button>`;
+    const actions = f.status === "buying"
+      ? `<button class="btn primary" type="button" data-act="bought" data-id="${f.id}">Mark bought</button>${del}`
+      : f.status === "holding"
+      ? `<button class="btn primary" type="button" data-act="list" data-id="${f.id}">List for sale</button>${del}`
+      : `<button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Mark sold</button><button class="btn" type="button" data-act="list" data-id="${f.id}">Change price</button>${del}`;
+    const when = f.status === "selling" ? `Listed ${since(f.listedAt)}` : f.status === "holding" ? `Bought ${since(f.filledAt || f.placedAt)}` : `Placed ${since(f.placedAt)}`;
+    return `<div class="lcard${f.hint ? " hinted" : ""}">
+      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${est < 0 ? "neg" : ""}" title="Expected profit">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
+      <div class="sub"><b>${STAGE[f.status]}</b> · ${when}</div>
+      <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${f.status === "selling" ? "listed" : "plan"} ${gp(f.target, true)}${live ? ` · live ${gp(live, true)}` : ""}</div>
+      <div class="sub">${resetAt > Date.now() ? `Buy limit resets in ${until(resetAt)}` : "Buy limit has reset"}</div>
+      ${hint ? `<div class="chips" style="grid-column:auto">${hint}</div>` : ""}
+      ${form || `<div class="btns">${actions}</div>`}
     </div>`;
-  }).join("") : `<div class="empty">No open flips. Tap any item in Picks, then “Log a buy” after you place the offer in-game.</div>`;
+  }).join("") : `<div class="empty">No open flips. Place a buy offer in-game, then tap the item in Picks and choose “Log a buy”.</div>`;
 
   $("log-done").innerHTML = done.length ? done.slice(0, 40).map(f => `<div class="lcard">
       <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${f.profit < 0 ? "neg" : "pos"}">${f.profit < 0 ? "-" : "+"}${gp(Math.abs(f.profit))}</div></div>
       <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${gp(f.sell, true)} · tax ${gp(f.taxPaid, true)}</div>
-      <div class="lrow"><div class="sub">Sold ${dateStr(f.soldAt)} · held ${since(f.boughtAt).replace(" ago", "")}</div><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again" : "Delete"}</button></div>
+      <div class="lrow"><div class="sub">Sold ${dateStr(f.soldAt)} · held ${since(f.placedAt || f.boughtAt).replace(" ago", "")}</div><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again" : "Delete"}</button></div>
     </div>`).join("") + (done.length > 40 ? `<p class="note">Showing your latest 40 of ${done.length}. All of them count toward your totals.</p>` : "")
     : `<div class="empty">Sold flips show up here with profit after tax.</div>`;
+  updateBadge();
 }
 
 $("sh-log").onclick = () => {
@@ -536,31 +652,47 @@ $("buy-form").addEventListener("submit", e => {
   const r = openRow; if (!r) return;
   const qty = parseGp($("bf-qty").value), buy = parseGp($("bf-price").value), target = parseGp($("bf-target").value);
   if (!(qty > 0) || !(buy > 0)) { $("bf-qty").focus(); return; }
-  flips.push({ id: uid(), itemId: r.id, name: r.it.name, icon: r.it.icon, qty, buy, target: target > 0 ? target : r.sell, boughtAt: Date.now(), status: "open" });
-  saveFlips(); closeSheet(); setView("log");
+  const now = Date.now();
+  changeFlips(() => flips.push({ id: uid(), itemId: r.id, name: r.it.name, icon: r.it.icon, qty, buy, target: target > 0 ? target : r.sell, boughtAt: now, placedAt: now, status: "buying" }));
+  closeSheet(); setView("log");
 });
 
 $("view-log").addEventListener("click", e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const id = b.dataset.id, act = b.dataset.act;
-  if (act === "sell") { sellOpen = id; armed = null; renderLog(); const i = $("sp-" + id); if (i) i.focus(); }
-  if (act === "cancel") { sellOpen = null; renderLog(); }
+  if (act === "bought" || act === "list" || act === "sell") { sellOpen = id; formKind = act; armed = null; renderLog(); const i = $("fp-" + id) || $("fq-" + id); if (i) i.focus(); }
+  if (act === "cancel") { sellOpen = null; formKind = null; renderLog(); }
   if (act === "del") {
-    if (armed === id) { flips = flips.filter(f => f.id !== id); saveFlips(); armed = null; }
+    if (armed === id) { changeFlips(() => { flips = flips.filter(f => f.id !== id); }); armed = null; }
     else { armed = id; clearTimeout(armTimer); armTimer = setTimeout(() => { armed = null; renderLog(); }, 3000); }
     renderLog();
   }
 });
 $("view-log").addEventListener("submit", e => {
-  const form = e.target.closest("form[data-sell]"); if (!form) return;
+  const form = e.target.closest("form[data-form]"); if (!form) return;
   e.preventDefault();
-  const f = flips.find(x => x.id === form.dataset.sell); if (!f) return;
-  const sell = parseGp($("sp-" + f.id).value), q = Math.min(f.qty, parseGp($("sq-" + f.id).value));
-  if (!(sell > 0) || !(q > 0)) return;
-  const taxPaid = tax(sell) * q, profit = (sell * q) - taxPaid - (f.buy * q);
-  flips.push({ id: uid(), itemId: f.itemId, name: f.name, icon: f.icon, qty: q, buy: f.buy, sell, taxPaid, profit, boughtAt: f.boughtAt, soldAt: Date.now(), status: "done" });
-  if (q >= f.qty) flips = flips.filter(x => x.id !== f.id); else f.qty -= q;
-  saveFlips(); sellOpen = null; renderLog();
+  const fid = form.dataset.id, kind = form.dataset.form;
+  const price = parseGp($("fp-" + fid).value);
+  const qIn = $("fq-" + fid) ? parseGp($("fq-" + fid).value) : null;
+  if (!(price > 0) || (qIn !== null && !(qIn > 0))) return;
+  const then = e.submitter?.dataset.then || "selling";
+  const now = Date.now();
+  changeFlips(() => {
+    normalize(flips);
+    const f = flips.find(x => x.id === fid); if (!f) return;
+    if (kind === "bought") {
+      f.qty = Math.max(1, qIn); f.filledAt = now; f.target = price; f.hint = false;
+      f.status = then; if (then === "selling") f.listedAt = now;
+    } else if (kind === "list") {
+      f.target = price; f.status = "selling"; f.listedAt = now; f.hint = false;
+    } else if (kind === "sell") {
+      const q = Math.min(f.qty, qIn);
+      const taxPaid = tax(price) * q, profit = (price * q) - taxPaid - (f.buy * q);
+      flips.push({ id: uid(), itemId: f.itemId, name: f.name, icon: f.icon, qty: q, buy: f.buy, sell: price, taxPaid, profit, boughtAt: f.boughtAt, placedAt: f.placedAt, soldAt: now, status: "done" });
+      if (q >= f.qty) flips = flips.filter(x => x.id !== f.id); else { f.qty -= q; f.hint = false; f.listedAt = now; }
+    }
+  });
+  sellOpen = null; formKind = null; renderLog();
 });
 
 $("bk-copy").onclick = async () => {
@@ -591,7 +723,8 @@ $("tab-picks").onclick = () => setView("picks");
 $("tab-plan").onclick = () => setView("plan");
 $("tab-watch").onclick = () => setView("watch");
 $("tab-log").onclick = () => setView("log");
-for (const id of ["cash","cap","minvol","share","members","hidestale","sort"]) $(id).addEventListener("change", render);
+$("toast").onclick = () => { $("toast").hidden = true; closeSheet(); setView("log"); };
+for (const id of ["cash","cap","minvol","share","members","hidestale","sound","sort"]) $(id).addEventListener("change", render);
 let qt; $("q").addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(render, 150); });
 document.addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openSheet(+c.dataset.id); });
 $("scrim").onclick = closeSheet; $("sh-close").onclick = closeSheet;
