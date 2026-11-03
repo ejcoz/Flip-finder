@@ -109,6 +109,9 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
 .lrow{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:0}
 .lrow img{width:28px;height:28px;object-fit:contain;image-rendering:pixelated;flex:none}
 .lrow .name{flex:1}
+.lname{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:0;padding:4px 0;text-align:left;cursor:pointer;color:inherit;font-weight:600}
+.lname .name{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lname:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .btn{border:1px solid var(--line);background:var(--raise);border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px;cursor:pointer;color:var(--fg)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -669,7 +672,7 @@ function renderLog(){
       : `<button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Record sale</button><button class="btn" type="button" data-act="list" data-id="${f.id}">Change price</button>${del}`;
     const when = f.status === "selling" ? `Listed ${since(f.listedAt)}` : f.status === "holding" ? `Bought ${since(f.filledAt || f.placedAt)}` : `Placed ${since(f.placedAt)}`;
     return `<div class="lcard${f.hint ? " hinted" : ""}">
-      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${est < 0 ? "neg" : ""}" title="Expected profit">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
+      <div class="lrow"><button class="lname" type="button" data-open="${f.itemId}" aria-label="Details for ${esc(f.name)}">${iconImg(f.icon)}<span class="name">${esc(f.name)}</span></button><div class="profit ${est < 0 ? "neg" : ""}" title="Expected profit">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
       <div class="sub"><b>${STAGE[f.status]}</b> · ${when}</div>
       <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${f.status === "selling" ? "listed" : "plan"} ${gp(f.target, true)}${live ? ` · live ${gp(live, true)}` : ""}</div>
       <div class="sub">${resetAt > Date.now() ? `Buy limit resets in ${until(resetAt)}` : "Buy limit has reset"}</div>
@@ -680,7 +683,7 @@ function renderLog(){
   }).join("") : `<div class="empty">No open flips. Place a buy offer in-game, then tap the item in Picks and choose “Log a buy”.</div>`;
 
   $("log-done").innerHTML = done.length ? done.slice(0, 40).map(f => `<div class="lcard">
-      <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${f.profit < 0 ? "neg" : "pos"}">${f.profit < 0 ? "-" : "+"}${gp(Math.abs(f.profit))}</div></div>
+      <div class="lrow"><button class="lname" type="button" data-open="${f.itemId}" aria-label="Details for ${esc(f.name)}">${iconImg(f.icon)}<span class="name">${esc(f.name)}</span></button><div class="profit ${f.profit < 0 ? "neg" : "pos"}">${f.profit < 0 ? "-" : "+"}${gp(Math.abs(f.profit))}</div></div>
       <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${gp(f.sell, true)} · tax ${gp(f.taxPaid, true)}</div>
       <div class="lrow"><div class="sub">Sold ${dateStr(f.soldAt)} · held ${since(f.placedAt || f.boughtAt).replace(" ago", "")}</div><button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again" : "Delete"}</button></div>
     </div>`).join("") + (done.length > 40 ? `<p class="note">Showing your latest 40 of ${done.length}. All of them count toward your totals.</p>` : "")
@@ -710,6 +713,8 @@ $("buy-form").addEventListener("submit", e => {
 });
 
 $("view-log").addEventListener("click", e => {
+  const o = e.target.closest("button[data-open]");
+  if (o) { openSheet(+o.dataset.open); return; }
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const id = b.dataset.id, act = b.dataset.act;
   if (act === "bought" || act === "list" || act === "sell" || act === "got") { sellOpen = id; formKind = act; armed = null; renderLog(); const i = $("fp-" + id) || $("fq-" + id); if (i) i.focus(); }
