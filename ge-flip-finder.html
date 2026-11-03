@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Flip Finder">
+<meta name="theme-color" content="#1b1d16">
+<title>GE Flip Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800&family=Chivo+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one-column ledger of flip cards under a sticky header; detail opens as a bottom sheet. Dark-first, brass accent, coin-stack colours for gp amounts. */
+:root{
+  --bg:#1b1d16; --surface:#24271d; --raise:#2e3225; --line:#3a3f2f;
+  --fg:#ece8d6; --muted:#a39f88; --accent:#d4a73a; --accent-ink:#1b1d16;
+  --gp-low:#f2d24b; --gp-k:#f4f1e4; --gp-m:#5fd36b;
+  --good:#6fcf7f; --warn:#e8a64a; --bad:#e2685a;
+  --f-ui:"Chivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"Chivo Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#f3f0e4; --surface:#fbf9f1; --raise:#ebe6d4; --line:#d8d1b9;
+  --fg:#23241b; --muted:#6c6852; --accent:#9a7313; --accent-ink:#fbf9f1;
+  --gp-low:#8f7400; --gp-k:#23241b; --gp-m:#1f8a3a;
+  --good:#1f8a3a; --warn:#a8650c; --bad:#b23a2c; color-scheme:light;}}
+:root[data-theme="light"]{
+  --bg:#f3f0e4; --surface:#fbf9f1; --raise:#ebe6d4; --line:#d8d1b9;
+  --fg:#23241b; --muted:#6c6852; --accent:#9a7313; --accent-ink:#fbf9f1;
+  --gp-low:#8f7400; --gp-k:#23241b; --gp-m:#1f8a3a;
+  --good:#1f8a3a; --warn:#a8650c; --bad:#b23a2c; color-scheme:light;}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 var(--f-ui);
+  padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:12px;padding-block:12px}
+.brand{font-weight:800;font-size:19px;letter-spacing:-.01em;flex:1;min-width:0}
+.brand small{display:block;font-weight:400;font-size:12px;color:var(--muted);letter-spacing:0}
+.icon-btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:13px}
+.icon-btn:focus-visible,.tab:focus-visible,.card:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{display:flex;gap:4px;padding-bottom:10px}
+.tab{flex:1;border:0;background:transparent;padding:8px 6px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:600;font-size:14px}
+.tab[aria-selected="true"]{background:var(--raise);color:var(--fg)}
+details.settings{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+details.settings summary{cursor:pointer;padding:12px 14px;font-weight:600;font-size:14px;display:flex;justify-content:space-between;gap:8px;list-style:none}
+details.settings summary::-webkit-details-marker{display:none}
+details.settings summary span{color:var(--muted);font-weight:400;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 14px 14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.field input,.field select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.search{margin-top:12px;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+.status{font-size:12px;color:var(--muted);margin:10px 2px 8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.list{display:flex;flex-direction:column;gap:8px;padding-bottom:32px}
+.card{display:grid;grid-template-columns:36px 1fr auto;gap:4px 12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;text-align:left;width:100%}
+.card img{width:32px;height:32px;object-fit:contain;image-rendering:pixelated;grid-row:span 2}
+.name{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profit{text-align:right;font-weight:600;font-size:16px}
+.sub{font-size:12.5px;color:var(--muted);min-width:0}
+.sub b{color:var(--fg);font-weight:400}
+.per{font-size:11px;color:var(--muted);text-align:right}
+.chips{grid-column:2 / -1;display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid currentColor;line-height:1.4}
+.chip.warn{color:var(--warn)} .chip.bad{color:var(--bad)} .chip.star{color:var(--accent)}
+.gp-low{color:var(--gp-low)} .gp-k{color:var(--gp-k)} .gp-m{color:var(--gp-m)}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+.plan-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.plan-sum div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.plan-sum dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.plan-sum dd{margin:2px 0 0;font-size:17px;font-weight:600}
+.slot{font-family:var(--f-num);font-size:11px;color:var(--accent-ink);background:var(--accent);border-radius:6px;padding:1px 6px;margin-right:6px}
+.note{font-size:12.5px;color:var(--muted);margin:4px 2px 12px}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-top:1px solid var(--line);border-radius:16px 16px 0 0;max-height:88vh;overflow:auto;padding-bottom:max(20px,env(safe-area-inset-bottom,0px))}
+.sheet .wrap{padding-block:14px}
+.sheet-head{display:flex;gap:12px;align-items:center}
+.sheet-head img{width:40px;height:40px;object-fit:contain;image-rendering:pixelated}
+.sheet-head h2{margin:0;font-size:18px;flex:1;min-width:0;text-wrap:balance}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+.kv div{background:var(--bg);border-radius:10px;padding:8px 10px;min-width:0}
+.kv dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.kv dd{margin:2px 0 0;font-size:15px}
+.chart{width:100%;height:auto;display:block;background:var(--bg);border-radius:10px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin:6px 2px 0}
+.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.links{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.links a,.links button{flex:1;text-align:center;text-decoration:none;color:var(--fg);border:1px solid var(--line);background:var(--raise);border-radius:10px;padding:10px;font-weight:600;font-size:14px;cursor:pointer;min-width:120px}
+.links .primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .2s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+@media (max-width:380px){.grid{grid-template-columns:1fr}.plan-sum dd{font-size:15px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="bar">
+      <div class="brand">GE Flip Finder<small id="updated">Loading prices…</small></div>
+      <button class="icon-btn" id="refresh" type="button">Refresh</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="tab-picks" aria-selected="true" type="button">Top picks</button>
+      <button class="tab" role="tab" id="tab-plan" aria-selected="false" type="button">8-slot plan</button>
+      <button class="tab" role="tab" id="tab-watch" aria-selected="false" type="button">Watchlist</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <details class="settings" id="settings">
+    <summary>Settings <span id="settings-sum"></span></summary>
+    <div class="grid">
+      <div class="field"><label for="cash">Cash stack</label><input id="cash" inputmode="text" value="30m"></div>
+      <div class="field"><label for="cap">Max per item</label><input id="cap" inputmode="text" value="10m"></div>
+      <div class="field"><label for="minvol">Min trades/hr (each side)</label><input id="minvol" type="number" min="0" value="10"></div>
+      <div class="field"><label for="share">Your share of volume</label>
+        <select id="share"><option value="0.1">10% (busy item)</option><option value="0.25" selected>25%</option><option value="0.5">50%</option><option value="1">100% (optimistic)</option></select></div>
+      <label class="check"><input type="checkbox" id="members" checked> Members items</label>
+      <label class="check"><input type="checkbox" id="hidestale" checked> Hide stale prices</label>
+    </div>
+  </details>
+
+  <input class="search" id="q" type="search" placeholder="Search items" autocomplete="off">
+  <div class="status"><span id="count"></span><span id="sortwrap">Sort
+    <select id="sort" aria-label="Sort by" style="background:transparent;border:0;color:var(--fg);font-weight:600">
+      <option value="p4h">Profit / 4h</option><option value="margin">Margin each</option><option value="roi">ROI %</option><option value="vol">Volume</option>
+    </select></span></div>
+
+  <section id="view-picks"><div class="list" id="list"></div></section>
+  <section id="view-plan" hidden>
+    <p class="note">Greedy fill of your 8 GE slots from the top picks, capped by your max per item. Buy at the instant-sell price, sell at the instant-buy price, 2% tax already taken off.</p>
+    <dl class="plan-sum" id="plan-sum"></dl>
+    <div class="list" id="plan"></div>
+  </section>
+  <section id="view-watch" hidden><div class="list" id="watch"></div></section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sh-name">
+  <div class="wrap">
+    <div class="sheet-head"><img id="sh-img" alt=""><h2 id="sh-name"></h2><button class="icon-btn" id="sh-close" type="button">Close</button></div>
+    <dl class="kv" id="sh-kv"></dl>
+    <svg class="chart" id="sh-chart" viewBox="0 0 360 180" role="img" aria-label="24 hour price chart"></svg>
+    <div class="legend"><span><i style="background:var(--gp-m)"></i>Sell (instant-buy)</span><span><i style="background:var(--accent)"></i>Buy (instant-sell)</span></div>
+    <div class="links">
+      <button id="sh-star" type="button" class="primary">Add to watchlist</button>
+      <a id="sh-wiki" target="_blank" rel="noopener">Wiki page</a>
+      <a id="sh-prices" target="_blank" rel="noopener">Full price history</a>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+const API = "https://prices.runescape.wiki/api/v1/osrs";
+const TAX_RATE = 0.02, TAX_CAP = 5_000_000;
+const STALE_MIN = 45;
+const $ = id => document.getElementById(id);
+
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+
+let mapping = null, latest = {}, hour = {}, lastLoad = 0, view = "picks";
+let watch = new Set(store.get("ff.watch", []));
+
+// ---- settings ----
+const S = store.get("ff.settings", null);
+if (S) for (const k of ["cash","cap","minvol","share"]) if (S[k] != null) $(k).value = S[k];
+if (S) { $("members").checked = S.members !== false; $("hidestale").checked = S.hidestale !== false; }
+if (S && S.sort) $("sort").value = S.sort;
+
+function parseGp(s){
+  s = String(s).trim().toLowerCase().replace(/,/g, "").replace(/gp$/, "");
+  const m = s.match(/^(\d*\.?\d+)\s*([kmb]?)$/); if (!m) return NaN;
+  return Math.floor(parseFloat(m[1]) * ({"":1,k:1e3,m:1e6,b:1e9})[m[2]]);
+}
+function settings(){
+  const cash = parseGp($("cash").value), cap = parseGp($("cap").value);
+  return {
+    cash: isFinite(cash) && cash > 0 ? cash : 30e6,
+    cap: isFinite(cap) && cap > 0 ? cap : 10e6,
+    minvol: Math.max(0, +$("minvol").value || 0),
+    share: +$("share").value || 0.25,
+    members: $("members").checked, hidestale: $("hidestale").checked,
+    sort: $("sort").value
+  };
+}
+function saveSettings(){
+  const s = settings();
+  store.set("ff.settings", {cash:$("cash").value, cap:$("cap").value, minvol:$("minvol").value, share:$("share").value, members:s.members, hidestale:s.hidestale, sort:s.sort});
+  $("settings-sum").textContent = `${short(s.cash)} stack · ${short(s.cap)}/item · ${s.members ? "P2P" : "F2P"}`;
+}
+
+// ---- formatting ----
+const comma = n => Math.round(n).toLocaleString("en-US");
+function short(n){
+  const a = Math.abs(n);
+  if (a >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/,"") + "B";
+  if (a >= 1e6) return (n/1e6).toFixed(a >= 1e8 ? 0 : 1).replace(/\.0$/,"") + "M";
+  if (a >= 1e4) return Math.round(n/1e3) + "K";
+  return comma(n);
+}
+// In-game coin stack colours: yellow under 100K, white from 100K, green from 10M
+function gp(n, plain){
+  const a = Math.abs(n), cls = a >= 1e7 ? "gp-m" : a >= 1e5 ? "gp-k" : "gp-low";
+  const t = plain ? comma(n) : short(n);
+  return `<span class="num ${cls}">${t}</span>`;
+}
+function ago(sec){
+  if (sec < 60) return `${Math.max(0,Math.round(sec))}s ago`;
+  if (sec < 3600) return `${Math.round(sec/60)}m ago`;
+  return `${Math.round(sec/3600)}h ago`;
+}
+const tax = sell => sell >= 50 ? Math.min(Math.floor(sell * TAX_RATE), TAX_CAP) : 0;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const iconUrl = icon => "https://oldschool.runescape.wiki/images/" + encodeURIComponent(icon.replace(/ /g, "_"));
+
+// ---- data ----
+async function getJSON(path){
+  const r = await fetch(API + path, {headers: {"Accept": "application/json"}});
+  if (!r.ok) throw new Error(`Price server answered ${r.status}`);
+  return r.json();
+}
+async function load(force){
+  $("updated").textContent = "Loading prices…";
+  try {
+    const jobs = [getJSON("/latest"), getJSON("/1h")];
+    if (!mapping) jobs.push(getJSON("/mapping"));
+    const [l, h, m] = await Promise.all(jobs);
+    latest = l.data || {}; hour = h.data || {};
+    if (m) { mapping = {}; for (const it of m) mapping[it.id] = it; }
+    lastLoad = Date.now();
+    render();
+  } catch (e) {
+    $("updated").textContent = "Couldn't load prices. Check your connection and tap Refresh.";
+    if (!mapping) $("list").innerHTML = `<div class="empty">Prices didn't load (${esc(e.message || "network error")}). This page needs internet access to the OSRS Wiki price service.</div>`;
+  }
+}
+
+function analyse(s){
+  const now = Date.now()/1000, out = [];
+  if (!mapping) return out;
+  for (const id in latest){
+    const it = mapping[id], p = latest[id];
+    if (!it || !p.high || !p.low) continue;
+    const buy = p.low, sell = p.high;
+    const t = tax(sell), margin = sell - t - buy;
+    const h = hour[id] || {};
+    const hv = h.highPriceVolume || 0, lv = h.lowPriceVolume || 0, minVol = Math.min(hv, lv);
+    const age = (now - Math.min(p.highTime || 0, p.lowTime || 0)) / 60;
+    const limit = it.limit || null;
+    const byVol = Math.floor(minVol * 4 * s.share);
+    const flags = [];
+    if (age > STALE_MIN) flags.push(["warn", `Price ${Math.round(age)}m old`]);
+    if (h.avgHighPrice && h.avgLowPrice && (sell > h.avgHighPrice * 1.08 || buy < h.avgLowPrice * 0.92)) flags.push(["warn", "Moving fast"]);
+    if (margin / buy > 0.15) flags.push(["bad", "Margin looks too good"]);
+    if (!limit) flags.push(["warn", "Unknown buy limit"]);
+    out.push({id:+id, it, buy, sell, tax:t, margin, roi: margin/buy, hv, lv, minVol, age, limit, byVol, flags,
+      avgHigh: h.avgHighPrice, avgLow: h.avgLowPrice});
+  }
+  return out;
+}
+function qtyFor(r, budget){
+  return Math.max(0, Math.min(r.limit ?? Infinity, Math.floor(budget / r.buy), r.byVol));
+}
+function ranked(s, ignoreFilters){
+  const q = $("q").value.trim().toLowerCase();
+  const rows = analyse(s).map(r => { r.qty = qtyFor(r, Math.min(s.cash, s.cap)); r.p4h = r.qty * r.margin; return r; });
+  const keep = rows.filter(r => {
+    if (q && !r.it.name.toLowerCase().includes(q)) return false;
+    if (ignoreFilters) return true;
+    if (!s.members && r.it.members) return false;
+    if (r.margin <= 0 || r.qty <= 0) return false;
+    if (r.minVol < s.minvol) return false;
+    if (s.hidestale && r.age > STALE_MIN) return false;
+    return true;
+  });
+  const key = {p4h: r => r.p4h, margin: r => r.margin, roi: r => r.roi, vol: r => r.hv + r.lv}[s.sort] || (r => r.p4h);
+  keep.sort((a, b) => key(b) - key(a));
+  return keep;
+}
+
+// ---- render ----
+function card(r, extra){
+  const star = watch.has(r.id) ? `<span class="chip star">Watching</span>` : "";
+  const chips = r.flags.map(([c, t]) => `<span class="chip ${c}">${esc(t)}</span>`).join("") + star;
+  const lim = r.limit ? comma(r.limit) : "?";
+  return `<button class="card" type="button" data-id="${r.id}">
+    <img src="${iconUrl(r.it.icon)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'">
+    <div class="name">${extra?.slot ? `<span class="slot">${extra.slot}</span>` : ""}${esc(r.it.name)}</div>
+    <div class="profit">${gp(extra?.profit ?? r.p4h)}</div>
+    <div class="sub num">${gp(r.buy, true)} → ${gp(r.sell, true)} · <b class="${r.margin > 0 ? "pos" : "neg"}">${r.margin > 0 ? "+" : ""}${comma(r.margin)}</b> ea · ${(r.roi*100).toFixed(1)}%</div>
+    <div class="per">${extra?.qty != null ? `${comma(extra.qty)} qty` : "per 4h"}</div>
+    <div class="sub" style="grid-column:2 / -1">Limit ${lim} · ${comma(r.hv)}/${comma(r.lv)} trades/hr · ${extra?.qty == null ? `buy ${comma(r.qty)}` : `costs ${short(extra.cost)}`}</div>
+    ${chips ? `<div class="chips">${chips}</div>` : ""}
+  </button>`;
+}
+function render(){
+  saveSettings();
+  if (!mapping) return;
+  const s = settings();
+  const age = (Date.now() - lastLoad) / 1000;
+  $("updated").textContent = `Live OSRS Wiki prices · updated ${ago(age)}`;
+  const picks = ranked(s);
+  $("count").textContent = view === "picks" ? `${picks.length} flips match` : view === "plan" ? "Best use of your slots" : `${watch.size} watched`;
+  $("sortwrap").hidden = view !== "picks";
+
+  if (view === "picks") {
+    $("list").innerHTML = picks.length ? picks.slice(0, 60).map(r => card(r)).join("")
+      : `<div class="empty">No flips match. Lower the minimum trades per hour or raise your max per item.</div>`;
+  }
+  if (view === "plan") {
+    let cash = s.cash, used = 0, profit = 0; const slots = [];
+    const byP = ranked({...s, sort: "p4h"});
+    for (const r of byP) {
+      if (slots.length >= 8 || cash < 1000) break;
+      const q = qtyFor(r, Math.min(cash, s.cap)); if (q <= 0) continue;
+      const cost = q * r.buy, pr = q * r.margin;
+      if (pr < 1000) continue;
+      cash -= cost; used += cost; profit += pr;
+      slots.push(card(r, {slot: slots.length + 1, qty: q, cost, profit: pr}));
+    }
+    $("plan-sum").innerHTML = `<div><dt>Capital used</dt><dd>${gp(used)}</dd></div><div><dt>Est. profit</dt><dd>${gp(profit)}</dd></div><div><dt>Return</dt><dd class="num">${used ? (profit/used*100).toFixed(1) : "0"}%</dd></div>`;
+    $("plan").innerHTML = slots.join("") || `<div class="empty">Nothing worth a slot right now. Try a lower minimum volume.</div>`;
+  }
+  if (view === "watch") {
+    const all = ranked(s, true).filter(r => watch.has(r.id));
+    $("watch").innerHTML = all.length ? all.map(r => card(r)).join("")
+      : `<div class="empty">Tap any item and choose “Add to watchlist” to keep an eye on it here.</div>`;
+  }
+}
+
+// ---- detail sheet ----
+let openId = null;
+async function openSheet(id){
+  openId = id;
+  const s = settings();
+  const r = ranked(s, true).find(x => x.id === id) || analyse(s).find(x => x.id === id);
+  if (!r) return;
+  if (r.qty == null) { r.qty = qtyFor(r, Math.min(s.cash, s.cap)); r.p4h = r.qty * r.margin; }
+  $("sh-img").src = iconUrl(r.it.icon);
+  $("sh-name").textContent = r.it.name;
+  const kv = [
+    ["Buy at", gp(r.buy, true)], ["Sell at", gp(r.sell, true)],
+    ["Tax (2%)", gp(r.tax, true)], ["Margin each", `<span class="num ${r.margin>0?"pos":"neg"}">${comma(r.margin)}</span>`],
+    ["Buy limit / 4h", `<span class="num">${r.limit ? comma(r.limit) : "Unknown"}</span>`], ["Your qty", `<span class="num">${comma(r.qty)}</span>`],
+    ["Profit / 4h", gp(r.p4h)], ["Capital needed", gp(r.qty * r.buy)],
+    ["1h avg sell", r.avgHigh ? gp(r.avgHigh, true) : "–"], ["1h avg buy", r.avgLow ? gp(r.avgLow, true) : "–"],
+    ["Trades/hr", `<span class="num">${comma(r.hv)} / ${comma(r.lv)}</span>`], ["Last trade", `<span class="num">${ago(r.age*60)}</span>`]
+  ];
+  $("sh-kv").innerHTML = kv.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  const slug = encodeURIComponent(r.it.name.replace(/ /g, "_"));
+  $("sh-wiki").href = `https://oldschool.runescape.wiki/w/${slug}`;
+  $("sh-prices").href = `https://prices.runescape.wiki/osrs/item/${id}`;
+  syncStar();
+  $("sh-chart").innerHTML = `<text x="180" y="94" text-anchor="middle" fill="var(--muted)" font-size="12">Loading 24h chart…</text>`;
+  $("scrim").hidden = false; $("sheet").hidden = false; $("sheet").scrollTop = 0;
+  try {
+    const ts = await getJSON(`/timeseries?timestep=5m&id=${id}`);
+    if (openId === id) drawChart((ts.data || []).slice(-288));
+  } catch {
+    if (openId === id) $("sh-chart").innerHTML = `<text x="180" y="94" text-anchor="middle" fill="var(--muted)" font-size="12">Chart unavailable right now</text>`;
+  }
+}
+function closeSheet(){ openId = null; $("scrim").hidden = true; $("sheet").hidden = true; }
+function syncStar(){ $("sh-star").textContent = watch.has(openId) ? "Remove from watchlist" : "Add to watchlist"; }
+
+function drawChart(pts){
+  const W = 360, H = 180, L = 52, R = 10, T = 12, B = 24;
+  const hi = pts.map(p => p.avgHighPrice).filter(Boolean), lo = pts.map(p => p.avgLowPrice).filter(Boolean);
+  if (hi.length + lo.length < 4) { $("sh-chart").innerHTML = `<text x="180" y="94" text-anchor="middle" fill="var(--muted)" font-size="12">Not enough recent trades to chart</text>`; return; }
+  let mn = Math.min(...hi, ...lo), mx = Math.max(...hi, ...lo);
+  if (mn === mx) { mn *= 0.99; mx *= 1.01; }
+  const pad = (mx - mn) * 0.08; mn -= pad; mx += pad;
+  const t0 = pts[0].timestamp, t1 = pts[pts.length - 1].timestamp || t0 + 1;
+  const x = t => L + (t - t0) / Math.max(1, t1 - t0) * (W - L - R);
+  const y = v => T + (1 - (v - mn) / (mx - mn)) * (H - T - B);
+  const line = key => { let d = "", pen = false;
+    for (const p of pts) { const v = p[key]; if (!v) { pen = false; continue; } d += (pen ? "L" : "M") + x(p.timestamp).toFixed(1) + " " + y(v).toFixed(1); pen = true; }
+    return d; };
+  let grid = "";
+  for (let i = 0; i <= 3; i++) {
+    const v = mn + (mx - mn) * i / 3, yy = y(v);
+    grid += `<line x1="${L}" x2="${W-R}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`
+         + `<text x="${L-6}" y="${(yy+4).toFixed(1)}" text-anchor="end" fill="var(--muted)" font-size="10" font-family="Chivo Mono, monospace">${short(v)}</text>`;
+  }
+  const hrs = (t1 - t0) / 3600;
+  grid += `<text x="${L}" y="${H-6}" fill="var(--muted)" font-size="10">${Math.round(hrs)}h ago</text><text x="${W-R}" y="${H-6}" text-anchor="end" fill="var(--muted)" font-size="10">now</text>`;
+  $("sh-chart").innerHTML = grid +
+    `<path d="${line("avgHighPrice")}" fill="none" stroke="var(--gp-m)" stroke-width="1.8" stroke-linejoin="round"/>` +
+    `<path d="${line("avgLowPrice")}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/>`;
+}
+
+// ---- events ----
+function setView(v){
+  view = v;
+  for (const t of ["picks","plan","watch"]) { $("tab-"+t).setAttribute("aria-selected", t === v); $("view-"+t).hidden = t !== v; }
+  render();
+}
+$("tab-picks").onclick = () => setView("picks");
+$("tab-plan").onclick = () => setView("plan");
+$("tab-watch").onclick = () => setView("watch");
+for (const id of ["cash","cap","minvol","share","members","hidestale","sort"]) $(id).addEventListener("change", render);
+let qt; $("q").addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(render, 150); });
+document.addEventListener("click", e => { const c = e.target.closest(".card"); if (c) openSheet(+c.dataset.id); });
+$("scrim").onclick = closeSheet; $("sh-close").onclick = closeSheet;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+$("sh-star").onclick = () => {
+  if (watch.has(openId)) watch.delete(openId); else watch.add(openId);
+  store.set("ff.watch", [...watch]); syncStar(); render();
+};
+$("refresh").onclick = () => load(true);
+setInterval(() => { if (!document.hidden) load(); }, 60_000);
+setInterval(() => { if (lastLoad) $("updated").textContent = `Live OSRS Wiki prices · updated ${ago((Date.now()-lastLoad)/1000)}`; }, 15_000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden && Date.now() - lastLoad > 30_000) load(); });
+
+saveSettings();
+load();
+})();
+</script>
+</body>
+</html>
