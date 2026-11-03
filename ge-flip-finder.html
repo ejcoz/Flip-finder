@@ -121,6 +121,10 @@ details.settings summary span{color:var(--muted);font-weight:400;min-width:0;ove
 textarea.backup{width:100%;min-height:90px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px var(--f-num);color:var(--fg)}
 .msg{font-size:12.5px;color:var(--good)}
 .chip.good{color:var(--good)}
+.prog{position:relative;height:8px;border-radius:99px;background:var(--bg);overflow:hidden}
+.prog i{position:absolute;left:0;top:0;bottom:0;border-radius:99px}
+.prog .est{background:color-mix(in srgb,var(--good) 35%,transparent)}
+.prog .got{background:var(--good)}
 .lcard.hinted{border-color:var(--good)}
 .toast{position:fixed;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:30;max-width:688px;margin:0 auto;display:grid;gap:2px;text-align:left;background:var(--raise);color:var(--fg);border:1px solid var(--good);border-radius:12px;padding:12px 14px;font-weight:600;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35)}
 .toast small{font-weight:400;color:var(--muted);font-size:12px}
@@ -298,6 +302,7 @@ async function load(force){
     lastLoad = Date.now();
     checkFills();
     render();
+    refreshEstimates();
   } catch (e) {
     $("updated").textContent = "Couldn't load prices. Check your connection and tap Refresh.";
     if (!mapping) $("list").innerHTML = `<div class="empty">Prices didn't load (${esc(e.message || "network error")}). This page needs internet access to the OSRS Wiki price service.</div>`;
@@ -517,11 +522,52 @@ function normalize(list){
 // a sale fills when someone buys at or above your price after you listed it.
 function likelyFilled(f){
   const p = latest[f.itemId]; if (!p) return false;
-  const lowAfter = p.low && p.lowTime * 1000 > (f.status === "buying" ? f.placedAt : f.listedAt);
-  const highAfter = p.high && p.highTime * 1000 > (f.status === "buying" ? f.placedAt : f.listedAt);
+  const from = f.checkFrom || (f.status === "buying" ? f.placedAt : f.listedAt);
+  const lowAfter = p.low && p.lowTime * 1000 > from;
+  const highAfter = p.high && p.highTime * 1000 > from;
   if (f.status === "buying") return (lowAfter && p.low <= f.buy) || (highAfter && p.high <= f.buy);
   if (f.status === "selling") return (highAfter && p.high >= f.target) || (lowAfter && p.low >= f.target);
   return false;
+}
+// Volume since the offer went up, from the wiki's 5-minute buckets, counting only buckets that traded at your price or better
+const estCache = {};
+async function refreshEstimates(){
+  const ids = [...new Set(flips.filter(f => f.status === "buying" || f.status === "selling").map(f => f.itemId))];
+  let changed = false;
+  for (const id of ids) {
+    if (estCache[id] && Date.now() - estCache[id].at < 55_000) continue;
+    try { const ts = await getJSON(`/timeseries?timestep=5m&id=${id}`); estCache[id] = { at: Date.now(), data: ts.data || [] }; changed = true; } catch {}
+  }
+  if (changed && view === "log") renderLog();
+}
+function estimate(f){
+  const c = estCache[f.itemId]; if (!c) return null;
+  const from = (f.estFrom || (f.status === "buying" ? f.placedAt : f.listedAt)) / 1000;
+  let n = 0;
+  for (const b of c.data) {
+    if (b.timestamp + 300 <= from) continue;
+    if (f.status === "buying") {
+      if (b.avgLowPrice && b.avgLowPrice <= f.buy) n += b.lowPriceVolume || 0;
+      if (b.avgHighPrice && b.avgHighPrice <= f.buy) n += b.highPriceVolume || 0;
+    } else {
+      if (b.avgHighPrice && b.avgHighPrice >= f.target) n += b.highPriceVolume || 0;
+      if (b.avgLowPrice && b.avgLowPrice >= f.target) n += b.lowPriceVolume || 0;
+    }
+  }
+  if (!n && f.hint) n = 1; // a trade at your price showed up but isn't in the 5-minute data yet
+  return Math.min(n, f.qty);
+}
+function progress(f){
+  const est = estimate(f), got = f.status === "buying" ? (f.got || 0) : 0, q = f.qty;
+  const pct = x => Math.max(0, Math.min(100, x / q * 100)).toFixed(1);
+  const verb = f.status === "buying" ? "bought" : "sold";
+  const label = [
+    got ? `<b>${comma(got)}</b> of ${comma(q)} ${verb} (confirmed)` : "",
+    est != null ? `~${comma(est)} of ${comma(q)} may have ${f.status === "buying" ? "filled" : "sold"}` : `Checking volume…`
+  ].filter(Boolean).join(" · ");
+  return `<div class="prog" role="img" aria-label="${got ? comma(got) + " confirmed, " : ""}${est != null ? "about " + comma(est) : "unknown"} of ${comma(q)}">
+      <i class="est" style="width:${pct(Math.max(est || 0, got))}%"></i><i class="got" style="width:${pct(got)}%"></i></div>
+    <div class="sub num">${label}</div>`;
 }
 function checkFills(){
   const list = normalize(readFlips()), fresh = [];
@@ -595,9 +641,14 @@ function renderLog(){
     let form = "";
     if (sellOpen === f.id && formKind === "bought") form = `
       <form class="form" data-form="bought" data-id="${f.id}">
-        <div class="field"><label for="fq-${f.id}">Qty bought</label><input id="fq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
+        <div class="field"><label for="fq-${f.id}">Qty bought</label><input id="fq-${f.id}" inputmode="numeric" value="${f.got || f.qty}"></div>
         <div class="field"><label for="fp-${f.id}">Listed at each</label><input id="fp-${f.id}" inputmode="text" value="${f.target}"></div>
         <div class="btns full"><button class="btn primary" type="submit" data-then="selling">Bought &amp; listed</button><button class="btn" type="submit" data-then="holding">Bought, not listed yet</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
+      </form>`;
+    if (sellOpen === f.id && formKind === "got") form = `
+      <form class="form" data-form="got" data-id="${f.id}">
+        <div class="field full"><label for="fq-${f.id}">Bought so far (from your GE screen)</label><input id="fq-${f.id}" inputmode="numeric" value="${f.got || ""}" placeholder="0"></div>
+        <div class="btns full"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
       </form>`;
     if (sellOpen === f.id && formKind === "list") form = `
       <form class="form" data-form="list" data-id="${f.id}">
@@ -607,21 +658,22 @@ function renderLog(){
     if (sellOpen === f.id && formKind === "sell") form = `
       <form class="form" data-form="sell" data-id="${f.id}">
         <div class="field"><label for="fp-${f.id}">Sold at each</label><input id="fp-${f.id}" inputmode="text" value="${f.target}"></div>
-        <div class="field"><label for="fq-${f.id}">Qty sold</label><input id="fq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
+        <div class="field"><label for="fq-${f.id}">Qty sold so far</label><input id="fq-${f.id}" inputmode="numeric" value="${f.qty}"></div>
         <div class="btns full"><button class="btn primary" type="submit">Confirm sale</button><button class="btn" type="button" data-act="cancel">Cancel</button></div>
       </form>`;
     const del = `<button class="btn danger" type="button" data-act="del" data-id="${f.id}">${armed === f.id ? "Tap again to delete" : f.status === "buying" ? "Cancelled" : "Delete"}</button>`;
     const actions = f.status === "buying"
-      ? `<button class="btn primary" type="button" data-act="bought" data-id="${f.id}">Mark bought</button>${del}`
+      ? `<button class="btn" type="button" data-act="got" data-id="${f.id}">Update filled</button><button class="btn primary" type="button" data-act="bought" data-id="${f.id}">Done buying</button>${del}`
       : f.status === "holding"
       ? `<button class="btn primary" type="button" data-act="list" data-id="${f.id}">List for sale</button>${del}`
-      : `<button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Mark sold</button><button class="btn" type="button" data-act="list" data-id="${f.id}">Change price</button>${del}`;
+      : `<button class="btn primary" type="button" data-act="sell" data-id="${f.id}">Record sale</button><button class="btn" type="button" data-act="list" data-id="${f.id}">Change price</button>${del}`;
     const when = f.status === "selling" ? `Listed ${since(f.listedAt)}` : f.status === "holding" ? `Bought ${since(f.filledAt || f.placedAt)}` : `Placed ${since(f.placedAt)}`;
     return `<div class="lcard${f.hint ? " hinted" : ""}">
       <div class="lrow">${iconImg(f.icon)}<div class="name">${esc(f.name)}</div><div class="profit ${est < 0 ? "neg" : ""}" title="Expected profit">${est < 0 ? "-" : "+"}${gp(Math.abs(est))}</div></div>
       <div class="sub"><b>${STAGE[f.status]}</b> · ${when}</div>
       <div class="sub num">${comma(f.qty)} × ${gp(f.buy, true)} → ${f.status === "selling" ? "listed" : "plan"} ${gp(f.target, true)}${live ? ` · live ${gp(live, true)}` : ""}</div>
       <div class="sub">${resetAt > Date.now() ? `Buy limit resets in ${until(resetAt)}` : "Buy limit has reset"}</div>
+      ${f.status === "buying" || f.status === "selling" ? progress(f) : ""}
       ${hint ? `<div class="chips" style="grid-column:auto">${hint}</div>` : ""}
       ${form || `<div class="btns">${actions}</div>`}
     </div>`;
@@ -660,7 +712,7 @@ $("buy-form").addEventListener("submit", e => {
 $("view-log").addEventListener("click", e => {
   const b = e.target.closest("button[data-act]"); if (!b) return;
   const id = b.dataset.id, act = b.dataset.act;
-  if (act === "bought" || act === "list" || act === "sell") { sellOpen = id; formKind = act; armed = null; renderLog(); const i = $("fp-" + id) || $("fq-" + id); if (i) i.focus(); }
+  if (act === "bought" || act === "list" || act === "sell" || act === "got") { sellOpen = id; formKind = act; armed = null; renderLog(); const i = $("fp-" + id) || $("fq-" + id); if (i) i.focus(); }
   if (act === "cancel") { sellOpen = null; formKind = null; renderLog(); }
   if (act === "del") {
     if (armed === id) { changeFlips(() => { flips = flips.filter(f => f.id !== id); }); armed = null; }
@@ -672,24 +724,27 @@ $("view-log").addEventListener("submit", e => {
   const form = e.target.closest("form[data-form]"); if (!form) return;
   e.preventDefault();
   const fid = form.dataset.id, kind = form.dataset.form;
-  const price = parseGp($("fp-" + fid).value);
+  const price = $("fp-" + fid) ? parseGp($("fp-" + fid).value) : 0;
   const qIn = $("fq-" + fid) ? parseGp($("fq-" + fid).value) : null;
-  if (!(price > 0) || (qIn !== null && !(qIn > 0))) return;
-  const then = e.submitter?.dataset.then || "selling";
+  if (kind !== "got" && (!(price > 0) || (qIn !== null && !(qIn > 0)))) return;
+  if (kind === "got" && !(qIn >= 0)) return;
+  const then = (e.submitter && e.submitter.dataset.then) || "selling";
   const now = Date.now();
   changeFlips(() => {
     normalize(flips);
     const f = flips.find(x => x.id === fid); if (!f) return;
-    if (kind === "bought") {
+    if (kind === "got") {
+      f.got = Math.min(f.qty, qIn); f.hint = false; f.checkFrom = now;
+    } else if (kind === "bought") {
       f.qty = Math.max(1, qIn); f.filledAt = now; f.target = price; f.hint = false;
-      f.status = then; if (then === "selling") f.listedAt = now;
+      f.status = then; f.checkFrom = null; f.estFrom = null; if (then === "selling") f.listedAt = now;
     } else if (kind === "list") {
-      f.target = price; f.status = "selling"; f.listedAt = now; f.hint = false;
+      f.target = price; f.status = "selling"; f.listedAt = now; f.hint = false; f.checkFrom = null; f.estFrom = null;
     } else if (kind === "sell") {
       const q = Math.min(f.qty, qIn);
       const taxPaid = tax(price) * q, profit = (price * q) - taxPaid - (f.buy * q);
       flips.push({ id: uid(), itemId: f.itemId, name: f.name, icon: f.icon, qty: q, buy: f.buy, sell: price, taxPaid, profit, boughtAt: f.boughtAt, placedAt: f.placedAt, soldAt: now, status: "done" });
-      if (q >= f.qty) flips = flips.filter(x => x.id !== f.id); else { f.qty -= q; f.hint = false; f.listedAt = now; }
+      if (q >= f.qty) flips = flips.filter(x => x.id !== f.id); else { f.qty -= q; f.hint = false; f.checkFrom = now; f.estFrom = now; }
     }
   });
   sellOpen = null; formKind = null; renderLog();
