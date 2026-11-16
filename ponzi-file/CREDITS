@@ -1,0 +1,20 @@
+The Ponzi File — third-party assets used in the film
+
+Picture: drawn entirely in code (Canvas 2D). The portrait is a generic drawn 1920s man, not a
+likeness traced from any photograph; newspaper names on the clippings are invented.
+
+Voice: Kokoro-82M text-to-speech (voice "am_michael"), run locally via kokoro-onnx — Apache License 2.0.
+Voice check: faster-whisper (MIT) with the Whisper base.en model (MIT).
+
+Music and sound effects: original, synthesized in code (numpy/scipy); no samples or recordings.
+
+Fonts (SIL Open Font License 1.1, files and licences in fonts/):
+  Alfa Slab One — JM Solé
+  Archivo Black — Omnibus-Type
+  Bagel Fat One — Kim Jung-hwan
+  JetBrains Mono — JetBrains
+
+Facts shown: 1920, Boston; promise of 50% in 45 days; postal reply coupons as the cover story;
+"Securities Exchange Co." (the name of Ponzi's firm); collapse in August 1920, Ponzi arrested.
+The coupon figures (about 160 million needed vs about 27,000 in circulation) follow the widely
+cited Boston Post reporting of 1920; they are approximate.
