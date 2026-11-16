@@ -1,0 +1,351 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The Coupon</title>
+<style>html,body{margin:0;background:#ECDFC2;overflow:hidden}canvas{display:block}</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// The Coupon: Charles Ponzi's postal reply coupon scheme, Boston 1920. Vintage engraving collage on one long paper table.
+// Parts in parts/ (src/bake.py), voice and cue times in timeline.json (src/timeline.py). One camera travels across the table.
+const W = 1920, H = 1080;
+const Q = new URLSearchParams(location.search);
+let FILM = 35.5, FROM = +(Q.get('from') ?? 0), TO = +(Q.get('to') ?? FILM);
+window.DUR = TO - FROM;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+ctx.imageSmoothingQuality = 'high';
+
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const seg = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+const EASE = {
+  lin: p => p, out: p => 1 - Math.pow(1 - p, 3), in: p => p * p * p,
+  io: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  back: p => { const s = 1.9; p -= 1; return p * p * ((s + 1) * p + s) + 1; }, hold: p => 0,
+  whip: p => p < .5 ? 16 * p ** 5 : 1 - Math.pow(-2 * p + 2, 5) / 2,
+};
+function hash(a, b = 0) { let h = Math.imul(a | 0, 374761393) ^ Math.imul(b | 0, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+const STEP = 1 / 12, stepT = t => Math.floor(t / STEP + 1e-6) * STEP, D2R = Math.PI / 180;
+const PAL = { paper: '#ECDFC2', card: '#F6EEDB', ink: '#221C17', ochre: '#C65F3A', teal: '#2F7F7A', mustard: '#E1AB3B', red: '#B8403A' };
+const EDGE = '#B49D78', BACK = '#E9DFC8', SHADOW = 'rgb(62,40,22)';
+
+// ---------- parts ----------
+let M, TL, SP = {}, B = 1.5;
+async function loadImg(src) { const im = new Image(); im.src = src; await im.decode(); return im; }
+function canvasOf(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; }
+function tinted(img, color, pad, blur) {
+  const c = canvasOf(img.width + 2 * pad, img.height + 2 * pad), g = c.getContext('2d');
+  const tmp = canvasOf(img.width, img.height), t = tmp.getContext('2d');
+  t.drawImage(img, 0, 0); t.globalCompositeOperation = 'source-in'; t.fillStyle = color; t.fillRect(0, 0, img.width, img.height);
+  if (blur) g.filter = `blur(${blur}px)`;
+  g.drawImage(tmp, pad, pad); return c;
+}
+function sprite(img, k) { const pad = Math.round(16 * k); return { img, k, pad, edge: tinted(img, EDGE, 0, 0), sh1: tinted(img, SHADOW, pad, 2.5 * k), sh2: tinted(img, SHADOW, pad, 9 * k) }; }
+async function loadParts() {
+  M = await (await fetch('parts/manifest.json')).json(); B = M._.B;
+  TL = await (await fetch('timeline.json')).json(); FILM = TL.dur;
+  if (!Q.get('to')) { TO = FILM; window.DUR = TO - FROM; }
+  const names = Object.keys(M).filter(k => !k.startsWith('_') && k !== 'paper');
+  const raw = {}; await Promise.all(names.map(async n => { raw[n] = await loadImg('parts/' + n + '.png'); }));
+  for (const n of names) { SP[n] = n === 'postmark' ? { img: raw[n], k: B } : sprite(raw[n], B); SP[n].m = M[n]; }
+  SP.paper = { img: await loadImg('parts/paper.jpg'), m: M.paper };
+}
+
+// ---------- drawing a paper piece: shadow -> cut edge -> face ----------
+function drawSprite(S, ax, ay, lx, ly, r, z, sx = 1, s = 1, alpha = 1, img = null) {
+  const w = S.img.width / S.k, h = S.img.height / S.k, pad = (S.pad || 0) / S.k;
+  const fw = Math.abs(sx) < 0.04 ? 0.04 : Math.abs(sx);
+  const place = (dx, dy) => { ctx.save(); ctx.translate(ax + dx, ay + dy); ctx.rotate(r * D2R); ctx.scale(fw * s, s); };
+  if (S.sh1) {
+    const zz = Math.max(0, z), off = [3 + 4.2 * zz, 4 + 5.4 * zz], soft = clamp(zz / 2.2, 0, 1), sa = alpha * (0.30 - 0.035 * Math.min(zz, 4));
+    place(off[0], off[1]);
+    if (soft < 1) { ctx.globalAlpha = sa * (1 - soft); ctx.drawImage(S.sh1, -lx - pad, -ly - pad, w + 2 * pad, h + 2 * pad); }
+    if (soft > 0) { ctx.globalAlpha = sa * soft; ctx.drawImage(S.sh2, -lx - pad, -ly - pad, w + 2 * pad, h + 2 * pad); }
+    ctx.restore();
+    const side = Math.sqrt(Math.max(0, 1 - sx * sx));
+    place(0.9 + 3 * side, 1.2); ctx.globalAlpha = alpha; ctx.drawImage(S.edge, -lx, -ly, w, h); ctx.restore();
+  }
+  place(0, 0); ctx.globalAlpha = alpha; ctx.drawImage(img || S.img, -lx, -ly, w, h); ctx.restore(); ctx.globalAlpha = 1;
+}
+const sz = S => [S.img.width / S.k, S.img.height / S.k];
+function put(name, x, y, r = 0, z = 0, sx = 1, s = 1, a = 1) { const S = typeof name === 'string' ? SP[name] : name; const [w, h] = sz(S); drawSprite(S, x, y, w / 2, h / 2, r, z, sx, s, a); }
+
+// keys: [t, x, y, rot, z, sx, ease, land, scale]
+function pose(keys, t, id = 1) {
+  if (t <= keys[0][0]) { const k = keys[0]; return { x: k[1], y: k[2], r: k[3], z: k[4], sx: k[5] ?? 1, s: k[8] ?? 1 }; }
+  let i = keys.length - 1; for (let j = 0; j < keys.length - 1; j++) if (t < keys[j + 1][0]) { i = j; break; }
+  const a = keys[i]; let p;
+  if (i === keys.length - 1) p = { x: a[1], y: a[2], r: a[3], z: a[4], sx: a[5] ?? 1, s: a[8] ?? 1 };
+  else {
+    const b = keys[i + 1], e = EASE[b[6] || 'out'](seg(t, a[0], b[0]));
+    p = { x: lerp(a[1], b[1], e), y: lerp(a[2], b[2], e), r: lerp(a[3], b[3], e), z: lerp(a[4], b[4], e), sx: lerp(a[5] ?? 1, b[5] ?? 1, e), s: lerp(a[8] ?? 1, b[8] ?? 1, e), moving: b[6] !== 'hold' };
+  }
+  for (let j = 0; j <= i; j++) {
+    const k = keys[j]; if (!k[7]) continue;
+    const s = t - k[0]; if (s < 0 || s > 0.34) continue;
+    const n = Math.round(s / STEP), dec = Math.pow(0.45, n);
+    p.r += k[7] * dec * (n % 2 ? -1 : 1); p.y += -2.2 * dec * (n % 2 ? 0 : 1) * Math.sign(k[7]);
+  }
+  if (p.moving) { const n = Math.round(t / STEP); p.x += (hash(id, n) - .5) * 1.4; p.y += (hash(id + 7, n) - .5) * 1.4; p.r += (hash(id + 3, n) - .5) * 0.5; }
+  return p;
+}
+function putK(name, keys, t, id) { if (t < keys[0][0]) return null; const p = pose(keys, t, id); put(name, p.x, p.y, p.r, p.z, p.sx, p.s); return p; }
+const slap = (t0, x, y, r, s = 1, dx = -16, dy = -24) => [[t0 - 0.17, x + dx * s, y + dy * s, r - 5, 4.5, 1, null, 0, 1.12 * s], [t0, x, y, r, 0, 1, 'in', 0.9, s]];
+const slide = (t0, t1, x, y, r, fx, fy, fr = 0, land = 0.8, s = 1) => [[t0, x + fx, y + fy, r + fr, 2.0, 1, null, 0, s], [t1, x, y, r, 0, 1, 'back', land, s]];
+const drop = (t0, t1, x, y, r, s = 1, h = 520) => [[t0, x + 40 * s, y - h * s, r + 12, 4, 1, null, 0, 1.18 * s], [t1, x, y, r, 0, 1, 'in', 1.2, s]];
+
+// ---------- table and camera ----------
+function drawPaper(x0, y0, x1, y1) {
+  const P = SP.paper, w = P.img.width / P.m.scale, h = P.img.height / P.m.scale, bx = P.m.x, by = P.m.y;
+  const i0 = Math.floor((x0 - bx) / w), i1 = Math.floor((x1 - bx) / w), j0 = Math.floor((y0 - by) / h), j1 = Math.floor((y1 - by) / h);
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+    ctx.save(); ctx.translate(bx + i * w + (i & 1 ? w : 0), by + j * h + (j & 1 ? h : 0)); ctx.scale(i & 1 ? -1 : 1, j & 1 ? -1 : 1);
+    ctx.drawImage(P.img, 0, 0, w + 0.5, h + 0.5); ctx.restore();
+  }
+}
+// [t, cx, cy, zoom, ease]
+const CAM = [
+  [0.0, 940, 580, 1.10], [4.4, 960, 590, 1.20, 'io'],            // 1 the coupon lands: slow push
+  [5.2, 720, 560, 0.95, 'io'], [7.15, 720, 560, 0.95, 'io'],     // 2 pull back: Italy
+  [8.45, 2620, 560, 0.95, 'io'], [10.05, 2660, 560, 0.97, 'io'], //   pan with the coupon to America
+  [10.45, 4180, 500, 1.00, 'whip'], [14.8, 4230, 490, 1.06, 'io'],   // 3 whip to Ponzi, push
+  [15.4, 4300, 1640, 1.00, 'io'], [18.15, 4300, 1640, 1.00, 'io'],   // 4 tilt down to the money
+  [18.75, 4360, 1640, 1.12, 'io'], [20.9, 4370, 1640, 1.14, 'io'],   // 5 the turn: close on the coupon
+  [21.5, 5300, 1680, 0.95, 'io'], [23.6, 5320, 1690, 0.97, 'io'],    //   the pyramid
+];
+// 6 signature: the square of coupons needed grows; the camera pulls back with it
+const SQ = { x: 12000, y: 400, s0: 300, s1: 2400, t0: 24.0, t1: 26.9 };
+SQ.tiny = SQ.s1 / Math.sqrt(160e6 / 27e3);                         // ≈ 31 world units: 27,000 against 160,000,000 by area
+const sqSide = t => lerp(SQ.s0, SQ.s1, EASE.io(seg(stepT(t), SQ.t0, SQ.t1)));
+function camAt(T) {
+  if (T < 23.78) return camTrack(CAM, T);
+  if (T < 24.0) {                                                   // whip from the pyramid to the first coupons
+    const a = camTrack(CAM, 23.78), b = sqCam(24.0), p = EASE.whip(seg(T, 23.78, 24.0));
+    return { cx: lerp(a.cx, b.cx, p), cy: lerp(a.cy, b.cy, p), z: Math.exp(lerp(Math.log(a.z), Math.log(b.z), p)) };
+  }
+  if (T < 30.25) return sqCam(T);
+  const a = sqCam(30.25), p = EASE.whip(seg(T, 30.25, 30.6));                  // 7 whip down to Ponzi's face, then a slow push
+  const z1 = END.z * (1 + 0.08 * EASE.io(seg(T, 30.6, 35.5)));
+  return { cx: lerp(a.cx, END.cx, p), cy: lerp(a.cy, END.cy, p), z: Math.exp(lerp(Math.log(a.z), Math.log(z1), p)) };
+}
+function sqCam(T) {
+  const s = lerp(SQ.s0, SQ.s1, EASE.io(seg(T, SQ.t0, SQ.t1)));              // the camera moves smoothly every frame
+  const wide = seg(T, SQ.t0, SQ.t1);
+  const cx = SQ.x + s / 2 + lerp(0, 1050, EASE.io(wide)), cy = SQ.y + s / 2 + lerp(0, 60, wide);
+  const z = 0.62 * H / s * lerp(1, 0.78, EASE.io(wide));
+  return { cx, cy, z: z * (1 + 0.04 * seg(T, 26.9, 30.3)) };
+}
+const END = { cx: 13560, cy: 4990, z: 0.62 };
+function camTrack(keys, t) {
+  let k = keys.length - 1; for (let i = 0; i < keys.length - 1; i++) if (t < keys[i + 1][0]) { k = i; break; }
+  if (k === keys.length - 1 || t <= keys[0][0]) { const a = t <= keys[0][0] ? keys[0] : keys[k]; return { cx: a[1], cy: a[2], z: a[3] }; }
+  const a = keys[k], b = keys[k + 1], p = EASE[b[4] || 'io'](seg(t, a[0], b[0]));
+  return { cx: lerp(a[1], b[1], p), cy: lerp(a[2], b[2], p), z: Math.exp(lerp(Math.log(a[3]), Math.log(b[3]), p)) };
+}
+function applyCam(c) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.translate(W / 2, H / 2); ctx.scale(c.z, c.z); ctx.translate(-c.cx, -c.cy); }
+function view(c) { const hw = W / 2 / c.z * 1.1, hh = H / 2 / c.z * 1.1; return [c.cx - hw, c.cy - hh, c.cx + hw, c.cy + hh]; }
+
+// ---------- sound events ----------
+const EVS = [];
+const ev = (t, type, extra = {}) => EVS.push(Object.assign({ t: +t.toFixed(3), type }, extra));
+
+// ---------- 1 + 2: coupon, Italy, America ----------
+const COUPON_HOME = [980, 600];
+const K = {};
+K.italy = slide(4.7, 5.2, 0, 0, 0, -1300, 60, -6, 0.6);
+K.coupon = [...drop(0.75, 1.0, COUPON_HOME[0], COUPON_HOME[1], -3, 1, 700),
+  [7.25, COUPON_HOME[0], COUPON_HOME[1], -3, 0, 1, 'hold'], [7.5, COUPON_HOME[0] + 60, COUPON_HOME[1] - 30, 4, 2.2, 1, 'out'],
+  [8.35, 2560, 560, 4, 2.2, 1, 'io'], [8.5, 2560, 580, 3, 0, 1, 'in', 1.0],
+  [10.0, 2560, 580, 3, 0, 1, 'hold']];
+K.lire = slap(5.4, 370, 720, -7);
+K.usa = [[0, 0, 0, 0, 0, 1]];
+const STAMPS = [[8.75, 3010, 430, 9], [8.92, 3150, 590, -6], [9.09, 2990, 740, 4]];
+ev(0.75, 'fall', { d: 0.25 }); ev(1.0, 'thud', { w: 1.0 });
+ev(4.7, 'slide', { d: 0.5, size: 1 }); ev(5.2, 'land', { w: 0.8 });
+ev(5.4, 'slap'); ev(7.25, 'slide', { d: 1.1, size: 0.7 }); ev(8.5, 'land', { w: 0.7 });
+for (const s of STAMPS) ev(s[0], 'slap', { hi: 1 });
+// typewriter slip: BOSTON, 1920
+const TYPE = [];  // [name, x, y, rot, t0, t1, scale]
+TYPE.push(['t_boston', 470, 260, -2, 0.2, 1.0, 1.15]);
+TYPE.push(['t_day', 4700, 1340, 2, 15.45, 16.45, 1.15]);
+const SLAPS = [  // [name, t, x, y, rot, scale]
+  ['t_italy', 5.25, 250, 470, -4, 1], ['t_cents', 5.55, 400, 880, 3, 1.1], ['t_usa', 8.15, 2330, 250, 3, 1],
+  ['t_old', 21.3, 5480, 1340, -3, 1.25], ['t_new', 21.42, 5480, 1660, 2, 1.25],
+];
+for (const s of SLAPS) ev(s[1], 'slap');
+for (const t of TYPE) { const n = M_n(t[0]); for (let i = 0; i < n; i++) if (true) ev(t[4] + (t[5] - t[4]) * i / n, 'key'); ev(t[5] + 0.05, 'bell'); }
+function M_n(name) { return { t_boston: 12, t_day: 14 }[name]; }
+
+// ---------- 3: Ponzi ----------
+K.sun = slide(10.3, 10.75, 0, 0, 0, 0, 900, 0, 0.6);
+K.ponzi = slide(10.4, 10.95, 3900, 470, -2, 0, 900, 4, 1.0);
+ev(10.05, 'whip', { d: 0.4 }); ev(10.4, 'slide', { d: 0.55, size: 1 }); ev(10.95, 'land', { w: 1.0 });
+const RANSOM = [];
+{
+  let x = 4430; M_r('pct').forEach((n, i) => { const t = 11.4 + i * 0.13; RANSOM.push({ n, t, x, y: 300 + (i % 2 ? 12 : -8), r: [-6, 4, -3][i] }); x += 100; });
+  x = 4380; M_r('days').forEach((n, i) => { if (!n) { x += 40; return; } const t = 12.3 + RANSOM.filter(r => r.t >= 12.3).length * 0.125; RANSOM.push({ n, t, x, y: 560 + (i % 2 ? 10 : -6), r: [-5, 3, 0, 6, -4, 0, 4, -6, 3, -2][i] }); x += 78; });
+}
+function M_r(k) { return k === 'pct' ? ['rp0', 'rp1', 'rp2'] : ['rd0', 'rd1', null, 'rd3', 'rd4', null, 'rd6', 'rd7', 'rd8', 'rd9']; }
+for (const r of RANSOM) ev(r.t, 'slap', { hi: 1 });
+
+// ---------- 4: money ----------
+const NOTES = [];
+{ const N = 26; for (let i = 0; i < N; i++) { const t = 15.25 + 2.75 * Math.sqrt(i / N); NOTES.push({ t, x: 4300 + (hash(i, 3) - .5) * 640, y: 1720 + (hash(i, 5) - .5) * 300 - i * 2.5, r: (hash(i, 7) - .5) * 70, k: i % 3 === 2 ? 'lire' : 'note' }); ev(t + 0.22, 'drop'); } }
+K.coupon2 = [[18.15, 4720, 1180, 18, 3.5, 1, null, 0, 1.0], [18.45, 4360, 1660, -4, 0, 1, 'in', 1.4],
+  [19.55, 4360, 1660, -4, 0, 1, 'hold'], [19.72, 4360, 1640, 0, 1.4, 0, 'in'], [19.9, 4360, 1660, 3, 0, -1, 'out', 0.8]];
+ev(18.15, 'fall', { d: 0.3 }); ev(18.45, 'thud', { w: 1.1 }); ev(19.55, 'flip', { d: 0.35 }); ev(19.9, 'land', { w: 0.6 });
+
+// ---------- 5: pyramid (old investors paid with new investors' money) ----------
+K.pyr = slide(20.85, 21.3, 0, 0, 0, 900, 0, 4, 0.6);
+const ROWS = [[{ x: 5900, y: 1390, t: 21.35, k: 'inv_old' }],
+  [{ x: 5760, y: 1700, t: 21.75, k: 'inv_new' }, { x: 6040, y: 1700, t: 21.85, k: 'inv_new' }],
+  [{ x: 5620, y: 1990, t: 22.45, k: 'inv_new' }, { x: 5800, y: 1995, t: 22.53, k: 'inv_new' }, { x: 5980, y: 1990, t: 22.61, k: 'inv_new' }, { x: 6160, y: 1995, t: 22.69, k: 'inv_new' }]];
+const RS = [0.62, 0.55, 0.42];
+ev(20.85, 'slide', { d: 0.45, size: 1 });
+ROWS.forEach(r => r.forEach(p => ev(p.t, 'land', { w: 0.5 })));
+// money passed up a row: small notes slide from the new row to the old one
+const FLOW = [[22.15, 5760, 1650, 5880, 1430], [22.25, 6040, 1650, 5920, 1430], [22.95, 5620, 1950, 5740, 1720], [23.05, 5800, 1950, 5780, 1720], [23.15, 5980, 1950, 6020, 1720], [23.25, 6160, 1950, 6060, 1720]];
+for (const f of FLOW) ev(f[0], 'slide', { d: 0.3, size: 0.5 });
+
+// ---------- 6: the square ----------
+ev(23.78, 'whip', { d: 0.25 }); ev(24.05, 'grow', { d: SQ.t1 - SQ.t0 });
+const LBL = [['t_need', 25.1, SQ.x + SQ.s1 / 2, SQ.y + SQ.s1 / 2, -2, 0.75], ['t_exist', 27.7, SQ.x + SQ.s1 + 1100, SQ.y + SQ.s1 - 560, 3, 0.85]];
+ev(25.1, 'slap', { big: 1 }); ev(27.55, 'tiny'); ev(27.7, 'slap', { big: 1 });
+function engraving(x, y, s, tone0 = 0.25) {
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, s, s); ctx.clip();
+  ctx.fillStyle = 'rgba(198,95,58,0.30)'; ctx.fillRect(x, y, s, s);
+  const sp = 30; ctx.strokeStyle = PAL.ink;
+  for (let u = -s; u < s; u += sp) {                                // 45° lines, swelling with distance from the top-left corner
+    const tone = tone0 + 0.55 * clamp((u + s) / (2 * s), 0, 1);
+    ctx.lineWidth = sp * (0.08 + 0.42 * tone);
+    ctx.beginPath(); ctx.moveTo(x + u, y); ctx.lineTo(x + u + s, y + s); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.strokeStyle = PAL.ink; const k = s / 600; ctx.lineWidth = 5 * k; ctx.strokeRect(x - 10 * k, y - 10 * k, s + 20 * k, s + 20 * k); ctx.lineWidth = 2 * k; ctx.strokeRect(x - 22 * k, y - 22 * k, s + 44 * k, s + 44 * k);
+}
+
+// ---------- 7: collapse ----------
+K.face = drop(30.45, 30.75, 13300, 4950, -3, 2.15, 900);
+const PM = { t: 32.25, x: 14230, y: 4500, r: -12, s: 1.8 };
+ev(30.25, 'whip', { d: 0.35 }); ev(30.45, 'fall', { d: 0.3 }); ev(30.75, 'thud', { w: 1.3 }); ev(PM.t, 'stamp');
+const TITLE = ['title', 32.85, 13750, 5560, -2, 1.5];
+ev(32.85, 'slap', { big: 1 });
+
+// ---------- render ----------
+function drawFlat(n, p) { const m = SP[n].m, [w, h] = sz(SP[n]); drawSprite(SP[n], m.x + w / 2 + p.x, m.y + h / 2 + p.y, w / 2, h / 2, p.r, p.z, p.sx, p.s); }
+function typed(name, x, y, r, t0, t1, tp, s = 1) {
+  if (tp < t0 - 0.3) return;
+  const S = SP[name], bg = SP[name + '_bg'], m = S.m, [w, h] = sz(S);
+  const p = pose(slap(t0 - 0.05, x, y, r, s), tp, t0 * 37);
+  const n = Math.floor(m.n * seg(tp, t0, t1) + 1e-6);
+  drawSprite(bg, p.x, p.y, w / 2, h / 2, p.r, p.z, 1, p.s);
+  if (n <= 0) return;
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r * D2R); ctx.scale(p.s, p.s);
+  const cw = m.tx + m.adv * n; ctx.beginPath(); ctx.rect(-w / 2, -h / 2, cw, h); ctx.clip();
+  ctx.drawImage(S.img, -w / 2, -h / 2, w, h); ctx.restore();
+}
+function couponAt(tp) {
+  if (tp >= 18.15) return pose(K.coupon2, tp, 61);
+  if (tp >= 0.58) return pose(K.coupon, tp, 60);
+  return null;
+}
+function drawCoupon(p) {
+  if (!p) return;
+  const S = SP.coupon_front, [w, h] = sz(S);
+  drawSprite(S, p.x, p.y, w / 2, h / 2, p.r, p.z, p.sx, p.s, 1, p.sx < 0 ? SP.coupon_back.img : null);
+}
+function scene(T, c) {
+  const tp = stepT(T);
+  drawPaper(...view(c));
+  // 1-2
+  if (tp >= 4.7) drawFlat('italy', pose(K.italy, tp, 31));
+  drawFlat('usa', { x: 0, y: 0, r: 0, z: 0, sx: 1, s: 1 });
+  drawFlat('sea', { x: 0, y: 0, r: 0, z: 0, sx: 1, s: 1 });
+  if (tp > 7.3 && tp < 10.2) {                                       // the coupon's route across the sea
+    ctx.save(); ctx.strokeStyle = PAL.ink; ctx.globalAlpha = 0.6; ctx.lineWidth = 4; ctx.setLineDash([16, 13]); ctx.beginPath();
+    const e = Math.min(1, seg(tp, 7.3, 8.35)); ctx.moveTo(1160, 600); ctx.lineTo(lerp(1160, 2380, e), lerp(600, 575, e)); ctx.stroke(); ctx.restore();
+  }
+  putK('lire', K.lire, tp, 41);
+  for (const s of STAMPS) putK('stamp', slap(s[0], s[1], s[2], s[3], 1.15), tp, s[0] * 9);
+  // 3
+  if (tp >= K.sun[0][0]) drawFlat('sun', pose(K.sun, tp, 51));
+  putK('ponzi', K.ponzi, tp, 52);
+  for (const r of RANSOM) putK(r.n, slap(r.t, r.x, r.y, r.r), tp, r.t * 100);
+  // 4
+  for (const [i, n] of NOTES.entries()) putK(n.k, drop(n.t, n.t + 0.22, n.x, n.y, n.r, 0.85, 420), tp, 200 + i);
+  // 5
+  if (tp >= K.pyr[0][0]) drawFlat('pyr', pose(K.pyr, tp, 71));
+  ROWS.forEach((row, ri) => row.forEach((q, j) => putK(q.k, drop(q.t, q.t + 0.2, q.x, q.y, (j % 2 ? 2 : -2), RS[ri], 260), tp, 300 + ri * 10 + j)));
+  for (const [i, f] of FLOW.entries()) if (tp >= f[0]) {
+    const e = EASE.back(seg(tp, f[0], f[0] + 0.3)); put('note', lerp(f[1], f[3], e), lerp(f[2], f[4], e), -8 + 16 * (i % 2), 1.4 * (1 - seg(tp, f[0] + 0.2, f[0] + 0.3)), 1, 0.28);
+  }
+  for (const [i, a] of [[22.05, 5900, 1545], [22.85, 5880, 1845]].entries()) if (tp >= a[0]) putK('arrow', slap(a[0], a[1] + (i ? -90 : 0), a[2], 0, 0.8), tp, 400 + i);
+  // 6
+  if (T >= 23.9) {
+    const s = sqSide(T); engraving(SQ.x, SQ.y, s);
+    if (tp >= 27.55) {                                               // the 27,000: a dot beside the field
+      const tx = SQ.x + SQ.s1 + 70, ty = SQ.y + SQ.s1 - SQ.tiny;
+      ctx.fillStyle = PAL.ink; ctx.fillRect(tx, ty, SQ.tiny, SQ.tiny);
+      ctx.strokeStyle = PAL.ink; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(tx + SQ.tiny + 20, ty - 20); ctx.lineTo(LBL[1][2] - 760, LBL[1][3] + 90); ctx.stroke();
+    }
+  }
+  // 7
+  putK('face', K.face, tp, 81);
+  // coupon: drawn above the pile it lands on
+  drawCoupon(couponAt(tp));
+  if (tp >= PM.t) {                                                  // postmark: ink pressed into the paper, no shadow
+    const k = Math.min(1, seg(T, PM.t, PM.t + 0.06)), s = PM.s * (1.06 - 0.06 * k);
+    const S = SP.postmark, [w, h] = sz(S);
+    ctx.save(); ctx.translate(PM.x, PM.y); ctx.rotate(PM.r * D2R); ctx.scale(s, s); ctx.globalAlpha = k; ctx.globalCompositeOperation = 'multiply';
+    ctx.drawImage(S.img, -w / 2, -h / 2, w, h); ctx.restore();
+  }
+  // labels and slips (on top)
+  for (const t of TYPE) typed(t[0], t[1], t[2], t[3], t[4], t[5], tp, t[6]);
+  for (const s of SLAPS) putK(s[0], slap(s[1], s[2], s[3], s[4], s[5]), tp, s[1] * 13);
+  for (const l of LBL) putK(l[0], slap(l[1], l[2], l[3], l[4], l[5], -16 * l[5], -24 * l[5]), tp, l[1] * 7);
+  putK(TITLE[0], slap(TITLE[1], TITLE[2], TITLE[3], TITLE[4], TITLE[5]), tp, 999);
+}
+function subtitles(T) {
+  const cues = TL.cues; const i = cues.findIndex(c => T >= c.t0 && T < c.t1); if (i < 0) return;
+  const q = cues[i], tp = stepT(T), id = 'sub' + String(i).padStart(2, '0');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const [w] = sz(SP[id]), n = SP[id].m.n;
+  typed(id, 80 + w / 2, 1010, -0.5, q.t0 + 0.05, q.t0 + 0.05 + Math.min(0.9, n / 60), tp, 1);
+}
+function renderFilm(T) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.fillStyle = PAL.paper; ctx.fillRect(0, 0, W, H);
+  const c = camAt(T); applyCam(c); scene(T, c);
+  subtitles(T);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, H * 1.05);
+  g.addColorStop(0, 'rgba(60,40,20,0)'); g.addColorStop(1, 'rgba(60,40,20,0.16)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+
+// ---------- page contract ----------
+function textItems() {
+  const L = [];
+  for (const t of TYPE) L.push([t[0], t[5], t[1], t[2], t[6]]);
+  for (const s of SLAPS) L.push([s[0], s[1], s[2], s[3], s[5]]);
+  for (const r of RANSOM) L.push([r.n, r.t, r.x, r.y, 1]);
+  for (const l of LBL) L.push([l[0], l[1], l[2], l[3], l[5]]);
+  L.push([TITLE[0], TITLE[1], TITLE[2], TITLE[3], TITLE[5]]);
+  return L;
+}
+window.TEXTS = t => {
+  const T = FROM + t, c = camAt(T), out = [];
+  for (const [name, t0, x, y, s] of textItems()) {
+    if (T < t0) continue;
+    const [w, h] = sz(SP[name]), sc = (X, Y) => [W / 2 + (X - c.cx) * c.z, H / 2 + (Y - c.cy) * c.z];
+    const [x0, y0] = sc(x - w * s / 2, y - h * s / 2), [x1, y1] = sc(x + w * s / 2, y + h * s / 2);
+    if (x1 < 0 || x0 > W || y1 < 0 || y0 > H) continue;
+    out.push({ id: name, text: SP[name].m.text || name, x0, y0, x1, y1 });
+  }
+  const pz = SP.ponzi; if (pz && T >= 10.95 && T < 15.4) { const s = (X, Y) => [W / 2 + (X - c.cx) * c.z, H / 2 + (Y - c.cy) * c.z], [w, h] = sz(pz);
+    const [x0, y0] = s(3900 - w / 2, 470 - h / 2), [x1, y1] = s(3900 + w / 2, 470 + h / 2); out.push({ id: 'ponzi', text: 'CHARLES PONZI · BOSTON, 1920', x0, y0, x1, y1, pass: true }); }
+  return out;
+};
+window.render = t => renderFilm(FROM + t);
+(async () => {
+  await loadParts();
+  window.EV = EVS.filter(e => e.t >= FROM - 1e-6 && e.t < TO).map(e => Object.assign({}, e, { t: +(e.t - FROM).toFixed(3) })).sort((a, b) => a.t - b.t);
+  window.READY = true;
+})();
+</script>
+</body></html>

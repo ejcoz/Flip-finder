@@ -1,0 +1,19 @@
+The Coupon (35.5 s), Vintage Engraving Collage style
+
+Archive image
+- "Charles Ponzi.jpg", Charles Ponzi at his desk, August 1920. Public domain (Wikimedia Commons, Boston Public Library source).
+  https://commons.wikimedia.org/wiki/File:Charles_Ponzi.jpg
+
+Made for this film (not facsimiles of real documents)
+- The reply coupon, the 2-cent stamp, the 2-lire note, the 5-dollar note, the postmark, the investor silhouettes and the data engraving
+  are hand-made designs drawn in code (src/bake.py). They are stylised stand-ins, not reproductions of the real items.
+
+Fonts (SIL Open Font License 1.1, fonts/OFL-*.txt)
+- IM FELL English, IM FELL English SC by Igino Marini
+- Courier Prime by Alan Dague-Greene
+
+Voice
+- Kokoro TTS (kokoro-onnx), voice am_michael. Apache-2.0 model.
+
+Music samples
+Samples (CC0): FreePats project (freepats.zenvoid.org), VS Chamber Orchestra: Community Edition (Versilian Studios), Versilian Community Sample Library (Versilian Studios)

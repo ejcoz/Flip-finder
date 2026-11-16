@@ -129,31 +129,112 @@ def gray_of(name):
     return np.asarray(Image.open(os.path.join(RAW, name)).convert('L'), float)
 
 
-def rect_mask(shape, box):
-    m = np.zeros(shape); x0, y0, x1, y1 = box; m[y0:y1, x0:x1] = 1; return m
+# ---------- hand-made engraved prints (our own designs, not facsimiles) ----------
+def guilloche(d, x0, y0, x1, y1, s, waves=3, amp=6, per=22, lw=1):
+    """Engraved border band: interlaced sine lines running round a rectangle (all in px)."""
+    for k in range(waves):
+        ph = k * 2 * math.pi / waves
+        for (ax, ay, bx, by) in ((x0, y0, x1, y0), (x1, y0, x1, y1), (x1, y1, x0, y1), (x0, y1, x0, y0)):
+            L = math.hypot(bx - ax, by - ay); n = int(L / 3) + 2
+            nx, ny = -(by - ay) / L, (bx - ax) / L
+            pts = []
+            for i in range(n):
+                u = i / (n - 1); off = amp * s * math.sin(u * L / (per * s) * 2 * math.pi + ph)
+                pts.append((ax + (bx - ax) * u + nx * off, ay + (by - ay) * u + ny * off))
+            d.line(pts, fill=255, width=max(1, int(lw * s)))
+
+
+def hatch_oval(d, cx, cy, rx, ry, s, step=5, lw=1):
+    for y in np.arange(cy - ry, cy + ry, step * s):
+        t = (y - cy) / ry; w = rx * math.sqrt(max(0, 1 - t * t))
+        d.line([(cx - w, y), (cx + w, y)], fill=255, width=max(1, int(lw * s)))
+
+
+def ctext(d, cx, y, txt, f):
+    d.text((cx - d.textlength(txt, font=f) / 2, y), txt, font=f, fill=255)
+
+
+def card(name, ww, hh, ink_col, draw, seed, wash=None, wash_amt=0.0, perf=False, paper=CARD):
+    """A printed piece of world size ww x hh: draw(d, w, h, s) draws ink (255) into an L image; cut with a thin white margin."""
+    s = B; w, h = int(ww * s), int(hh * s); P = int(14 * s)
+    img = Image.new('L', (w + 2 * P, h + 2 * P), 0)
+    draw(ImageDraw.Draw(img), w, h, s, P)
+    ink = ndi.gaussian_filter(np.asarray(img, float) / 255, 0.5)
+    rng = np.random.default_rng(seed)
+    ink *= 0.8 + 0.2 * np.clip(ndi.gaussian_filter(rng.random(ink.shape), 1.0) * 3 - 1, 0, 1)   # uneven plate ink
+    m = np.zeros(ink.shape, bool); m[P:P + h, P:P + w] = True
+    if perf:                                                   # perforation teeth on a stamp
+        r = 4.2 * s; yy, xx = np.mgrid[:m.shape[0], :m.shape[1]]
+        for x in np.arange(P, P + w + 1, 11 * s):
+            for y in (P, P + h): m &= (xx - x) ** 2 + (yy - y) ** 2 > r * r
+        for y in np.arange(P, P + h + 1, 11 * s):
+            for x in (P, P + w): m &= (xx - x) ** 2 + (yy - y) ** 2 > r * r
+    body, _ = torn(m, rough=0.7 * s, seed=seed, amp=0.15)
+    H_, W_ = m.shape
+    tex = paper_texture(H_, W_, seed=seed + 1, fibers=max(20, int(w * h / 4000))); tex = 1 + (tex - 1) * 0.5
+    col = paper[None, None, :] * tex[..., None]
+    if wash is not None:
+        col = col * (1 - wash_amt) + wash * wash_amt
+    col = col * (1 - ink[..., None]) + ink_col * ink[..., None]
+    save(name, col, body)
 
 
 def bake_cutouts():
-    C = json.load(open(os.path.join(HERE, 'crops.json')))
-    # coupon: face and reverse of the same 1907 Rome-type reply coupon
-    g = gray_of(C['irc']['file'])
-    for side, seed in (('front', 501), ('back', 503)):
-        box = C['irc'][side]
-        sc = C['irc']['width'] * B / (box[2] - box[0])
-        col, a = reink(g, rect_mask(g.shape, box), sc, INK, wash=MUSTARD, wash_amt=0.22, margin=5 * B, seed=seed, gain=1.05)
-        save('coupon_' + side, col, a)
-    # lire note
-    g = gray_of(C['lire']['file']); box = C['lire']['box']
-    col, a = reink(g, rect_mask(g.shape, box), C['lire']['width'] * B / (box[2] - box[0]), INK, wash=TEAL, wash_amt=0.18, margin=4 * B, seed=511)
-    save('lire', col, a)
-    # 2c stamp: re-inked in the stamp's red
-    g = gray_of(C['stamp']['file']); box = C['stamp']['box']
-    col, a = reink(g, rect_mask(g.shape, box), C['stamp']['width'] * B / (box[2] - box[0]), RED, margin=4 * B, seed=521, gain=1.1)
-    save('stamp', col, a)
-    # $5 note, greenback ink
-    g = gray_of(C['note']['file']); box = C['note']['box']
-    col, a = reink(g, rect_mask(g.shape, box), C['note']['width'] * B / (box[2] - box[0]), GREEN * 0.8, margin=4 * B, seed=531)
-    save('note', col, a)
+    f = lambda n, z: font(n, z * B)
+    def coupon_front(d, w, h, s, P):
+        x0, y0, x1, y1 = P + 10 * s, P + 10 * s, P + w - 10 * s, P + h - 10 * s
+        d.rectangle([x0, y0, x1, y1], outline=255, width=int(3 * s)); d.rectangle([x0 + 7 * s, y0 + 7 * s, x1 - 7 * s, y1 - 7 * s], outline=255, width=int(1 * s))
+        guilloche(d, x0 + 16 * s, y0 + 16 * s, x1 - 16 * s, y1 - 16 * s, s, amp=4, per=14)
+        cx = P + w / 2
+        ctext(d, cx, P + 38 * s, 'UNION POSTALE UNIVERSELLE', f(FELLSC, 17))
+        ctext(d, cx, P + 72 * s, 'COUPON-RÉPONSE', f(FELLSC, 30))
+        ctext(d, cx, P + 112 * s, 'INTERNATIONAL', f(FELLSC, 25))
+        hatch_oval(d, cx, P + 205 * s, 64 * s, 46 * s, s, step=4)
+        d.ellipse([cx - 70 * s, P + 153 * s, cx + 70 * s, P + 257 * s], outline=255, width=int(2 * s))
+        ctext(d, cx, P + 270 * s, 'Ce coupon peut être échangé', f(FELLI, 15))
+        ctext(d, cx, P + 292 * s, 'contre un timbre-poste', f(FELLI, 15))
+        ctext(d, cx, P + 314 * s, "dans tous les pays de l'Union.", f(FELLI, 15))
+    card('coupon_front', 360, 360, INK, coupon_front, 501, wash=MUSTARD, wash_amt=0.2)
+    def coupon_back(d, w, h, s, P):
+        x0, y0, x1, y1 = P + 10 * s, P + 10 * s, P + w - 10 * s, P + h - 10 * s
+        d.rectangle([x0, y0, x1, y1], outline=110, width=int(1 * s))
+        cx = P + w / 2
+        d.ellipse([cx - 60 * s, P + 120 * s, cx + 60 * s, P + 240 * s], outline=110, width=int(1 * s))
+        ctext(d, cx, P + 250 * s, "timbre du bureau d'origine", font(FELLI, 16 * s))
+    card('coupon_back', 360, 360, INK, coupon_back, 503, wash=MUSTARD, wash_amt=0.08)
+    def stamp(d, w, h, s, P):
+        x0, y0, x1, y1 = P + 9 * s, P + 9 * s, P + w - 9 * s, P + h - 9 * s
+        d.rectangle([x0, y0, x1, y1], fill=255)
+        cx = P + w / 2
+        d.ellipse([cx - 42 * s, P + 40 * s, cx + 42 * s, P + 140 * s], fill=0)
+        hatch_oval(d, cx, P + 90 * s, 38 * s, 46 * s, s, step=4)
+        d.rectangle([x0 + 6 * s, y0 + 6 * s, x1 - 6 * s, P + 34 * s], fill=0); ctext(d, cx, P + 13 * s, 'U.S. POSTAGE', f(CPB, 15))
+        d.rectangle([x0 + 6 * s, P + 148 * s, x1 - 6 * s, y1 - 6 * s], fill=0); ctext(d, cx, P + 152 * s, 'TWO CENTS', f(CPB, 17))
+        for xx in (x0 + 6 * s, x1 - 30 * s):
+            d.ellipse([xx, P + 120 * s, xx + 24 * s, P + 144 * s], fill=0); d.text((xx + 6 * s, P + 121 * s), '2', font=f(CPB, 20), fill=255)
+    card('stamp', 150, 190, RED, stamp, 521, perf=True)
+    def lire(d, w, h, s, P):
+        x0, y0, x1, y1 = P + 8 * s, P + 8 * s, P + w - 8 * s, P + h - 8 * s
+        d.rectangle([x0, y0, x1, y1], outline=255, width=int(3 * s))
+        guilloche(d, x0 + 12 * s, y0 + 12 * s, x1 - 12 * s, y1 - 12 * s, s, amp=5, per=18)
+        cx = P + w / 2
+        ctext(d, cx - 70 * s, P + 40 * s, 'BIGLIETTO DI STATO', f(FELLSC, 20))
+        ctext(d, cx - 70 * s, P + 78 * s, 'LIRE DUE', f(FELLSC, 38))
+        ox = P + w - 72 * s
+        d.ellipse([ox - 46 * s, P + 50 * s, ox + 46 * s, P + 160 * s], outline=255, width=int(2 * s)); hatch_oval(d, ox, P + 105 * s, 40 * s, 50 * s, s, step=4)
+        d.text((P + 34 * s, P + 128 * s), '2', font=f(CPB, 46), fill=255)
+    card('lire', 420, 200, INK, lire, 511, wash=TEAL, wash_amt=0.18)
+    def note(d, w, h, s, P):
+        x0, y0, x1, y1 = P + 8 * s, P + 8 * s, P + w - 8 * s, P + h - 8 * s
+        d.rectangle([x0, y0, x1, y1], outline=255, width=int(3 * s))
+        guilloche(d, x0 + 12 * s, y0 + 12 * s, x1 - 12 * s, y1 - 12 * s, s, amp=4, per=12)
+        cx = P + w / 2
+        d.ellipse([cx - 46 * s, P + 34 * s, cx + 46 * s, P + 142 * s], outline=255, width=int(2 * s)); hatch_oval(d, cx, P + 88 * s, 40 * s, 50 * s, s, step=4)
+        ctext(d, cx, P + 24 * s, 'FEDERAL RESERVE NOTE', f(FELLSC, 15))
+        for xx in (P + 28 * s, P + w - 62 * s):
+            d.ellipse([xx, P + 56 * s, xx + 36 * s, P + 92 * s], outline=255, width=int(2 * s)); d.text((xx + 9 * s, P + 56 * s), '5', font=f(CPB, 30), fill=255)
+        ctext(d, cx, P + 150 * s, 'FIVE DOLLARS', f(FELLSC, 20))
+    card('note', 400, 180, GREEN * 0.8, note, 531, wash=GREEN, wash_amt=0.10)
 
 
 def halftone_clip(name, file, box, width, caption, seed, cell=7.0, contrast=(0.08, 0.85), news=NEWS):
@@ -184,9 +265,8 @@ def halftone_clip(name, file, box, width, caption, seed, cell=7.0, contrast=(0.0
 
 
 def bake_clippings():
-    C = json.load(open(os.path.join(HERE, 'crops.json')))
-    halftone_clip('ponzi', C['ponzi']['file'], C['ponzi']['box'], C['ponzi']['width'], 'CHARLES PONZI  ·  BOSTON, 1920', 541, cell=6.0)
-    halftone_clip('mug', C['mug']['file'], C['mug']['box'], C['mug']['width'], 'CHARLES PONZI', 543, cell=7.0)
+    halftone_clip('ponzi', 'ponzi1920.jpg', (0, 0, 600, 360), 760, 'CHARLES PONZI  ·  BOSTON, 1920', 541, cell=5.5)
+    halftone_clip('face', 'ponzi1920.jpg', (230, 0, 420, 190), 520, None, 543, cell=6.5)
 
 
 # ---------- investor silhouettes (black paper, bowler hats) ----------
@@ -196,8 +276,8 @@ def bake_silhouettes():
     m |= ellipse_mask(h, w, 120 * s, 120 * s, 40 * s, 50 * s)                  # head
     m |= ellipse_mask(h, w, 120 * s, 66 * s, 44 * s, 38 * s) & (np.mgrid[:h, :w][0] < 74 * s)   # bowler crown
     m |= ellipse_mask(h, w, 120 * s, 76 * s, 70 * s, 9 * s)                    # brim
-    m |= poly_mask(h, w, [(x * s, y * s) for x, y in [(98, 150), (142, 150), (146, 200), (94, 200)]]) > 0.5   # neck
-    m |= poly_mask(h, w, [(x * s, y * s) for x, y in [(30, 330), (36, 250), (70, 212), (120, 200), (170, 212), (204, 250), (210, 330)]]) > 0.5
+    m |= poly_mask(h, w, [(x * s, y * s) for x, y in [(106, 150), (134, 150), (138, 205), (102, 205)]]) > 0.5   # neck
+    m |= poly_mask(h, w, [(x * s, y * s) for x, y in [(26, 330), (34, 262), (64, 222), (110, 206), (130, 206), (176, 222), (206, 262), (214, 330)]]) > 0.5
     m = ndi.gaussian_filter(m.astype(float), 2.0 * s) > 0.5
     for name, band, seed in (('inv_old', OCHRE, 551), ('inv_new', TEAL * 1.15, 553)):
         mm = np.pad(m, 10)
@@ -224,20 +304,22 @@ def bake_postmark():
     img = Image.new('L', (w, h), 0); d = ImageDraw.Draw(img)
     for r, wd in ((R, 7), (R - 18, 3)):
         d.ellipse([cx - r * s, cy - r * s, cx + r * s, cy + r * s], outline=255, width=int(wd * s))
-    f = font(FELLSC, 34 * s)
-    txt = 'BOSTON · MASS ·'
+    f = font(FELLSC, 30 * s)
+    txt = 'BOSTON  MASS.'
+    span = 150; n = len(txt)
     for i, ch in enumerate(txt):
-        ang = math.radians(-150 + i * 8.6)
-        x, y = cx + (R - 42) * s * math.cos(ang), cy + (R - 42) * s * math.sin(ang)
-        ch_im = Image.new('L', (int(50 * s), int(50 * s)), 0)
-        ImageDraw.Draw(ch_im).text((int(12 * s), int(4 * s)), ch, font=f, fill=255)
-        ch_im = ch_im.rotate(-math.degrees(ang) - 90, Image.BICUBIC)
-        img.paste(255, (int(x - 25 * s), int(y - 25 * s)), ch_im)
+        if ch == ' ': continue
+        ang = math.radians(-90 - span / 2 + span * (i + 0.5) / n)
+        x, y = cx + (R - 34) * s * math.cos(ang), cy + (R - 34) * s * math.sin(ang)
+        T = int(60 * s); tile = Image.new('L', (T, T), 0); td = ImageDraw.Draw(tile)
+        tw_ = td.textlength(ch, font=f); td.text((T / 2 - tw_ / 2, T / 2 - 18 * s), ch, font=f, fill=255)
+        tile = tile.rotate(-math.degrees(ang) - 90, Image.BICUBIC)
+        img.paste(255, (int(x - T / 2), int(y - T / 2)), tile)
     fb = font(CPB, 46 * s)
-    for txt_, yy in (('AUG', 6), ('1920', 60)):
+    for txt_, yy in (('AUG', 18), ('1920', 72)):
         tw = d.textlength(txt_, font=fb); d.text((cx - tw / 2, cy - 30 * s + yy * s - 20 * s), txt_, font=fb, fill=255)
     for k in range(5):
-        pts = [((R + 30 + x) * s, cy + (k - 2) * 26 * s + 9 * s * math.sin(x / 34.0)) for x in range(0, 560, 4)]
+        pts = [(cx + (R + 24 + x) * s, cy + (k - 2) * 26 * s + 9 * s * math.sin(x / 34.0)) for x in range(0, 380, 4)]
         d.line(pts, fill=255, width=int(6 * s))
     ink = np.asarray(img, float) / 255
     rng = np.random.default_rng(571)

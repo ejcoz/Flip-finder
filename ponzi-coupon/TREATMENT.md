@@ -86,3 +86,11 @@ A 35-second explainer in the **Vintage Engraving Collage** style: Charles Ponzi'
 5. But he barely bought any coupons. New investors' money paid the old ones.
 6. Backing his promises would take a hundred and sixty million coupons. About twenty-seven thousand existed.
 7. In August 1920, it collapsed. The scheme still bears his name.
+
+## 10. As built (changes from the plan)
+
+- The archive scans could not be downloaded (Wikimedia rate limits), so at your request the coupon, stamps, lire and dollar notes, and the postmark are hand-made engraved designs. The only real photograph is Ponzi at his desk, 1920. It is used for the Ponzi scene and again, cropped to his face, for the ending in place of the mug shot.
+- The score is a tarantella in A minor (6/8, one bar = 1 s) on accordion, tuba, bassoon and pizzicato, instead of a march in F.
+- The signature shot is a square of 160 million coupons that grows while the camera pulls back. Beside it, a speck drawn to scale stands for the 27,000 that existed.
+- The ending is a whip down to Ponzi's face, a red "BOSTON MASS. AUG 1920" postmark and the title slip "The Ponzi Scheme".
+- Length 35.5 s.
