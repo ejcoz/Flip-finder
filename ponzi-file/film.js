@@ -1,6 +1,6 @@
 // The Ponzi File — Halftone Dossier, 1080×1920, 30 fps.
 import { clamp, lerp, seg, ss, eio, eo, ei, back, mulberry, hash } from '/core/lib.js';
-import { T, VOICE } from './timeline.js';
+import { T, VOICE, TIER_T, CLIP_T } from './timeline.js';
 import { CARDS } from './captions.js';
 
 const W = innerWidth, H = innerHeight;
@@ -268,7 +268,7 @@ function scenePromise(t) {
   ctx.save(); ctx.translate(W / 2, 900); ctx.scale(push, push); ctx.translate(-W / 2, -900);
   drawFolder(t, 1);
   // radial bloom of dots behind the number
-  const t50 = VOICE.l1 + 3.94;
+  const t50 = T.t50;
   const bloom = popScale(t, t50 - .1, .5);
   if (bloom > 0) { ctx.save(); ctx.beginPath(); ctx.rect(150, 590, 780, 820); ctx.clip(); halftone(150, 590, 930, 1410, (x, y) => bloom * (1 - radial(540, 900, 60, 420)(x, y)) * .8, 24, 15, MUST, .7); ctx.restore(); }
   // $100 going in
@@ -290,7 +290,7 @@ function scenePromise(t) {
     glyphDots('50%', 540, 1000, 380 * s50, -4, MUST);
   }
   // calendar flipping to 45
-  const t45 = VOICE.l1 + 5.06; const sc = popScale(t, t45 - .15, .35);
+  const t45 = T.t45; const sc = popScale(t, t45 - .15, .35);
   if (sc > 0) {
     const day = Math.max(1, Math.min(45, Math.floor(1 + 44 * ei(seg(t, t45, t45 + 1.1)) ** .7)));
     ctx.save(); ctx.translate(800, 1180); ctx.rotate(6 * D2R); ctx.scale(sc, sc);
@@ -322,8 +322,8 @@ function glyphDots(str, x, y, size, rot, base) {
 }
 // C: exhibit 2, the man and his coupon
 function sceneMan(t) {
-  const tCoupon = VOICE.l2 + 2.0, tName = VOICE.l2 + .28;
-  const push = 1 + .04 * seg(t, T.exC, T.crowd);
+  const tCoupon = T.coupon, tName = T.name;
+  const push = 1 + .04 * seg(t, T.exC, T.chain);
   ctx.save(); ctx.translate(W / 2, 800); ctx.scale(push, push); ctx.translate(-W / 2, -800);
   // height chart
   const hc = popScale(t, T.exC + .05, .3);
@@ -369,7 +369,7 @@ function sceneMan(t) {
 }
 // D: the line outside the office
 function sceneCrowd(t) {
-  const d = t - T.crowd, pan = -60 * ss(seg(t, T.crowd, T.chain));
+  const d = t - T.crowd, pan = -60 * ss(seg(t, T.crowd, T.chain2));
   ctx.save(); ctx.translate(pan, 0);
   // sky dots
   halftone(-100, 420, W + 120, 1110, linear(1100, 420, .55), 22, 15, TEAL, .66);
@@ -394,7 +394,6 @@ function sceneCrowd(t) {
   headline('THE LINE', 64, 330, 118, T.crowd + .2, t);
 }
 // E: the chain
-const TIER_T = [17.75, 18.15, 18.65, 19.2, 19.75, 20.3, 20.85, 21.5];
 function chainLayout(t) {
   const n = TIER_T.filter(x => t >= x).length; if (!n) return { n, rows: [] };
   // animated tier count for the pull-back
@@ -412,7 +411,7 @@ function chainLayout(t) {
   return { n, rows };
 }
 function sceneChain(t) {
-  const L = chainLayout(t); const strain = seg(t, 21.8, T.snap);
+  const L = chainLayout(t); const strain = seg(t, T.chain2 + 1.2, T.snap);
   const R = mulberry(77);
   const fallD = t - T.snap;
   // jitter from strain
@@ -430,7 +429,7 @@ function sceneChain(t) {
       chainLine(x0, y0, lerp(x0, x1, row.pop), lerp(y0, y1, row.pop), lw, strain);
       // money flows up: from new ones to old ones
       if (k <= 6 && t > TIER_T[k] + .25 && fallD < 0) {
-        const per = .95, flow = 1 - .7 * seg(t, 24.5, 27.8);  // the flow dries up
+        const per = .95, flow = 1 - .7 * seg(t, T.need + .8, T.snap - .3);  // the flow dries up
         for (let b = 0; b < 2; b++) { const ph = ((t - TIER_T[k]) / per + b * .5 + hash(k * 9 + i) * .3) % 1;
           if (hash(k * 13 + i * 7 + b + Math.floor((t - TIER_T[k]) / per)) > flow) continue;
           drawBill(lerp(x0, x1, ph), lerp(y0, y1, ph), Math.max(12, Math.min(70, row.fs * .5)), Math.sin(ph * 6 + i) * .3); }
@@ -463,7 +462,7 @@ function sceneChain(t) {
     drawBill(x, y, 60, fallD * (4 + r * 6) * (i % 2 ? 1 : -1));
   }
   // top panel
-  const tRep = VOICE.l5, tNeed = VOICE.l5 + .35;
+  const tRep = T.chain2, tNeed = T.need;
   if (t < tRep) headline('THE CHAIN', 64, 250, 112, TIER_T[0], t);
   else headline('THE MATH', 64, 250, 112, tRep, t);
   if (t > TIER_T[0] && t < tNeed) {
@@ -492,10 +491,10 @@ function chainLine(x0, y0, x1, y1, lw, strain) {
 }
 // F: clippings pile on the closed folder, then CLOSED
 const CLIPS = [
-  { t: 29.0, x: 230, y: 700, r: -9, mast: 'THE EVENING LEDGER', head: 'COUPON PLAN DOUBTED' },
-  { t: 29.32, x: 860, y: 820, r: 7, mast: 'DAILY COURIER', head: 'RUN ON THE OFFICE' },
-  { t: 29.64, x: 220, y: 1120, r: 5, mast: 'THE MORNING STAR', head: 'AUDITORS FIND HOLE' },
-  { t: 29.96, x: 850, y: 1250, r: -6, mast: 'THE EVENING LEDGER', head: 'PONZI ARRESTED' },
+  { t: CLIP_T[0], x: 230, y: 700, r: -9, mast: 'THE EVENING LEDGER', head: 'COUPON PLAN DOUBTED' },
+  { t: CLIP_T[1], x: 860, y: 820, r: 7, mast: 'DAILY COURIER', head: 'RUN ON THE OFFICE' },
+  { t: CLIP_T[2], x: 220, y: 1120, r: 5, mast: 'THE MORNING STAR', head: 'AUDITORS FIND HOLE' },
+  { t: CLIP_T[3], x: 850, y: 1250, r: -6, mast: 'THE EVENING LEDGER', head: 'PONZI ARRESTED' },
 ];
 function clipping(c, t) {
   if (t < c.t) return; const d = t - c.t, sc = d < .08 ? lerp(1.5, 1, ei(d / .08)) : 1 + .04 * Math.exp(-d * 14) * Math.cos(d * 40);
@@ -521,8 +520,8 @@ function sceneEnd(t) {
   CLIPS.forEach(c => clipping(c, t));
   stamp('closed', 540, 950, -11, T.closed, t);
   ctx.restore();
-  headline('THE PONZI', 64, 300, 146, VOICE.l6 + 2.07, t, { stagger: .04 });
-  headline('SCHEME', 64, 456, 146, VOICE.l6 + 2.4, t, { stagger: .04, hl: [0, 1, 2, 3, 4, 5] });
+  headline('THE PONZI', 64, 300, 146, T.nameHead - .35, t, { stagger: .04 });
+  headline('SCHEME', 64, 456, 146, T.nameHead, t, { stagger: .04, hl: [0, 1, 2, 3, 4, 5] });
 }
 
 // ───────── captions: 2–4 words, bold sans, centred at 65 % height ─────────
@@ -549,9 +548,9 @@ function captions(t) {
 }
 
 // ───────── camera shake / flash ─────────
-const HITS = [[0, 10], [T.fake, 14], [T.snap, 26], [T.closed, 20], [29.0, 5], [29.32, 5], [29.64, 5], [29.96, 6]];
+const HITS = [[0, 10], [T.fake, 14], [T.snap, 26], [T.closed, 20], ...CLIP_T.map(c => [c, 5])];
 function shake(t) { let x = 0, y = 0; for (const [th, a] of HITS) { const d = t - th; if (d >= 0 && d < .45) { const e = a * (1 - d / .45) ** 2; x += Math.sin(d * 87 + th) * e; y += Math.cos(d * 73 + th) * e; } } return [x, y]; }
-const FLASH = [[VOICE.l2 + .28, .5], [T.fake, .35], [T.snap, .5], [T.closed, .4]];
+const FLASH = [[T.name, .5], [T.fake, .35], [T.snap, .5], [T.closed, .4]];
 function flash(t) { let a = 0; for (const [tf, m] of FLASH) { const d = t - tf; if (d >= 0 && d < .25) a = Math.max(a, m * (1 - d / .25)); } return a; }
 
 // ───────── frame ─────────
@@ -564,16 +563,17 @@ function render(t) {
   let chip = '';
   if (t < T.open + .5) { sceneOpening(t); chip = 'CLOSED'; }
   else if (t < T.exC) { scenePromise(t); chip = 'EXHIBIT 1'; }
-  else if (t < T.crowd + .22) { sceneMan(t); chip = 'EXHIBIT 2'; }
-  else if (t < T.chain + .22) { sceneCrowd(t); chip = 'EXHIBIT 3'; }
-  else if (t < T.clips - .05) { sceneChain(t); chip = 'EXHIBIT 4'; }
+  else if (t < T.chain) { sceneMan(t); chip = 'EXHIBIT 2'; }
+  else if (t < T.crowd) { sceneChain(t); chip = 'EXHIBIT 3'; }
+  else if (t < T.chain2) { sceneCrowd(t); chip = 'EXHIBIT 4'; }
+  else if (t < T.clips) { sceneChain(t); chip = 'EXHIBIT 3'; }
   else { sceneEnd(t); chip = t < T.closed ? 'EXHIBIT 5' : 'CLOSED'; }
   ctx.restore();
   hud(t, chip);
   captions(t);
   // wipes (cover the cut)
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, SAFE_BOTTOM); ctx.clip();
-  dotWipe(t, T.exC, TEAL); dotWipe(t, T.crowd + .22, INK); dotWipe(t, T.chain + .22, MUST);
+  dotWipe(t, T.exC, TEAL); dotWipe(t, T.chain, MUST); dotWipe(t, T.crowd, INK); dotWipe(t, T.chain2, MUST);
   ctx.restore();
   // paper multiply + grain + flash
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -588,30 +588,24 @@ window.TEXTS = t => {
   const add = (id, text, t0, t1, x0, y0, x1, y1, pass = false) => { if (t >= t0 && t < t1) o.push({ id, text, x0, y0, x1, y1, pass }); };
   add('hook', '50% profit in 45 days?', 0, T.open + .05, 60, 180, 1000, 480);
   add('promise', 'THE PROMISE', T.open + .3, T.exC, 60, 230, 900, 350);
-  add('name', 'CHARLES PONZI', VOICE.l2 + .28, T.crowd, 100, 1010, 980, 1110);
-  add('coupon', 'POSTAL REPLY COUPON', VOICE.l2 + 2.0, T.crowd, 500, 580, 980, 910, true);
-  add('fake', 'FAKE', T.fake, T.crowd + .1, 480, 610, 1000, 880);
-  add('office', 'SECURITIES EXCHANGE CO.', T.crowd, T.chain + .1, 520, 490, 1000, 660, true);
-  add('needed', 'NEEDED 160,000,000 · EXISTED ~27,000', VOICE.l5 + .35, T.snap, 60, 280, 1010, 465);
-  add('clips', 'clippings', 29.0, T.end, 60, 560, 1020, 1440, true);
+  add('name', 'CHARLES PONZI', T.name, T.chain, 100, 1010, 980, 1110);
+  add('coupon', 'POSTAL REPLY COUPON', T.coupon, T.chain, 500, 580, 980, 910, true);
+  add('fake', 'FAKE', T.fake, T.chain, 480, 610, 1000, 880);
+  add('office', 'SECURITIES EXCHANGE CO.', T.crowd, T.chain2, 520, 490, 1000, 660, true);
+  add('needed', 'NEEDED 160,000,000 · EXISTED ~27,000', T.need, T.snap, 60, 280, 1010, 465);
+  add('clips', 'clippings', CLIP_T[0], T.end, 60, 560, 1020, 1440, true);
   add('closed', 'CLOSED', T.closed, T.end, 220, 820, 860, 1080);
   return o;
 };
 
 // ───────── sound events ─────────
 const EV = []; const ev = (t, type, o = {}) => EV.push({ t: +t.toFixed(3), type, ...o });
-ev(0, 'stamp', { big: 1 }); ev(T.open, 'flap'); ev(T.open + .3, 'pops', { n: 11 }); ev(T.open + .55, 'boing');
-ev(VOICE.l1 + 3.94, 'boing'); ev(VOICE.l1 + 5.06, 'flip', { dur: 1.1 });
-ev(T.exC - .22, 'whoosh'); ev(T.exC + .1, 'pops', { n: 7 }); ev(VOICE.l2 + .28, 'shutter');
-ev(VOICE.l2 + 2.0, 'slide'); ev(VOICE.l2 + 2.0, 'pops', { n: 9 }); ev(T.fake, 'stamp');
-ev(T.crowd, 'whoosh'); ev(T.crowd + .2, 'pops', { n: 8 }); ev(T.crowd, 'murmur', { dur: 2.6 });
-ev(T.chain, 'whoosh'); TIER_T.forEach((x, k) => ev(x, 'clink', { k })); ev(TIER_T[0], 'pops', { n: 9 });
-ev(TIER_T[1] + .3, 'money', { until: 27.8 }); ev(21.8, 'strain', { until: T.snap - .05 });
-ev(VOICE.l5, 'pops', { n: 8 }); ev(VOICE.l5 + .35, 'typing', { dur: .9 });
-ev(T.snap, 'snap'); ev(T.snap + .05, 'flutter', { dur: 1.2 });
-CLIPS.forEach(c => ev(c.t, 'slap'));
-ev(T.closed, 'stamp', { big: 1 });
-ev(VOICE.l6 + 2.07, 'pops', { n: 15 });
+// sound effects; mix.py only plays the ones that fit in a silent gap between spoken lines
+ev(0, 'stamp', { big: 1 });
+ev(T.fake, 'stamp');
+ev(T.snap, 'snap');
+// visual hits the score accents instead (they fall inside speech)
+ev(T.t50, 'accent'); ev(T.name, 'accent'); ev(T.closed, 'accent', { big: 1 });
 Object.entries(VOICE).forEach(([id, t]) => ev(t, 'voice', { id }));
 window.EV = EV; window.DUR = T.end;
 

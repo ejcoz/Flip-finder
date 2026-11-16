@@ -1,178 +1,178 @@
 export const CARDS = [
  {
-  "t0": 0.95,
-  "tw": 1.88,
+  "t0": 0.4,
+  "tw": 1.35,
   "text": "In 1920,",
   "kw": "1920",
   "line": "l1",
-  "t1": 2.59
+  "t1": 1.74
  },
  {
-  "t0": 2.59,
-  "tw": 3.66,
+  "t0": 1.74,
+  "tw": 2.77,
   "text": "one man promised",
   "kw": "",
   "line": "l1",
-  "t1": 3.61
+  "t1": 2.72
  },
  {
-  "t0": 3.61,
-  "tw": 4.6,
+  "t0": 2.72,
+  "tw": 3.75,
   "text": "to grow your money",
   "kw": "money",
   "line": "l1",
-  "t1": 4.55
+  "t1": 3.7
  },
  {
-  "t0": 4.55,
-  "tw": 5.78,
+  "t0": 3.7,
+  "tw": 4.87,
   "text": "by 50%",
   "kw": "50%",
   "line": "l1",
-  "t1": 5.73
+  "t1": 4.82
  },
  {
-  "t0": 5.73,
-  "tw": 7.08,
+  "t0": 4.82,
+  "tw": 6.17,
   "text": "in 45 days.",
   "kw": "45 days",
   "line": "l1",
-  "t1": 8.071
+  "t1": 6.767
  },
  {
-  "t0": 8.55,
-  "tw": 9.84,
+  "t0": 6.787,
+  "tw": 7.997,
   "text": "Charles Ponzi said",
   "kw": "Ponzi",
   "line": "l2",
-  "t1": 9.79
+  "t1": 7.947
  },
  {
-  "t0": 9.79,
-  "tw": 10.6,
+  "t0": 7.947,
+  "tw": 8.617,
   "text": "he was trading",
   "kw": "",
   "line": "l2",
-  "t1": 10.55
+  "t1": 8.567
  },
  {
-  "t0": 10.55,
-  "tw": 12.46,
+  "t0": 8.567,
+  "tw": 10.377,
   "text": "international postal coupons.",
   "kw": "postal coupons",
   "line": "l2",
-  "t1": 13.43
+  "t1": 11.12
  },
  {
-  "t0": 13.45,
-  "tw": 14.3,
+  "t0": 11.14,
+  "tw": 11.77,
   "text": "He wasn't.",
   "kw": "wasn't",
   "line": "l3",
-  "t1": 14.973
+  "t1": 12.398
  },
  {
-  "t0": 16.45,
-  "tw": 17.82,
+  "t0": 12.418,
+  "tw": 13.748,
   "text": "He paid early investors",
   "kw": "early investors",
   "line": "l4",
-  "t1": 17.77
+  "t1": 13.698
  },
  {
-  "t0": 17.77,
-  "tw": 18.78,
+  "t0": 13.698,
+  "tw": 14.768,
   "text": "with money from",
   "kw": "money",
   "line": "l4",
-  "t1": 18.73
+  "t1": 14.718
  },
  {
-  "t0": 18.73,
-  "tw": 19.28,
+  "t0": 14.718,
+  "tw": 15.348,
   "text": "new ones,",
   "kw": "new ones",
   "line": "l4",
-  "t1": 19.73
+  "t1": 15.598
  },
  {
-  "t0": 19.73,
-  "tw": 20.34,
+  "t0": 15.598,
+  "tw": 16.048,
   "text": "and the crowds",
   "kw": "crowds",
   "line": "l4",
-  "t1": 20.29
+  "t1": 15.998
  },
  {
-  "t0": 20.29,
-  "tw": 21.34,
+  "t0": 15.998,
+  "tw": 16.968,
   "text": "kept coming.",
   "kw": "",
   "line": "l4",
-  "t1": 22.085
+  "t1": 17.373
  },
  {
-  "t0": 23.95,
-  "tw": 25.02,
+  "t0": 17.393,
+  "tw": 18.423,
   "text": "When reporters checked,",
   "kw": "reporters",
   "line": "l5",
-  "t1": 25.67
+  "t1": 18.793
  },
  {
-  "t0": 25.67,
-  "tw": 26.48,
+  "t0": 18.793,
+  "tw": 19.663,
   "text": "there weren't enough coupons",
   "kw": "enough coupons",
   "line": "l5",
-  "t1": 26.43
+  "t1": 19.613
  },
  {
-  "t0": 26.43,
-  "tw": 27.44,
+  "t0": 19.613,
+  "tw": 20.543,
   "text": "in the world",
   "kw": "world",
   "line": "l5",
-  "t1": 27.39
+  "t1": 20.493
  },
  {
-  "t0": 27.39,
-  "tw": 28.16,
+  "t0": 20.493,
+  "tw": 21.263,
   "text": "to cover it.",
   "kw": "",
   "line": "l5",
-  "t1": 28.761
+  "t1": 21.613
  },
  {
-  "t0": 31.15,
-  "tw": 32.02,
+  "t0": 21.633,
+  "tw": 22.383,
   "text": "The scheme collapsed",
   "kw": "collapsed",
   "line": "l6",
-  "t1": 31.97
+  "t1": 22.333
  },
  {
-  "t0": 31.97,
-  "tw": 32.66,
+  "t0": 22.333,
+  "tw": 23.103,
   "text": "in August,",
   "kw": "August",
   "line": "l6",
-  "t1": 33.27
+  "t1": 23.053
  },
  {
-  "t0": 33.27,
-  "tw": 34.1,
+  "t0": 23.053,
+  "tw": 24.203,
   "text": "and it still carries",
   "kw": "",
   "line": "l6",
-  "t1": 34.05
+  "t1": 24.153
  },
  {
-  "t0": 34.05,
-  "tw": 34.68,
+  "t0": 24.153,
+  "tw": 24.663,
   "text": "his name.",
   "kw": "his name",
   "line": "l6",
-  "t1": 35.0
+  "t1": 25.037
  }
 ];

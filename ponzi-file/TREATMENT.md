@@ -1,6 +1,6 @@
 # The Ponzi File — treatment
 
-Style: Halftone Dossier. 1080×1920 vertical, 30 fps, 35.0 s, ending on the last spoken word. English voice (Kokoro `am_michael`, calm, deadpan). Numbers are spelled out for the voice and shown as digits in the captions. Captions in Archivo Black, 2–4 words per card, centred at 65 % of the frame height (y ≈ 1248). Nothing is placed in the bottom 20 % (below y = 1536). No title card. No user material: everything is drawn in code, and the portrait is a generic 1920s man, not a likeness.
+Style: Halftone Dossier. 1080×1920 vertical, 30 fps, 25.0 s, ending on the last spoken word. English voice (Kokoro `am_fenrir`, confident documentary read at about 160 words per minute; every pause under 0.3 s except one 0.55 s beat after "He wasn't."). Numbers are spelled out for the voice and shown as digits in the captions. Captions in Archivo Black, 2–4 words per card, centred at 65 % of the frame height (y ≈ 1248). Nothing is placed in the bottom 20 % (below y = 1536). No title card. No user material: everything is drawn in code, and the portrait is a generic 1920s man, not a likeness.
 
 ## Three candidate structures
 
@@ -32,3 +32,9 @@ Signature shot: E, the chain growing to fill the frame and snapping.
 ## Sound
 
 Synth pop-print kit (kick, snare, hats, square bass, marimba-like pluck, finger snaps), all synthesized. Foley: stamp booms, camera flash, paper slides, glyph pops, crowd murmur, coin and bill flutters, chain clinks, the snap (boom + crackle + metal), paper slaps. Silences: before the snap (28.2–28.6) and before the closing stamp (30.3–30.6). The music ends with a bell tag on the last word.
+
+## Revision 2 (voice and mix)
+
+- Voice: Kokoro `am_fenrir` at speed 0.9. Internal pauses are trimmed (`voice_trim.py`), with 0.25 s between sentences and a 0.55 s beat after "He wasn't." The narration runs 24.3 s at about 162 wpm, so the film is now 25.0 s.
+- Every cue is anchored to a spoken word (`make_timeline.py` → `timeline.js`). The order is now man → chain → crowd ("and the crowds kept coming") → chain (reporters' math, snap) → clippings, CLOSED on "August".
+- Mix: sound effects play only in the silent gaps (opening stamp, FAKE stamp, chain snap) and are cut 20 ms before the next word. Visual hits inside speech are accented by the score instead. Music and effects are held 16 dB under the voice wherever it speaks; `mix.py` measures it in 100 ms windows (worst 14.2 dB, none under 12 dB).

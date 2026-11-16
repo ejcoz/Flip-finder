@@ -1,12 +1,17 @@
 #!/bin/sh
-# One command: voice (if missing), captions, picture, sound, master → ponzi-file.mp4
+# One command: voice (if missing), pause trim, timeline, captions, picture, sound, master → ponzi-file.mp4
 set -e
 LIB=${LIB:-/root/lemo-opuscar}
 HERE=$(cd "$(dirname "$0")" && pwd)
 export LIB
 [ -f "$LIB/core/render/video.mjs" ] || { echo "set LIB to the library folder"; exit 1; }
 cd "$LIB"; PY="$LIB/.venv/bin/python"
-[ -f "$HERE/voice/words.json" ] || { "$PY" core/tts/tts.py "$HERE/lines.json" "$HERE/voice"; "$PY" core/tts/asr_check.py "$HERE/lines.json" "$HERE/voice"; }
+if [ ! -f "$HERE/voice/words.json" ]; then
+  "$PY" core/tts/tts.py "$HERE/lines.json" "$HERE/voice_raw"
+  "$PY" "$HERE/voice_trim.py"
+  "$PY" core/tts/asr_check.py "$HERE/lines.json" "$HERE/voice"
+fi
+"$PY" "$HERE/make_timeline.py" > /dev/null
 "$PY" "$HERE/make_captions.py"
 "$PY" core/render/srt.py "$HERE/out/cues.json" "$HERE/ponzi-file.srt"
 node core/render/events.mjs "$HERE" --size 1080x1920

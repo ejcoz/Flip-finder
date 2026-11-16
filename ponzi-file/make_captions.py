@@ -3,7 +3,8 @@ import os, re, json
 HERE = os.path.dirname(os.path.abspath(__file__))
 W = json.load(open(os.path.join(HERE, 'voice', 'words.json')))
 src = open(os.path.join(HERE, 'timeline.js')).read()
-VOICE = {k: float(v) for k, v in re.findall(r'(l\d): ([\d.]+)', src.split('export const T')[0])}
+VOICE = json.loads(re.search(r'export const VOICE = (\{.*?\});', src).group(1))
+END = json.loads(re.search(r'export const T = (\{.*?\});', src, re.S).group(1))['end']
 DUR = json.load(open(os.path.join(HERE, 'voice', 'dur.json')))
 # (line, number of ASR tokens, display text, keyword)
 CHUNKS = [
@@ -29,7 +30,7 @@ for i, c in enumerate(cards):
     lineEnd = VOICE[c['line']] + DUR[c['line']]
     nxt = cards[i + 1]['t0'] if i + 1 < len(cards) else 99
     c['t1'] = round(min(nxt, max(c['tw'] + .35, lineEnd + .45)), 3) if cards[i + 1:] and cards[i + 1]['line'] == c['line'] else round(min(nxt - .02, lineEnd + .55), 3)
-cards[-1]['t1'] = 35.0
+cards[-1]['t1'] = END
 open(os.path.join(HERE, 'captions.js'), 'w').write('export const CARDS = ' + json.dumps(cards, indent=1) + ';\n')
 os.makedirs(os.path.join(HERE, 'out'), exist_ok=True)
 json.dump([{'t0': c['t0'], 't1': c['t1'], 'text': c['text']} for c in cards], open(os.path.join(HERE, 'out', 'cues.json'), 'w'), indent=1)
