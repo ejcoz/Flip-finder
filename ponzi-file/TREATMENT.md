@@ -43,3 +43,10 @@ Synth pop-print kit (kick, snare, hats, square bass, marimba-like pluck, finger 
 
 - Voice changed to Kokoro `am_michael` (picked from the audition reel), speed 0.98, internal pauses trimmed to 0.2 s or less. The narration runs 24.3 s at about 163 wpm, and the film is 24.9 s.
 - Mix check: worst 12.8 dB of voice over music + effects while speaking, no 100 ms window under 12 dB.
+
+## Revision 4 (your ElevenLabs narration)
+
+- Voice: your ElevenLabs recording (`voice_src/narration.mp3`), used as supplied. `split_voice.py` cuts it into six lines at the quietest point of each sentence gap, and `voice_trim.py` shortens the two comma pauses (0.26–0.27 s → 0.2 s). Sentence gaps are 0.25 s, with a 0.55 s beat after "He wasn't." No time-stretching.
+- The read is faster than the 160 wpm target: with those gaps it runs about 182 wpm, and the film is 22.3 s.
+- The chain layout never lags behind the tiers on screen (they now arrive faster).
+- Mix check: worst 15.6 dB of voice over music + effects while speaking, none under 12 dB.

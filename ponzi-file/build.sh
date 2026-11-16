@@ -7,7 +7,11 @@ export LIB
 [ -f "$LIB/core/render/video.mjs" ] || { echo "set LIB to the library folder"; exit 1; }
 cd "$LIB"; PY="$LIB/.venv/bin/python"
 if [ ! -f "$HERE/voice/words.json" ]; then
-  "$PY" core/tts/tts.py "$HERE/lines.json" "$HERE/voice_raw"
+  if ls "$HERE"/voice_src/narration.* >/dev/null 2>&1; then
+    "$PY" "$HERE/split_voice.py"             # the user's recorded read (ElevenLabs), split into lines
+  else
+    "$PY" core/tts/tts.py "$HERE/lines.json" "$HERE/voice_raw"   # fallback: Kokoro
+  fi
   "$PY" "$HERE/voice_trim.py"
   "$PY" core/tts/asr_check.py "$HERE/lines.json" "$HERE/voice"
 fi

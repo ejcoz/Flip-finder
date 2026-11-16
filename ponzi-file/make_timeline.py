@@ -16,7 +16,7 @@ T = {
   't50': w('l1', '50'), 't45': w('l1', '45'),
   'exC': round(V['l2'] - .12, 3), 'name': w('l2', 'Ponzi'), 'coupon': w('l2', 'international'),
   'fake': round(end('l3') + .04, 3),            # in the beat after "He wasn't."
-  'chain': round(w('l4', 'money') - .15, 3),   # chain 1: "…with money from new ones,"
+  'chain': w('l4', 'money'),                     # chain 1: "…with money from new ones,"
   'crowd': round(w('l4', 'and') - .1, 3),       # "and the crowds kept coming."
   'chain2': round(V['l5'] - .12, 3),            # back to the chain, bigger: the reporters' math
   'need': w('l5', 'reporters'),

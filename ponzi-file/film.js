@@ -398,7 +398,7 @@ function chainLayout(t) {
   const n = TIER_T.filter(x => t >= x).length; if (!n) return { n, rows: [] };
   // animated tier count for the pull-back
   let nEff = 0; TIER_T.forEach(x => nEff += eio(seg(t, x, x + .45)));
-  nEff = Math.max(2, nEff);
+  nEff = Math.max(2, nEff, n);   // never lag behind the tiers already on screen
   const top = 470, bot = 1130, gap = (bot - top) / nEff;
   const rows = [];
   for (let k = 0; k < n; k++) {
