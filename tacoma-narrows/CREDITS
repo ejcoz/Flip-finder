@@ -1,0 +1,21 @@
+Tacoma Narrows — third-party assets used in the film
+
+Picture: drawn entirely in code (Canvas 2D); no images, footage or traced photographs.
+
+Voice: Kokoro-82M text-to-speech (voice "am_michael"), run locally via kokoro-onnx — Apache License 2.0.
+Voice check: faster-whisper (MIT) with the Whisper base.en model (MIT).
+
+Music: original score; samples:
+  Samples (CC0): VS Chamber Orchestra: Community Edition (Versilian Studios) — harpsichord via
+  Versilian Community Sample Library (Versilian Studios); bassoon, strings (violins spiccato,
+  cellos pizzicato/spiccato, contrabass pizzicato) via VSCO 2 CE; harp via VCSL. CC0 1.0.
+
+Sound effects: synthesized procedurally (numpy/scipy); no recordings.
+
+Fonts (SIL Open Font License 1.1, files in fonts/ with their licences):
+  Architects Daughter — Kimberly Geswein
+  B612 — Airbus / Intactile Design
+
+Facts in the narration and drawing: Tacoma Narrows Bridge opened July 1, 1940 and collapsed
+November 7, 1940 in winds of about 40 mph; main span 2,800 ft, side spans 1,100 ft; deck 39 ft
+wide on 8 ft solid plate girders. Proportions in the drawing are simplified, vertical scale exaggerated.

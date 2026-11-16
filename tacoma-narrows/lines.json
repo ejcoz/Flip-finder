@@ -1,0 +1,33 @@
+[
+ {
+  "id": "l1",
+  "text": "This bridge tore itself apart in a forty mile an hour wind.",
+  "voice": "am_michael",
+  "speed": 0.9
+ },
+ {
+  "id": "l2",
+  "text": "The Tacoma Narrows Bridge opened in July nineteen forty.",
+  "asr": "The Tacoma Narrows Bridge opened in July 1940.",
+  "voice": "am_michael",
+  "speed": 0.9
+ },
+ {
+  "id": "l3",
+  "text": "Its deck was so thin and solid that steady wind made it twist, harder and harder, until it ripped apart four months later.",
+  "voice": "am_michael",
+  "speed": 0.9
+ },
+ {
+  "id": "l4",
+  "text": "Engineers learned that wind can shake a bridge to pieces.",
+  "voice": "am_michael",
+  "speed": 0.88
+ },
+ {
+  "id": "l5",
+  "text": "That's why modern bridges are tested in wind tunnels first.",
+  "voice": "am_michael",
+  "speed": 0.9
+ }
+]

@@ -1,0 +1,23 @@
+1
+00:00:00,500 --> 00:00:05,200
+This bridge tore itself apart in a 40-mile-an-hour wind.
+
+2
+00:00:05,600 --> 00:00:10,350
+The Tacoma Narrows Bridge opened in July 1940.
+
+3
+00:00:11,830 --> 00:00:16,300
+Its deck was so thin and solid that steady wind made it twist,
+
+4
+00:00:16,400 --> 00:00:20,950
+harder and harder, until it ripped apart four months later.
+
+5
+00:00:22,300 --> 00:00:26,700
+Engineers learned that wind can shake a bridge to pieces.
+
+6
+00:00:27,300 --> 00:00:31,900
+That's why modern bridges are tested in wind tunnels first.
