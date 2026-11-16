@@ -1,0 +1,23 @@
+1
+00:00:00,600 --> 00:00:05,113
+This American town can only be reached by land through Canada.
+
+2
+00:00:05,400 --> 00:00:12,187
+In 1846, Britain and the United States drew their border along the 49th parallel.
+
+3
+00:00:12,600 --> 00:00:17,714
+But one small peninsula south of Vancouver dips just below that line.
+
+4
+00:00:17,900 --> 00:00:20,268
+So its tip became American.
+
+5
+00:00:21,000 --> 00:00:25,670
+Today, people in Point Roberts, Washington cross two international borders
+
+6
+00:00:25,670 --> 00:00:29,038
+just to drive to the rest of their own state.

@@ -1,0 +1,6 @@
+out/
+music/score.wav
+music/stems/
+fonts/*.ttf
+events.json
+data/raw/

@@ -1,0 +1,10 @@
+Point Roberts — credits for third-party assets
+
+Map data: Natural Earth 1:10m Admin 0 – Countries (v5.1.2), public domain — https://www.naturalearthdata.com
+  (fetched from github.com/nvkelso/natural-earth-vector). Default view; only the United States and Canada are drawn.
+  The road from Point Roberts to Blaine is schematic, traced by hand along the real highways.
+Voice: Kokoro TTS v1.0 (voice am_michael), Apache License 2.0 — https://github.com/thewh1teagle/kokoro-onnx
+Fonts (SIL Open Font License 1.1, fetched by tools/fonts.sh from google/fonts): Bodoni Moda, Pinyon Script
+Samples (CC0): VS Chamber Orchestra: Community Edition (Versilian Studios), Versilian Community Sample Library (Versilian Studios)
+Sound effects: synthesized in code (mix.py).
+Pictures: engraved in code; no images, photos or stock footage.

@@ -1,0 +1,42 @@
+[
+ {
+  "id": "s1",
+  "text": "This American town can only be reached by land through Canada.",
+  "asr": "This American town can only be reached by land through Canada.",
+  "sub": "This American town can only be reached by land through Canada.",
+  "voice": "am_michael",
+  "speed": 0.95
+ },
+ {
+  "id": "s2",
+  "text": "In eighteen forty-six, Britain and the United States drew their border along the forty-ninth parallel.",
+  "asr": "In 1846, Britain and the United States drew their border along the 49th parallel.",
+  "sub": "In 1846, Britain and the United States drew their border along the 49th parallel.",
+  "voice": "am_michael",
+  "speed": 0.95
+ },
+ {
+  "id": "s3",
+  "text": "But one small peninsula south of Vancouver dips just below that line.",
+  "asr": "But one small peninsula south of Vancouver dips just below that line.",
+  "sub": "But one small peninsula south of Vancouver dips just below that line.",
+  "voice": "am_michael",
+  "speed": 0.95
+ },
+ {
+  "id": "s4",
+  "text": "So its tip became American.",
+  "asr": "So its tip became American.",
+  "sub": "So its tip became American.",
+  "voice": "am_michael",
+  "speed": 0.95
+ },
+ {
+  "id": "s5",
+  "text": "Today, people in Point Roberts, Washington, cross two international borders just to drive to the rest of their own state.",
+  "asr": "Today, people in Point Roberts, Washington cross two international borders just to drive to the rest of their own state.",
+  "sub": "Today, people in Point Roberts, Washington cross two international borders just to drive to the rest of their own state.",
+  "voice": "am_michael",
+  "speed": 0.95
+ }
+]
