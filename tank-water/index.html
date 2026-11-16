@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Water Tanks</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #EFE3C6; }
+  svg, canvas { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #paper { mix-blend-mode: multiply; pointer-events: none; }
+  #fx { pointer-events: none; }
+  .mul { mix-blend-mode: multiply; }
+</style>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs id="defs">
+    <filter id="boil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence id="boilT" type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="1" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="4" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -22 15.2" result="gm"/>
+      <feComposite in="d" in2="gm" operator="in"/>
+    </filter>
+    <filter id="stampInk" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="11" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="7" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="21" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 5.9" result="gm"/>
+      <feComposite in="d" in2="gm" operator="in"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <clipPath id="frameClip"><rect width="1080" height="1920"/></clipPath>
+  </defs>
+  <g clip-path="url(#frameClip)">
+    <g id="cam"><g id="world"></g></g>
+    <g id="caps"></g>
+    <g id="hud"></g>
+    <g id="wipe"></g>
+    <rect id="flash" width="1080" height="1920" fill="#FFFFFF" opacity="0"/>
+  </g>
+</svg>
+<canvas id="paper" width="1080" height="1920"></canvas>
+<canvas id="fx" width="1080" height="1920"></canvas>
+
+<script>
+// ============================================================
+// basics (helpers adapted from the Halftone Dossier engine)
+// ============================================================
+const NS = 'http://www.w3.org/2000/svg';
+const W = 1080, H = 1920;
+const C = {
+  paper: '#EFE3C6', paper2: '#F7F0DE', ink: '#1C2230', blue: '#2F6FA3', oil: '#D38A1C',
+  yellow: '#F2C230', red: '#D23C2A', manila: '#E2C98E',
+};
+const F = { slab: "'Alfa Slab One'", bagel: "'Bagel Fat One'", sans: "'Archivo Black'", mono: "'JetBrains Mono'" };
+const FPS = 30;
+const VO = 0.6;                 // narration starts 0.6 s in
+const DUR = 33.4;               // last word ends at 33.05; the CLOSED stamp lands right after
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, str, attrs) { const e = el('text', attrs, parent); e.textContent = str; return e; }
+function tf(e, x = 0, y = 0, s = 1, r = 0, sy) {
+  e.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${r.toFixed(2)}) scale(${s.toFixed(4)} ${(sy ?? s).toFixed(4)})`);
+}
+function op(e, o) { e.setAttribute('opacity', Math.max(0, Math.min(1, o)).toFixed(3)); }
+function show(e, v) { e.style.display = v ? '' : 'none'; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const E = {
+  out: p => 1 - Math.pow(1 - p, 3),
+  in: p => p * p * p,
+  io: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  back: p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); },
+};
+const pop = (t, t0, d = 0.35) => t < t0 ? 0 : E.back(seg(t, t0, t0 + d));
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const mctx = document.createElement('canvas').getContext('2d');
+function measure(str, size, family, weight = 400) { mctx.font = `${weight} ${size}px ${family}`; return mctx.measureText(str).width; }
+let uid = 0; const nid = p => `${p}${++uid}`;
+const defs = document.getElementById('defs');
+
+function chars(parent, str, o) {
+  const { x, y, size, family, weight = 400, fill = C.ink, anchor = 'start', ls = 0, shadow } = o;
+  const g = el('g', {}, parent);
+  const arr = [...str];
+  const widths = arr.map(c => measure(c, size, family, weight));
+  const total = widths.reduce((a, b) => a + b, 0) + ls * (arr.length - 1);
+  let cx = anchor === 'middle' ? x - total / 2 : anchor === 'end' ? x - total : x;
+  const items = arr.map((ch, i) => {
+    const cg = el('g', {}, g);
+    const base = { x: 0, y: 0, 'font-size': size, 'font-family': family, 'font-weight': weight, 'text-anchor': 'middle' };
+    if (shadow) txt(cg, ch, { ...base, x: shadow.dx, y: shadow.dy, fill: shadow.fill, class: 'mul' });
+    txt(cg, ch, { ...base, fill });
+    const it = { g: cg, x: cx + widths[i] / 2, y, w: widths[i], size };
+    cx += widths[i] + ls;
+    tf(cg, it.x, it.y);
+    return it;
+  });
+  return { g, items, total, str, x0: anchor === 'middle' ? x - total / 2 : x, y, size };
+}
+function charsPop(c, t, t0, stagger = 0.03, d = 0.34, from = 60) {
+  c.items.forEach((it, i) => {
+    const s = t0 + i * stagger;
+    const p = seg(t, s, s + d);
+    const h = it.size * 0.35;
+    if (t < s) { op(it.g, 0); return; }
+    op(it.g, 1);
+    const sc = E.back(p);
+    const sq = 1 + 0.25 * Math.sin(p * Math.PI) * (1 - p);
+    it.g.setAttribute('transform', `translate(${it.x} ${it.y + from * (1 - E.out(p))}) translate(0 ${-h}) scale(${(sc / sq).toFixed(3)} ${(sc * sq).toFixed(3)}) translate(0 ${h})`);
+  });
+}
+// halftone: one path of circles on a rotated grid inside a box; f(x,y) → 0..1
+function htD({ x0 = 0, y0 = 0, w = W, h = H, step = 22, angle = 15, f, maxK = 0.68 }) {
+  const a = angle * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const n = Math.ceil(Math.hypot(w, h) / step / 2) + 2;
+  const cx0 = x0 + w / 2, cy0 = y0 + h / 2;
+  let d = '';
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const u = i * step, v = j * step;
+    const x = cx0 + u * ca - v * sa, y = cy0 + u * sa + v * ca;
+    if (x < x0 - step || x > x0 + w + step || y < y0 - step || y > y0 + h + step) continue;
+    const s = clamp(f(x, y)); if (s < 0.06) continue;
+    const r = s * step * maxK;
+    d += `M${(x - r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(2 * r).toFixed(1)} 0a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(-2 * r).toFixed(1)} 0`;
+  }
+  return d || 'M0 0';
+}
+function halftone(parent, o) { const p = el('path', { d: htD(o), fill: o.color }, parent); if (o.mul) p.setAttribute('class', 'mul'); return p; }
+const radial = (cx, cy, R, pw = 1.2) => (x, y) => Math.pow(clamp(1 - Math.hypot(x - cx, y - cy) / R), pw);
+const edgeF = (R = 1000, pw = 1.6) => (x, y) => Math.pow(clamp(Math.hypot((x - 540) * 1.6, y - 960) / R - 0.45), pw) * 1.3;
+const ramp = (ya, yb, a = 0, b = 1) => (x, y) => lerp(a, b, seg(y, ya, yb));
+function clipOf(d) { const id = nid('cl'); const cp = el('clipPath', { id }, defs); const p = el('path', { d }, cp); return { id, p, url: `url(#${id})` }; }
+function bg(parent, color) { return el('rect', { width: W, height: H, fill: color }, parent); }
+
+function stampEl(parent, lines, { size = 120, color = C.red, family = F.sans, padX = 46, padY = 24, border = 11, sub = 0.34 } = {}) {
+  const g = el('g', {}, parent);
+  const inner = el('g', { filter: 'url(#stampInk)' }, g);
+  const sizes = lines.map((l, i) => i === 0 ? size : size * sub);
+  const w = Math.max(...lines.map((l, i) => measure(l, sizes[i], family))) + padX * 2;
+  const lh = sizes.map(s => s * 1.08);
+  const h = lh.reduce((a, b) => a + b, 0) + padY * 2;
+  el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 20, fill: 'none', stroke: color, 'stroke-width': border }, inner);
+  el('rect', { x: -w / 2 + border * 1.8, y: -h / 2 + border * 1.8, width: w - border * 3.6, height: h - border * 3.6, rx: 10, fill: 'none', stroke: color, 'stroke-width': border * 0.35 }, inner);
+  let y = -h / 2 + padY;
+  lines.forEach((l, i) => { y += lh[i]; txt(inner, l, { x: 0, y: y - sizes[i] * 0.2, 'font-size': sizes[i], 'font-family': family, fill: color, 'text-anchor': 'middle' }); });
+  return { g, w, h };
+}
+function stampAnim(s, t, t0, x, y, rot) {
+  if (t < t0 - 0.09) { op(s.g, 0); return; }
+  const p = seg(t, t0 - 0.09, t0);
+  const after = Math.max(0, t - t0);
+  const bounce = 1 + 0.05 * Math.sin(after * 30) * Math.exp(-after * 9);
+  op(s.g, p < 1 ? 0.3 + 0.7 * p : 0.93);
+  tf(s.g, x, y, lerp(2.6, 1, E.in(p)) * bounce, rot);
+}
+function label(parent, str, x, y, { size = 30, fill = C.ink, bgc = null, anchor = 'start' } = {}) {
+  const g = el('g', {}, parent);
+  const w = measure(str, size, F.mono, 800);
+  const xx = anchor === 'middle' ? -w / 2 : 0;
+  if (bgc) el('rect', { x: xx - 14, y: -size * 0.95, width: w + 28, height: size * 1.35, rx: 6, fill: bgc }, g);
+  txt(g, str, { x: xx, y: 0, 'font-size': size, 'font-family': F.mono, 'font-weight': 800, fill });
+  tf(g, x, y);
+  return g;
+}
+
+// ============================================================
+// the storage tank (cutaway): liquid levels animate, dots are the shading
+// ============================================================
+function tank(parent, { cx, top, w, h, step = 22, labels = false, id = nid('tk') }) {
+  const rx = w / 2, ry = w * 0.1, bot = top + h, roofH = w * 0.16;
+  const g = el('g', {}, parent);
+  const front = (ya, yb) => `M${cx - rx} ${ya}A${rx} ${ry} 0 0 0 ${cx + rx} ${ya}L${cx + rx} ${yb}A${rx} ${ry} 0 0 1 ${cx - rx} ${yb}Z`;
+  const topF = (y) => `M${cx - rx} ${y}A${rx} ${ry} 0 0 0 ${cx + rx} ${y}A${rx} ${ry} 0 0 0 ${cx - rx} ${y}Z`;
+  // interior back wall
+  el('path', { d: `M${cx - rx} ${top}A${rx} ${ry} 0 0 1 ${cx + rx} ${top}L${cx + rx} ${bot}A${rx} ${ry} 0 0 1 ${cx - rx} ${bot}Z`, fill: C.paper2 }, g);
+  const backDots = halftone(g, { x0: cx - rx, y0: top - ry, w, h: h + 2 * ry, step, angle: 45, color: C.ink, f: (x) => 0.18 + 0.25 * Math.pow(Math.abs(x - cx) / rx, 3), maxK: 0.5 });
+  const bclip = clipOf(front(top - ry * 3, bot)); backDots.setAttribute('clip-path', bclip.url);
+  // liquids
+  const water = el('path', { fill: C.paper2 }, g);
+  const wclip = clipOf('M0 0'); const wclip2 = clipOf('M0 0');
+  const waterDots = el('path', { fill: C.blue, 'clip-path': wclip.url }, g);
+  const waterDeep = el('path', { fill: C.ink, class: 'mul', 'clip-path': wclip.url }, g);
+  const waterTop = el('path', { fill: C.paper2 }, g);
+  const waterTopDots = el('path', { fill: C.blue, 'clip-path': wclip2.url }, g);
+  const oilF = el('path', { fill: C.oil }, g);
+  const oclip = clipOf('M0 0');
+  const oilDots = el('path', { fill: C.ink, class: 'mul', 'clip-path': oclip.url }, g);
+  const oilT = el('path', { fill: C.yellow }, g);
+  const otclip = clipOf('M0 0');
+  const oilTDots = el('path', { fill: C.oil, class: 'mul', 'clip-path': otclip.url }, g);
+  // walls (the cut edge) and roof
+  const wallW = Math.max(8, w * 0.025);
+  el('rect', { x: cx - rx - wallW, y: top, width: wallW, height: h, fill: C.ink }, g);
+  el('rect', { x: cx + rx, y: top, width: wallW, height: h, fill: C.ink }, g);
+  el('path', { d: `M${cx - rx - wallW} ${bot}A${rx + wallW} ${ry + wallW} 0 0 0 ${cx + rx + wallW} ${bot}`, fill: 'none', stroke: C.ink, 'stroke-width': wallW }, g);
+  const roof = el('g', {}, g);
+  el('path', { d: `M${cx - rx - wallW} ${top}L${cx} ${top - roofH}L${cx + rx + wallW} ${top}A${rx + wallW} ${ry} 0 0 1 ${cx - rx - wallW} ${top}Z`, fill: C.paper2, stroke: C.ink, 'stroke-width': wallW * 0.8, 'stroke-linejoin': 'round' }, roof);
+  const rd = halftone(roof, { x0: cx - rx, y0: top - roofH, w, h: roofH + ry, step: step * 0.8, angle: 30, color: C.blue, f: (x) => 0.25 + 0.6 * seg(x, cx - rx, cx + rx), maxK: 0.55 });
+  const rclip = clipOf(`M${cx - rx} ${top}L${cx} ${top - roofH}L${cx + rx} ${top}A${rx} ${ry} 0 0 1 ${cx - rx} ${top}Z`); rd.setAttribute('clip-path', rclip.url);
+  // hatch
+  const hatch = el('g', {}, g);
+  el('rect', { x: cx - w * 0.06, y: top - roofH - w * 0.035, width: w * 0.12, height: w * 0.04, rx: 3, fill: C.ink }, hatch);
+  // ladder
+  const lg = el('g', { stroke: C.ink, 'stroke-width': Math.max(3, w * 0.008), fill: 'none' }, g);
+  const lx = cx + rx + wallW + w * 0.02;
+  el('path', { d: `M${lx} ${top - 10}V${bot}M${lx + w * 0.05} ${top - 10}V${bot}` }, lg);
+  for (let y = top; y < bot; y += w * 0.05) el('path', { d: `M${lx} ${y}H${lx + w * 0.05}` }, lg);
+
+  function set(level, oilPx, { surfK = 1 } = {}) {
+    // level: 0..1 of water height; oilPx: thickness of the oil band
+    const ys = bot - (h - 4) * level;
+    const yo = ys - oilPx;
+    const fw = front(ys, bot);
+    water.setAttribute('d', fw); wclip.p.setAttribute('d', fw);
+    const bb = { x0: cx - rx, y0: ys - ry, w, h: bot - ys + 2 * ry };
+    waterDots.setAttribute('d', level > 0.01 ? htD({ ...bb, step, angle: 15, f: ramp(ys, bot, 0.55, 1.0), maxK: 0.72 }) : 'M0 0');
+    waterDeep.setAttribute('d', level > 0.01 ? htD({ ...bb, step, angle: 75, f: ramp(ys + (bot - ys) * 0.35, bot + ry, 0.0, 0.55), maxK: 0.6 }) : 'M0 0');
+    const tw = topF(ys);
+    waterTop.setAttribute('d', level > 0.01 && oilPx < 1 ? tw : 'M0 0'); wclip2.p.setAttribute('d', tw);
+    waterTopDots.setAttribute('d', level > 0.01 && oilPx < 1 ? htD({ x0: cx - rx, y0: ys - ry, w, h: 2 * ry, step, angle: 15, f: () => 0.4 * surfK, maxK: 0.7 }) : 'M0 0');
+    if (oilPx >= 1) {
+      const fo = front(yo, ys);
+      oilF.setAttribute('d', fo); oclip.p.setAttribute('d', fo);
+      oilDots.setAttribute('d', htD({ x0: cx - rx, y0: yo - ry, w, h: oilPx + 2 * ry, step: step * 0.75, angle: 45, f: (x) => 0.18 + 0.35 * Math.pow(Math.abs(x - cx) / rx, 2), maxK: 0.62 }));
+      oilT.setAttribute('d', topF(yo));
+      oilTDots.setAttribute('d', htD({ x0: cx - rx, y0: yo - ry, w, h: 2 * ry, step: step * 0.75, angle: 45, f: (x, y) => 0.25 + 0.5 * Math.pow(Math.hypot((x - cx) / rx, (y - yo) / ry), 2), maxK: 0.62 }));
+      otclip.p.setAttribute('d', topF(yo));
+    } else { [oilF, oilDots, oilT, oilTDots].forEach(p => p.setAttribute('d', 'M0 0')); }
+    return { ys, yo };
+  }
+  return { g, set, cx, top, bot, rx, ry, roofH, hatch, w, h };
+}
+
+// ============================================================
+// people and props (ink outline, flat fill, line boil)
+// ============================================================
+const LW = 7;
+function person(parent, { hat = 'fedora', coat = C.blue, scale = 1, briefcase = false, clipboard = false }) {
+  const g = el('g', {}, parent);
+  const body = el('g', { filter: 'url(#boil)' }, g);
+  const legs = el('g', {}, body);
+  const legL = el('path', { d: 'M-14 0 L-18 120', stroke: C.ink, 'stroke-width': 22, 'stroke-linecap': 'round' }, legs);
+  const legR = el('path', { d: 'M14 0 L18 120', stroke: C.ink, 'stroke-width': 22, 'stroke-linecap': 'round' }, legs);
+  const torso = el('g', {}, body);
+  el('path', { d: 'M-46 -170 Q-58 -60 -54 20 L54 20 Q58 -60 46 -170 Q0 -190 -46 -170Z', fill: coat, stroke: C.ink, 'stroke-width': LW, 'stroke-linejoin': 'round' }, torso);
+  halftone(torso, { x0: -60, y0: -190, w: 120, h: 215, step: 12, angle: 45, color: C.ink, f: (x) => 0.15 + 0.5 * seg(x, -20, 60), maxK: 0.55, mul: true }).setAttribute('clip-path', clipOf('M-46 -170 Q-58 -60 -54 20 L54 20 Q58 -60 46 -170 Q0 -190 -46 -170Z').url);
+  el('path', { d: 'M-10 -176 L0 -120 L10 -176', fill: C.paper2, stroke: C.ink, 'stroke-width': 4 }, torso);
+  const head = el('g', {}, torso);
+  el('ellipse', { cx: 0, cy: -222, rx: 36, ry: 42, fill: C.paper2, stroke: C.ink, 'stroke-width': LW }, head);
+  el('path', { d: 'M28 -228 Q44 -220 30 -210', fill: 'none', stroke: C.ink, 'stroke-width': 5, 'stroke-linecap': 'round' }, head); // nose (faces right)
+  el('circle', { cx: 16, cy: -232, r: 4.5, fill: C.ink }, head);
+  if (hat === 'fedora') {
+    el('path', { d: 'M-56 -246 Q0 -258 56 -246 L50 -238 Q0 -248 -50 -238Z', fill: C.ink }, head);
+    el('path', { d: 'M-34 -246 Q-36 -290 0 -292 Q36 -290 34 -246Z', fill: C.ink }, head);
+    el('rect', { x: -34, y: -262, width: 68, height: 9, fill: C.oil }, head);
+  } else {
+    el('path', { d: 'M-50 -244 Q0 -254 50 -244 L46 -238 Q0 -246 -46 -238Z', fill: C.ink }, head);
+    el('path', { d: 'M-32 -246 Q-34 -296 0 -296 Q34 -296 32 -246Z', fill: C.ink }, head);
+  }
+  const arm = el('g', {}, torso);
+  el('path', { d: 'M20 -150 Q34 -90 40 -50', fill: 'none', stroke: C.ink, 'stroke-width': 26, 'stroke-linecap': 'round' }, arm);
+  el('path', { d: 'M20 -150 Q34 -90 40 -50', fill: 'none', stroke: coat, 'stroke-width': 14, 'stroke-linecap': 'round' }, arm);
+  el('circle', { cx: 41, cy: -44, r: 11, fill: C.paper2, stroke: C.ink, 'stroke-width': 5 }, arm);
+  let bc = null, cb = null;
+  if (briefcase) { bc = el('g', {}, arm); el('rect', { x: 18, y: -38, width: 56, height: 44, rx: 6, fill: C.oil, stroke: C.ink, 'stroke-width': 6 }, bc); el('path', { d: 'M34 -38 v-8 h24 v8', fill: 'none', stroke: C.ink, 'stroke-width': 5 }, bc); }
+  if (clipboard) { cb = el('g', {}, arm); el('rect', { x: 30, y: -96, width: 56, height: 74, rx: 4, fill: C.paper2, stroke: C.ink, 'stroke-width': 5 }, cb); el('path', { d: 'M40 -78h36M40 -64h36M40 -50h24', stroke: C.ink, 'stroke-width': 4 }, cb); }
+  tf(g, 0, 0, scale);
+  return { g, body, legL, legR, torso, head, arm, scale };
+}
+function walk(p, t, speed = 2.2, amp = 22) {
+  const a = Math.sin(t * speed * Math.PI);
+  p.legL.setAttribute('transform', `rotate(${(a * amp).toFixed(1)} -14 0)`);
+  p.legR.setAttribute('transform', `rotate(${(-a * amp).toFixed(1)} 14 0)`);
+  p.torso.setAttribute('transform', `translate(0 ${(-Math.abs(Math.cos(t * speed * Math.PI)) * 6).toFixed(1)})`);
+}
+function cashStack(parent, x, y, s = 1) {
+  const g = el('g', { filter: 'url(#boil)' }, parent);
+  for (let i = 0; i < 4; i++) {
+    const yy = -i * 26;
+    el('path', { d: `M-90 ${yy} L60 ${yy} L100 ${yy - 22} L-50 ${yy - 22}Z`, fill: C.paper2, stroke: C.ink, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+    el('path', { d: `M-90 ${yy} L60 ${yy} L60 ${yy + 22} L-90 ${yy + 22}Z`, fill: C.paper2, stroke: C.ink, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+    el('rect', { x: -32, y: yy - 1, width: 34, height: 23, fill: C.yellow, stroke: C.ink, 'stroke-width': 4 }, g);
+    txt(g, '$', { x: -15, y: yy + 18, 'font-size': 20, 'font-family': F.sans, fill: C.ink, 'text-anchor': 'middle' });
+    el('path', { d: `M-90 ${yy} L60 ${yy} L60 ${yy + 22} L-90 ${yy + 22}Z`, fill: C.blue, class: 'mul', opacity: 0.0 }, g);
+  }
+  halftone(g, { x0: -100, y0: -110, w: 210, h: 140, step: 10, angle: 45, color: C.blue, f: (x, y) => 0.35 * seg(y, -110, 30), maxK: 0.55, mul: true });
+  tf(g, x, y, s);
+  return g;
+}
+function skyline(parent, y, { color = C.blue } = {}) {
+  const g = el('g', {}, parent);
+  const r = rng(77);
+  const shapes = [];
+  let d = '';
+  // squat tanks
+  [[60, 150, 120], [230, 190, 150], [420, 140, 110], [700, 210, 160], [900, 160, 120]].forEach(([x, w, hh]) => {
+    d += `M${x} ${y}V${y - hh}Q${x + w / 2} ${y - hh - 22} ${x + w} ${y - hh}V${y}Z`;
+  });
+  // towers and stacks
+  [[560, 46, 330], [630, 30, 260], [380, 26, 240], [860, 34, 300]].forEach(([x, w, hh]) => { d += `M${x} ${y}V${y - hh}H${x + w}V${y}Z`; });
+  d += `M0 ${y}H${W}V${y + 40}H0Z`;
+  el('path', { d, fill: C.paper2, stroke: C.ink, 'stroke-width': 5, 'stroke-linejoin': 'round' }, g);
+  const clip = clipOf(d);
+  halftone(g, { x0: 0, y0: y - 340, w: W, h: 380, step: 14, angle: 15, color, f: ramp(y - 340, y + 40, 0.3, 0.95), maxK: 0.66 }).setAttribute('clip-path', clip.url);
+  // pipe rack
+  el('path', { d: `M0 ${y - 60}H${W}M0 ${y - 44}H${W}`, stroke: C.ink, 'stroke-width': 6 }, g);
+  return g;
+}
+
+// ============================================================
+// stage
+// ============================================================
+const world = document.getElementById('world');
+const cam = document.getElementById('cam');
+const hud = document.getElementById('hud');
+const caps = document.getElementById('caps');
+const wipe = document.getElementById('wipe');
+const flash = document.getElementById('flash');
+const scenes = [];
+const TEXTS_LIST = [];   // [{t0,t1,id,text,box}] for readcheck
+function scene(t0, t1, build) {
+  const g = el('g', {}, world);
+  const s = { g, t0, t1 };
+  s.update = build(g, s);
+  scenes.push(s);
+  return s;
+}
+function headline(g, str, y, { size = 96, fill = C.ink, sh = C.blue, x = 70, anchor = 'start', family = F.slab } = {}) {
+  return chars(g, str, { x, y, size, family, fill, anchor, shadow: { fill: sh, dx: 8, dy: 8 } });
+}
+function regText(t0, t1, id, c) { TEXTS_LIST.push({ t0, t1, id, text: c.str, x0: c.x0, y0: c.y - c.size, x1: c.x0 + c.total, y1: c.y + c.size * 0.25 }); }
+
+const T = { s2: 3.4, s3: 5.6, s4: 9.2, s5: 14.0, s6: 18.3, s7: 22.45, s8: 26.05, s9: 30.0 };
+const HIT = { stampAmex: 9.28, tick: 22.05, paper: 26.2, closed: 33.08, hatch: 18.36 };
+
+function buildAll() {
+  // ---------------- S1 · payoff frame: the cutaway + hook (0–3.4) ----------------
+  scene(0, T.s2, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 24, angle: 15, color: C.yellow, f: edgeF(1100, 1.5), maxK: 0.6 });
+    const inner = el('g', {}, g);
+    const tk = tank(inner, { cx: 520, top: 900, w: 700, h: 600, step: 22 });
+    tk.set(0.93, 26);
+    const oilTag = label(inner, '← OIL', 905, 900, { size: 36, fill: C.ink, bgc: C.yellow });
+    const waterTag = chars(inner, 'WATER', { x: 520, y: 1110, size: 110, family: F.bagel, fill: C.paper2, anchor: 'middle', shadow: { fill: C.ink, dx: 7, dy: 7 } });
+    const h1 = headline(g, 'He borrowed', 330, { size: 104 });
+    const h2 = chars(g, '$150M', { x: 70, y: 540, size: 210, family: F.bagel, fill: C.red, shadow: { fill: C.ink, dx: 10, dy: 10 } });
+    const h3 = headline(g, 'against water', 680, { size: 104, fill: C.blue, sh: C.ink });
+    TEXTS_LIST.push({ t0: 0, t1: T.s2, id: 'hook', text: 'He borrowed $150M against water', x0: 70, y0: 230, x1: 1010, y1: 700 });
+    return (t) => {
+      // the payoff frame is complete on frame 0; it breathes and pushes in
+      const s = 1 + 0.05 * E.io(seg(t, 0, T.s2));
+      tf(inner, 540 * (1 - s), 1140 * (1 - s), s);
+      const bob = Math.sin(t * 2.6) * 3;
+      tf(oilTag, 905, 900 + bob);
+      [h1, h2, h3].forEach(c => c.items.forEach(it => tf(it.g, it.x, it.y)));
+    };
+  });
+
+  // ---------------- S2 · cash slides toward the tanks (3.4–5.6) ----------------
+  scene(T.s2, T.s3, (g) => {
+    bg(g, C.paper);
+    const far = el('g', {}, g);
+    const tanks = [];
+    for (let i = 0; i < 4; i++) { const tk = tank(far, { cx: 150 + i * 260, top: 520, w: 210, h: 330, step: 12 }); tk.set(0.9, 10); tanks.push(tk); }
+    // desk
+    const desk = el('g', {}, g);
+    el('path', { d: 'M-40 1020 L1120 1020 L1120 1920 L-40 1920Z', fill: C.manila, stroke: C.ink, 'stroke-width': 8 }, desk);
+    halftone(desk, { x0: 0, y0: 1020, w: W, h: 900, step: 20, angle: 15, color: C.oil, f: ramp(1020, 1920, 0.2, 0.75), maxK: 0.64, mul: true });
+    el('path', { d: 'M-40 1060 H1120', stroke: C.ink, 'stroke-width': 5 }, desk);
+    const stacks = [];
+    const r = rng(5);
+    for (let i = 0; i < 5; i++) stacks.push({ e: cashStack(g, 0, 0, 1.25), x0: -260 - i * 170, y0: 1660 - (i % 2) * 120, d: i * 0.12 });
+    const h1 = headline(g, 'EXHIBIT A', 300, { size: 64, fill: C.ink, sh: C.yellow, family: F.mono });
+    const h2 = headline(g, 'the loans', 400, { size: 88, fill: C.blue, sh: C.ink });
+    regText(T.s2, T.s3, 's2a', h1);
+    return (t) => {
+      charsPop(h1, t, T.s2 + 0.05); charsPop(h2, t, T.s2 + 0.25);
+      const pan = E.io(seg(t, T.s2, T.s3));
+      tf(far, -30 * pan, 0);
+      stacks.forEach((s, i) => {
+        const p = E.out(seg(t, T.s2 + s.d, T.s2 + s.d + 1.5));
+        const x = lerp(s.x0, 200 + i * 175, p), y = lerp(s.y0 + 150, 1440 + (i % 2) * 70, p);
+        tf(s.e, x, y, lerp(1.7, 1.25, p), -6 + 6 * p);
+      });
+    };
+  });
+
+  // ---------------- S3 · the case file opens (5.6–9.2) ----------------
+  scene(T.s3, T.s4, (g) => {
+    bg(g, C.ink);
+    halftone(g, { step: 24, angle: 15, color: C.blue, f: radial(540, 900, 1100, 1.1), maxK: 0.6 });
+    const cam3 = el('g', {}, g);
+    // folder back
+    el('path', { d: 'M60 300 H420 L460 250 H1020 V1520 H60Z', fill: C.manila, stroke: C.ink, 'stroke-width': 8 }, cam3);
+    halftone(cam3, { x0: 60, y0: 250, w: 960, h: 1270, step: 20, angle: 45, color: C.oil, f: () => 0.32, maxK: 0.6, mul: true });
+    // sheet
+    const sheet = el('g', {}, cam3);
+    el('rect', { x: 110, y: 340, width: 860, height: 1140, fill: C.paper2, stroke: C.ink, 'stroke-width': 5 }, sheet);
+    // refinery behind the portrait
+    const sky = el('g', {}, sheet);
+    el('rect', { x: 150, y: 400, width: 780, height: 560, fill: C.paper }, sky);
+    const skyClip = clipOf('M150 400H930V960H150Z');
+    const skyG = el('g', { 'clip-path': skyClip.url }, sky);
+    halftone(skyG, { x0: 150, y0: 400, w: 780, h: 560, step: 16, angle: 15, color: C.yellow, f: radial(760, 520, 520, 1.2), maxK: 0.66 });
+    const sk = skyline(skyG, 900, {});
+    tf(sk, 150, 60, 0.72);
+    el('rect', { x: 150, y: 400, width: 780, height: 560, fill: 'none', stroke: C.ink, 'stroke-width': 6 }, sky);
+    // portrait (1960s businessman, drawn)
+    const bust = el('g', { filter: 'url(#boil)' }, sheet);
+    const sp = 'M300 960 Q310 790 430 760 L650 760 Q770 790 780 960Z';
+    el('path', { d: sp, fill: C.ink, stroke: C.ink, 'stroke-width': LW }, bust);
+    halftone(bust, { x0: 300, y0: 750, w: 480, h: 220, step: 12, angle: 45, color: C.blue, f: (x) => 0.55 - 0.45 * seg(x, 300, 780), maxK: 0.6 }).setAttribute('clip-path', clipOf(sp).url);
+    el('path', { d: 'M482 762 L540 880 L598 762Z', fill: C.paper2, stroke: C.ink, 'stroke-width': 5 }, bust);
+    el('path', { d: 'M528 790 L552 790 L562 880 L540 905 L518 880Z', fill: C.red, stroke: C.ink, 'stroke-width': 5 }, bust);
+    const face = 'M540 520 C640 520 668 600 662 670 C656 740 610 790 540 790 C470 790 424 740 418 670 C412 600 440 520 540 520Z';
+    el('path', { d: face, fill: C.paper2, stroke: C.ink, 'stroke-width': LW }, bust);
+    halftone(bust, { x0: 410, y0: 510, w: 260, h: 290, step: 11, angle: 45, color: C.oil, f: (x, y) => 0.1 + 0.55 * seg(x, 520, 670) + 0.2 * seg(y, 700, 790), maxK: 0.6, mul: true }).setAttribute('clip-path', clipOf(face).url);
+    el('path', { d: 'M420 640 C410 540 470 492 545 494 C625 496 676 548 662 640 C640 580 600 556 540 560 C480 558 438 586 420 640Z', fill: C.ink }, bust); // slick hair
+    el('ellipse', { cx: 495, cy: 660, rx: 34, ry: 26, fill: 'none', stroke: C.ink, 'stroke-width': 7 }, bust);
+    el('ellipse', { cx: 590, cy: 660, rx: 34, ry: 26, fill: 'none', stroke: C.ink, 'stroke-width': 7 }, bust);
+    el('path', { d: 'M529 656 H556', stroke: C.ink, 'stroke-width': 6 }, bust);
+    el('circle', { cx: 497, cy: 662, r: 6, fill: C.ink }, bust); el('circle', { cx: 588, cy: 662, r: 6, fill: C.ink }, bust);
+    el('path', { d: 'M540 680 Q532 712 548 716', fill: 'none', stroke: C.ink, 'stroke-width': 5 }, bust);
+    el('path', { d: 'M500 740 Q540 756 584 738', fill: 'none', stroke: C.ink, 'stroke-width': 6, 'stroke-linecap': 'round' }, bust);
+    // name plate + data
+    const plate = el('g', {}, sheet);
+    el('rect', { x: 150, y: 1000, width: 780, height: 120, fill: C.ink }, plate);
+    txt(plate, 'TINO DE ANGELIS', { x: 540, y: 1082, 'font-size': 66, 'font-family': F.sans, fill: C.yellow, 'text-anchor': 'middle' });
+    const info = el('g', {}, sheet);
+    txt(info, 'OCCUPATION .... OIL DEALER', { x: 160, y: 1370, 'font-size': 34, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    txt(info, 'PREMISES ...... REFINERY', { x: 160, y: 1420, 'font-size': 34, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    txt(info, 'LOCATION ...... BAYONNE, N.J.', { x: 160, y: 1470, 'font-size': 34, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    // paper clip
+    el('path', { d: 'M820 300 V430 Q820 460 850 460 Q880 460 880 430 V320 Q880 300 862 300 Q845 300 845 320 V420', fill: 'none', stroke: C.ink, 'stroke-width': 8, 'stroke-linecap': 'round' }, sheet);
+    // folder flap
+    const flap = el('g', {}, g);
+    el('path', { d: 'M60 300 H1020 V1520 H60Z', fill: C.manila, stroke: C.ink, 'stroke-width': 8 }, flap);
+    halftone(flap, { x0: 60, y0: 300, w: 960, h: 1220, step: 20, angle: 45, color: C.oil, f: () => 0.45, maxK: 0.6, mul: true });
+    txt(flap, 'CASE No. 63-1119', { x: 120, y: 420, 'font-size': 52, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    txt(flap, 'CONFIDENTIAL', { x: 120, y: 480, 'font-size': 34, 'font-family': F.mono, 'font-weight': 800, fill: C.red });
+    TEXTS_LIST.push({ t0: 6.5, t1: T.s4, id: 'plate', text: 'TINO DE ANGELIS', x0: 150, y0: 1000, x1: 930, y1: 1120 });
+    return (t) => {
+      // the folder is lifted, then the flap swings open toward camera
+      const enter = E.back(seg(t, T.s3, T.s3 + 0.4));
+      const p = E.io(seg(t, T.s3 + 0.35, T.s3 + 0.9));
+      flap.setAttribute('transform', `translate(0 ${lerp(1500, 0, enter)}) translate(0 300) scale(1 ${(1 - p * 1.0).toFixed(3)}) translate(0 -300)`);
+      show(flap, p < 0.99);
+      const s = 1 + 0.08 * E.io(seg(t, T.s3 + 0.9, T.s4));
+      tf(cam3, 540 * (1 - s), (700 + lerp(1500, 0, enter)) * (1 - s) + lerp(1500, 0, enter) * s, s);
+      tf(sk, 150 - 40 * seg(t, T.s3, T.s4), 60, 0.72);
+    };
+  });
+
+  // ---------------- S4 · certified, then the bankers line up (9.2–14.0) ----------------
+  scene(T.s4, T.s5, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 24, angle: 15, color: C.blue, f: edgeF(1000, 1.4), maxK: 0.55 });
+    const top = el('g', {}, g);
+    const rc = el('g', {}, top);
+    el('rect', { x: 120, y: 260, width: 840, height: 760, fill: C.paper2, stroke: C.ink, 'stroke-width': 6 }, rc);
+    halftone(rc, { x0: 120, y0: 260, w: 840, h: 760, step: 16, angle: 45, color: C.yellow, f: () => 0.22, maxK: 0.6, mul: true });
+    txt(rc, 'WAREHOUSE RECEIPT', { x: 540, y: 350, 'font-size': 60, 'font-family': F.slab, fill: C.ink, 'text-anchor': 'middle' });
+    el('path', { d: 'M160 385 H920', stroke: C.ink, 'stroke-width': 5 }, rc);
+    ['TANK ............ No. 6', 'CONTENTS ........ OIL', 'HELD AT ......... BAYONNE, N.J.', 'BORROWER ........ T. DE ANGELIS'].forEach((s, i) => {
+      txt(rc, s, { x: 170, y: 460 + i * 62, 'font-size': 34, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    });
+    el('path', { d: 'M170 930 H520', stroke: C.ink, 'stroke-width': 3, 'stroke-dasharray': '10 8' }, rc);
+    txt(rc, 'warehouseman', { x: 170, y: 970, 'font-size': 28, 'font-family': F.mono, 'font-weight': 500, fill: C.ink });
+    const st = stampEl(top, ['AMERICAN EXPRESS', 'FIELD WAREHOUSING · CERTIFIED'], { size: 70, color: C.red, sub: 0.42 });
+    // bankers
+    const line = el('g', {}, g);
+    const bankers = [];
+    for (let i = 0; i < 5; i++) {
+      const p = person(line, { hat: 'bowler', coat: C.ink, scale: 1.05, briefcase: true });
+      bankers.push(p);
+    }
+    TEXTS_LIST.push({ t0: T.s4 + 0.2, t1: T.s5, id: 'receipt', text: 'WAREHOUSE RECEIPT', x0: 200, y0: 290, x1: 880, y1: 370 });
+    return (t) => {
+      stampAnim(st, t, HIT.stampAmex, 560, 790, -9);
+      // pull back as the lenders arrive
+      const pb = E.io(seg(t, 11.9, 12.9));
+      tf(top, lerp(0, 120, pb), lerp(0, -90, pb), lerp(1, 0.78, pb));
+      bankers.forEach((b, i) => {
+        const t0 = 12.2 + i * 0.16;
+        const rise = E.back(seg(t, t0, t0 + 0.42));
+        const x = 120 + i * 190 + (t - 12.2) * 14;
+        const y = lerp(2300, 1700, rise);
+        tf(b.g, x, y, 1.05);
+        walk(b, t + i * 0.3, 1.8, 12);
+      });
+    };
+  });
+
+  // ---------------- S5 · payoff, big: the water rises (14.0–18.3) ----------------
+  scene(T.s5, T.s6, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 26, angle: 15, color: C.yellow, f: edgeF(900, 1.3), maxK: 0.62 });
+    const inner = el('g', {}, g);
+    const tk = tank(inner, { cx: 520, top: 420, w: 860, h: 1260, step: 24 });
+    const waterWord = chars(inner, 'WATER', { x: 520, y: 1020, size: 210, family: F.bagel, fill: C.paper2, anchor: 'middle', shadow: { fill: C.ink, dx: 10, dy: 10 } });
+    const oilTag = label(inner, 'OIL', 870, 380, { size: 48, fill: C.ink, bgc: C.yellow });
+    const arrow = el('path', { d: 'M880 400 Q900 440 860 480', fill: 'none', stroke: C.ink, 'stroke-width': 8, 'stroke-linecap': 'round', 'marker-end': '' }, inner);
+    const h1 = headline(g, 'EXHIBIT B', 240, { size: 64, family: F.mono, sh: C.yellow });
+    regText(T.s5, T.s6, 's5h', h1);
+    TEXTS_LIST.push({ t0: 16.0, t1: T.s6, id: 'water', text: 'WATER OIL', x0: 100, y0: 330, x1: 1000, y1: 1340 });
+    return (t) => {
+      charsPop(h1, t, T.s5 + 0.02);
+      // snap zoom settles, water rises to almost the whole tank
+      const z = lerp(1.18, 1.0, E.out(seg(t, T.s5, T.s5 + 0.5)));
+      tf(inner, 540 * (1 - z), 1000 * (1 - z), z);
+      const lvl = lerp(0.08, 0.95, E.io(seg(t, T.s5 + 0.05, 15.6)));
+      const slosh = Math.sin(t * 9) * 4 * (1 - seg(t, 15.4, 16.2));
+      const oilP = E.back(seg(t, 16.25, 16.65));
+      const r = tk.set(lvl + slosh / 1260, 34 * clamp(oilP, 0, 1.2));
+      charsPop(waterWord, t, 15.15, 0.05);
+      show(waterWord.g, r.ys < 900);
+      show(oilTag, t >= 16.3); show(arrow, t >= 16.3);
+      tf(oilTag, 760, lerp(300, 330, pop(t, 16.3)));
+      arrow.setAttribute('d', `M860 ${352} Q900 ${380} ${830} ${r.yo - 8}`);
+    };
+  });
+
+  // ---------------- S6 · the inspector looks through the hatch (18.3–22.45) ----------------
+  scene(T.s6, T.s7, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 24, angle: 15, color: C.blue, f: edgeF(1000, 1.4), maxK: 0.5 });
+    // view through the hatch: only oil
+    const view = el('g', {}, g);
+    const vc = { x: 540, y: 520, r: 260 };
+    el('circle', { cx: vc.x, cy: vc.y, r: vc.r + 30, fill: C.ink }, view);
+    const vclip = clipOf(`M${vc.x - vc.r} ${vc.y}a${vc.r} ${vc.r} 0 1 0 ${2 * vc.r} 0a${vc.r} ${vc.r} 0 1 0 ${-2 * vc.r} 0`);
+    const vin = el('g', { 'clip-path': vclip.url }, view);
+    el('rect', { x: 240, y: 220, width: 600, height: 600, fill: C.oil }, vin);
+    const ripples = el('path', { fill: C.yellow }, vin);
+    halftone(vin, { x0: 240, y0: 220, w: 600, h: 600, step: 18, angle: 45, color: C.ink, f: radial(540, 520, 260, 0.6), maxK: 0.35, mul: true });
+    for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; el('circle', { cx: vc.x + Math.cos(a) * (vc.r + 15), cy: vc.y + Math.sin(a) * (vc.r + 15), r: 8, fill: C.paper2 }, view); }
+    const vl = label(view, 'VIEW FROM HATCH', 540, 850, { size: 34, fill: C.paper2, bgc: C.ink, anchor: 'middle' });
+    // tank top + inspector below
+    const lower = el('g', {}, g);
+    el('path', { d: 'M-40 1920 L-40 1700 L540 1560 L1120 1700 L1120 1920Z', fill: C.paper2, stroke: C.ink, 'stroke-width': 8, 'stroke-linejoin': 'round' }, lower);
+    halftone(lower, { x0: 0, y0: 1560, w: W, h: 360, step: 20, angle: 15, color: C.blue, f: ramp(1560, 1920, 0.3, 0.85), maxK: 0.62 }).setAttribute('clip-path', clipOf('M-40 1920 L-40 1700 L540 1560 L1120 1700 L1120 1920Z').url);
+    const lid = el('g', {}, lower);
+    el('rect', { x: -70, y: -22, width: 140, height: 22, rx: 4, fill: C.ink }, lid);
+    el('ellipse', { cx: 640, cy: 1580, rx: 80, ry: 20, fill: C.ink }, lower);
+    const insp = person(lower, { hat: 'fedora', coat: C.blue, scale: 1.1, clipboard: true });
+    // checklist card
+    const card = el('g', {}, g);
+    el('rect', { x: -330, y: -110, width: 660, height: 220, rx: 12, fill: C.ink, transform: 'translate(10 10)', class: 'mul', opacity: 0.0 }, card);
+    el('rect', { x: -330, y: -110, width: 660, height: 220, rx: 12, fill: C.paper2, stroke: C.ink, 'stroke-width': 7 }, card);
+    txt(card, 'INSPECTION · TANK 6', { x: -290, y: -40, 'font-size': 36, 'font-family': F.mono, 'font-weight': 800, fill: C.ink });
+    el('rect', { x: -290, y: 0, width: 70, height: 70, rx: 6, fill: 'none', stroke: C.ink, 'stroke-width': 7 }, card);
+    txt(card, 'OIL SEEN', { x: -190, y: 58, 'font-size': 60, 'font-family': F.sans, fill: C.ink });
+    const tick = el('path', { d: 'M-282 30 L-258 62 L-200 -14', fill: 'none', stroke: C.red, 'stroke-width': 16, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-dasharray': 160 }, card);
+    TEXTS_LIST.push({ t0: 20.6, t1: T.s7, id: 'card', text: 'INSPECTION OIL SEEN', x0: 210, y0: 910, x1: 870, y1: 1130, pass: true });
+    return (t) => {
+      const vp = E.back(seg(t, T.s6 + 0.25, T.s6 + 0.65));
+      tf(view, 540 * (1 - vp), 520 * (1 - vp), vp);
+      let d = '';
+      for (let k = 0; k < 4; k++) { const rr = ((t * 60 + k * 70) % 250) + 10; d += `M${540 - rr} 520a${rr} ${rr * 0.55} 0 1 0 ${2 * rr} 0a${rr} ${rr * 0.55} 0 1 0 ${-2 * rr} 0M${540 - rr + 6} 520a${rr - 6} ${(rr - 6) * 0.55} 0 1 1 ${2 * rr - 12} 0a${rr - 6} ${(rr - 6) * 0.55} 0 1 1 ${-2 * rr + 12} 0`; }
+      ripples.setAttribute('d', d); ripples.setAttribute('fill-rule', 'evenodd');
+      // lid flips open
+      const lp = E.back(seg(t, HIT.hatch - 0.05, HIT.hatch + 0.3));
+      tf(lid, 640 - 80, 1580, 1, -110 * lp);
+      // inspector leans over, then straightens up
+      const lean = E.io(seg(t, T.s6 + 0.2, T.s6 + 0.8)) * (1 - E.io(seg(t, 21.3, 21.8)));
+      tf(insp.g, 430, 1640, 1.1);
+      insp.torso.setAttribute('transform', `rotate(${(32 * lean).toFixed(1)} 0 0)`);
+      // checklist and tick (in the narration pause)
+      const cp = E.back(seg(t, 20.75, 21.15));
+      show(card, t >= 20.75);
+      tf(card, 540, 1020 + 400 * (1 - clamp(cp)), lerp(0.6, 1, clamp(cp)), -3);
+      tick.setAttribute('stroke-dashoffset', (160 * (1 - E.out(seg(t, HIT.tick, HIT.tick + 0.18)))).toFixed(1));
+      show(tick, t >= HIT.tick);
+    };
+  });
+
+  // ---------------- S7 · pipes move the oil to the next tank (22.45–26.05) ----------------
+  scene(T.s7, T.s8, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 24, angle: 15, color: C.yellow, f: edgeF(1000, 1.4), maxK: 0.55 });
+    const inner = el('g', {}, g);
+    const A = tank(inner, { cx: 270, top: 640, w: 380, h: 440, step: 16 });
+    const B = tank(inner, { cx: 800, top: 640, w: 380, h: 440, step: 16 });
+    const pipeD = 'M270 575 V470 H800 V575';
+    const halo = el('path', { d: pipeD, fill: 'none', stroke: C.yellow, 'stroke-width': 70, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', filter: 'url(#glow)' }, inner);
+    el('path', { d: pipeD, fill: 'none', stroke: C.ink, 'stroke-width': 40, 'stroke-linejoin': 'round' }, inner);
+    const flow = el('path', { d: pipeD, fill: 'none', stroke: C.oil, 'stroke-width': 22, 'stroke-linejoin': 'round', 'stroke-dasharray': '30 22' }, inner);
+    const glowDots = el('path', { fill: C.yellow }, inner);
+    label(inner, 'TANK 6', 270, 1160, { size: 40, anchor: 'middle', bgc: C.ink, fill: C.paper2 });
+    label(inner, 'TANK 7', 800, 1160, { size: 40, anchor: 'middle', bgc: C.ink, fill: C.paper2 });
+    const h1 = headline(g, 'SAME OIL,', 280, { size: 84 });
+    const h2 = headline(g, 'NEXT TANK', 380, { size: 84, fill: C.oil, sh: C.ink });
+    TEXTS_LIST.push({ t0: T.s7 + 0.3, t1: T.s8, id: 's7h', text: 'SAME OIL, NEXT TANK', x0: 70, y0: 190, x1: 720, y1: 400 });
+    const insp = person(g, { hat: 'fedora', coat: C.blue, scale: 1.05, clipboard: true });
+    return (t) => {
+      charsPop(h1, t, T.s7 + 0.05); charsPop(h2, t, T.s7 + 0.3);
+      const pan = E.io(seg(t, T.s7, T.s8));
+      tf(inner, -30 + 50 * pan, 0);
+      const mv = E.io(seg(t, 23.3, 25.4));
+      A.set(0.9, lerp(30, 0, mv) + (mv > 0.98 ? 0 : 0));
+      B.set(0.9, lerp(0, 30, mv));
+      const on = seg(t, 23.1, 23.4) * (1 - seg(t, 25.6, 25.95));
+      op(halo, 0.85 * on * (0.8 + 0.2 * Math.sin(t * 14)));
+      op(flow, on);
+      flow.setAttribute('stroke-dashoffset', (-t * 260).toFixed(1));
+      glowDots.setAttribute('d', on > 0.01 ? htD({ x0: 180, y0: 380, w: 720, h: 200, step: 18, angle: 30, f: (x, y) => on * 0.8 * clamp(1 - Math.abs(y - 470) / 90) * (0.6 + 0.4 * Math.sin(x * 0.05 - t * 12)), maxK: 0.6 }) : 'M0 0');
+      // the inspector walks away (to the left, out of frame)
+      const wx = lerp(600, -220, seg(t, T.s7, T.s8 - 0.2));
+      tf(insp.g, wx, 1760, -1.05, 0, 1.05);
+      walk(insp, t, 2.2, 22);
+    };
+  });
+
+  // ---------------- S8a · November 1963 headline (26.05–30.0) ----------------
+  scene(T.s8, T.s9, (g) => {
+    bg(g, C.ink);
+    halftone(g, { step: 24, angle: 15, color: C.blue, f: radial(540, 800, 1100, 0.9), maxK: 0.62 });
+    const np = el('g', {}, g);
+    const sheetD = 'M-430 -620 H430 V620 H-430Z';
+    el('path', { d: sheetD, fill: C.paper2, stroke: C.ink, 'stroke-width': 6 }, np);
+    txt(np, 'THE EVENING LEDGER', { x: 0, y: -520, 'font-size': 64, 'font-family': F.slab, fill: C.ink, 'text-anchor': 'middle' });
+    el('path', { d: 'M-400 -490 H400 M-400 -440 H400', stroke: C.ink, 'stroke-width': 5 }, np);
+    txt(np, 'NOVEMBER 1963', { x: 0, y: -452, 'font-size': 32, 'font-family': F.mono, 'font-weight': 800, fill: C.ink, 'text-anchor': 'middle' });
+    txt(np, 'OIL EMPIRE', { x: 0, y: -310, 'font-size': 128, 'font-family': F.slab, fill: C.ink, 'text-anchor': 'middle' });
+    txt(np, 'COLLAPSES', { x: 0, y: -170, 'font-size': 128, 'font-family': F.slab, fill: C.red, 'text-anchor': 'middle' });
+    txt(np, 'Tanks found full of water', { x: 0, y: -100, 'font-size': 40, 'font-family': F.mono, 'font-weight': 800, fill: C.ink, 'text-anchor': 'middle' });
+    // halftone photo of a tank
+    el('rect', { x: -400, y: -60, width: 460, height: 380, fill: C.paper }, np);
+    const ph = el('g', { 'clip-path': clipOf('M-400 -60H60V320H-400Z').url }, np);
+    halftone(ph, { x0: -400, y0: -60, w: 460, h: 380, step: 12, angle: 45, color: C.ink, f: (x, y) => { const inT = Math.abs(x + 170) < 140 && y > 40 && y < 300; return inT ? 0.55 + 0.3 * seg(x, -310, -30) : 0.2 + 0.15 * seg(y, -60, 320); }, maxK: 0.62 });
+    el('rect', { x: -400, y: -60, width: 460, height: 380, fill: 'none', stroke: C.ink, 'stroke-width': 4 }, np);
+    for (let i = 0; i < 12; i++) el('rect', { x: 90, y: -50 + i * 30, width: 310 - (i % 3) * 40, height: 12, fill: C.ink, opacity: 0.55 }, np);
+    for (let i = 0; i < 8; i++) el('rect', { x: -400, y: 350 + i * 30, width: 800 - (i % 4) * 60, height: 12, fill: C.ink, opacity: 0.55 }, np);
+    const big = chars(g, '1963', { x: 540, y: 1720, size: 260, family: F.bagel, fill: C.yellow, anchor: 'middle', shadow: { fill: C.red, dx: 12, dy: 12 } });
+    TEXTS_LIST.push({ t0: HIT.paper + 0.3, t1: T.s9, id: 'paper', text: 'OIL EMPIRE COLLAPSES', x0: 110, y0: 380, x1: 970, y1: 760 });
+    return (t) => {
+      const p = seg(t, HIT.paper - 0.3, HIT.paper);
+      const after = Math.max(0, t - HIT.paper);
+      const spin = lerp(-540, -4, E.out(p)), sc = lerp(0.1, 1, E.out(p)) * (1 + 0.04 * Math.sin(after * 26) * Math.exp(-after * 8));
+      const push = 1 + 0.06 * E.io(seg(t, HIT.paper, T.s9));
+      tf(np, 540, 860, sc * push * 0.98, spin);
+      show(np, t >= HIT.paper - 0.3);
+      // 1963 is on screen only as a numeral below the page, off the caption line... keep it hidden: captions carry it
+      show(big.g, false);
+    };
+  });
+
+  // ---------------- S8b · sixteen tanks, one with oil, file closed (30.0–end) ----------------
+  scene(T.s9, DUR + 1, (g) => {
+    bg(g, C.paper);
+    halftone(g, { step: 24, angle: 15, color: C.blue, f: edgeF(1000, 1.4), maxK: 0.5 });
+    const grid = el('g', {}, g);
+    const tks = [];
+    for (let i = 0; i < 16; i++) {
+      const r = Math.floor(i / 4), c = i % 4;
+      const cell = el('g', {}, grid);
+      const tk = tank(cell, { cx: 0, top: 0, w: 170, h: 160, step: 9 });
+      tks.push({ tk, cell, x: 150 + c * 250, y: 290 + r * 225, i });
+    }
+    const FULL = 9;
+    const frac = chars(g, '1/16', { x: 540, y: 1500, size: 220, family: F.bagel, fill: C.oil, anchor: 'middle', shadow: { fill: C.ink, dx: 10, dy: 10 } });
+    const st = stampEl(g, ['CASE CLOSED'], { size: 120, color: C.red });
+    TEXTS_LIST.push({ t0: 31.4, t1: DUR, id: 'frac', text: '1/16', x0: 330, y0: 1300, x1: 750, y1: 1520 });
+    return (t) => {
+      tks.forEach(({ tk, cell, x, y, i }) => {
+        const t0 = T.s9 + 0.05 + i * 0.035;
+        const s = pop(t, t0, 0.35);
+        tf(cell, x, y, s);
+        if (i === FULL) {
+          const f = E.out(seg(t, 31.0, 31.6));
+          tk.set(lerp(0.92, 0.0, f), lerp(5, 150, f));
+        } else tk.set(0.92, 5);
+      });
+      // highlight ring on the full tank
+      charsPop(frac, t, 31.4, 0.05);
+      stampAnim(st, t, HIT.closed, 540, 1010, -8);
+    };
+  });
+
+  // ---------------- HUD ----------------
+  const hudG = el('g', {}, hud);
+  const caseNo = txt(hudG, 'CASE No. 63-1119', { x: 60, y: 84, 'font-size': 30, 'font-family': F.mono, 'font-weight': 800 });
+  const chip = el('g', {}, hudG);
+  const chipBg = el('rect', { x: 60, y: 102, height: 46, rx: 6 }, chip);
+  const chipA = txt(chip, '', { x: 74, y: 136, 'font-size': 28, 'font-family': F.sans });
+  const chipB = txt(chip, '', { y: 136, 'font-size': 28, 'font-family': F.sans });
+  const date = el('g', {}, hudG);
+  const dateBg = el('rect', { x: 800, y: 52, width: 220, height: 54, rx: 8, fill: 'none', 'stroke-width': 4 }, date);
+  const rec = el('circle', { cx: 828, cy: 79, r: 10, fill: C.red }, date);
+  const dateT = txt(date, 'NOV 1963', { x: 848, y: 90, 'font-size': 30, 'font-family': F.mono, 'font-weight': 800 });
+  const chips = [
+    [0, T.s2, 'FILE', 'THE TANKS'], [T.s2, T.s3, 'EXH. A', 'LOANS'], [T.s3, T.s4, 'SUBJECT', 'PROFILE'], [T.s4, T.s5, 'CERT.', 'WAREHOUSE'],
+    [T.s5, T.s6, 'EXH. B', 'CONTENTS'], [T.s6, T.s7, 'EXH. C', 'INSPECTION'], [T.s7, T.s8, 'EXH. D', 'THE PIPES'], [T.s8, T.s9, 'OUTCOME', 'COLLAPSE'], [T.s9, 99, 'VERDICT', 'ARITHMETIC'],
+  ];
+  hudUpdate = (t) => {
+    const c = chips.find(c => t >= c[0] && t < c[1]);
+    show(hudG, !!c);
+    if (!c) return;
+    const dark = (t >= T.s3 && t < T.s4) || (t >= T.s8 && t < T.s9);
+    const ink = dark ? C.paper2 : C.ink;
+    caseNo.setAttribute('fill', ink);
+    chipBg.setAttribute('fill', dark ? C.paper2 : C.ink);
+    chipA.textContent = c[2]; chipA.setAttribute('fill', dark ? C.red : C.yellow);
+    chipB.textContent = c[3]; chipB.setAttribute('fill', dark ? C.ink : C.paper2);
+    const wa = measure(c[2], 28, F.sans), wb = measure(c[3], 28, F.sans);
+    chipB.setAttribute('x', 74 + wa + 14);
+    chipBg.setAttribute('width', wa + wb + 42);
+    dateBg.setAttribute('stroke', ink); dateT.setAttribute('fill', ink);
+    op(rec, Math.floor(t * 2) % 2 ? 0.25 : 1);
+  };
+
+  // ---------------- dot wipes (in narration pauses) ----------------
+  const dotsG = el('g', {}, wipe);
+  const wipeDots = [];
+  for (let y = 0; y <= H + 80; y += 80) for (let x = 0; x <= W + 80; x += 80) wipeDots.push({ el: el('circle', { cx: x, cy: y, r: 0 }, dotsG), x, y });
+  const WIPES = [[T.s3, C.blue], [T.s6, C.ink], [T.s7, C.yellow], [T.s8, C.red], [T.s9, C.blue]];
+  wipeUpdate = (t) => {
+    const w = WIPES.find(([b]) => Math.abs(t - b) < 0.22);
+    show(dotsG, !!w);
+    if (!w) return;
+    dotsG.setAttribute('fill', w[1]);
+    const u = (t - w[0] + 0.22) / 0.44;
+    wipeDots.forEach(d => {
+      const delay = (d.x / W * 0.4 + d.y / H * 0.6) * 0.35;
+      const p = clamp((u - delay) / 0.65);
+      d.el.setAttribute('r', (Math.sin(p * Math.PI) * 62).toFixed(1));
+    });
+  };
+}
+let hudUpdate = () => {}, wipeUpdate = () => {};
+
+// ============================================================
+// captions: 2–4 words, centred at 65 % of the height (y = 1248)
+// ============================================================
+let CUES = [];
+const CAP_Y = 1248, CAP_SIZE = 72;
+function buildCaptions(raw) {
+  CUES = raw.map(([a, b, text, kw], i) => ({ a: a + VO, b: b + VO, text, kw }));
+  CUES.forEach((c, i) => {
+    const next = CUES[i + 1];
+    c.t0 = c.a - 0.04;
+    c.t1 = next && next.a - c.b < 0.5 ? next.a - 0.04 : c.b + 0.35;
+    // split into normal / keyword runs
+    const k = c.kw ? c.text.indexOf(c.kw) : -1;
+    const parts = k < 0 ? [[c.text]] : [[c.text.slice(0, k)], [c.kw, C.yellow], [c.text.slice(k + c.kw.length)]].filter(p => p[0]);
+    let size = CAP_SIZE;
+    let w = measure(c.text, size, F.sans);
+    if (w > 940) { size = size * 940 / w; w = 940; }
+    const g = el('g', {}, caps);
+    const inner = el('g', {}, g);
+    const padX = 34, hgt = size * 1.55;
+    el('rect', { x: -w / 2 - padX + 9, y: -hgt / 2 + 9, width: w + padX * 2, height: hgt, rx: 16, fill: C.blue }, inner);
+    el('rect', { x: -w / 2 - padX, y: -hgt / 2, width: w + padX * 2, height: hgt, rx: 16, fill: C.ink }, inner);
+    const tt = el('text', { x: -w / 2, y: size * 0.36, 'font-size': size, 'font-family': F.sans }, inner);
+    parts.forEach(([s, col]) => { const sp = el('tspan', { fill: col || C.paper2 }, tt); sp.textContent = s; });
+    c.g = g; c.inner = inner;
+    show(g, false);
+  });
+}
+function captionUpdate(t) {
+  for (const c of CUES) {
+    const on = t >= c.t0 && t < c.t1;
+    show(c.g, on);
+    if (!on) continue;
+    const p = seg(t, c.t0, c.t0 + 0.22);
+    tf(c.g, 540, CAP_Y + 26 * (1 - E.out(p)), lerp(0.86, 1, E.back(p)), -1.2 * (1 - p) - 0.5);
+  }
+}
+
+// ============================================================
+// paper & grain
+// ============================================================
+function buildPaper() {
+  const cv = document.getElementById('paper'), ctx = cv.getContext('2d');
+  const r = rng(3);
+  const small = document.createElement('canvas'); small.width = 54; small.height = 96;
+  const sctx = small.getContext('2d'); const sim = sctx.createImageData(54, 96);
+  for (let i = 0; i < sim.data.length; i += 4) { const v = 242 + r() * 13; sim.data[i] = sim.data[i + 1] = sim.data[i + 2] = v; sim.data[i + 3] = 255; }
+  sctx.putImageData(sim, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.drawImage(small, 0, 0, W, H);
+  const base = ctx.getImageData(0, 0, W, H);
+  for (let i = 0; i < base.data.length; i += 4) {
+    const n = (r() - 0.5) * 24;
+    base.data[i] = clamp(base.data[i] + n, 0, 255);
+    base.data[i + 1] = clamp(base.data[i + 1] + n, 0, 255);
+    base.data[i + 2] = clamp(base.data[i + 2] + n - 4, 0, 255);
+  }
+  ctx.putImageData(base, 0, 0);
+  const gr = ctx.createRadialGradient(540, 960, 500, 540, 960, 1250);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(120,100,80,0.32)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(140,120,100,0.16)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 960); ctx.lineTo(W, 962); ctx.stroke();
+}
+function drawFx(frame) {
+  const cv = document.getElementById('fx'), ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const r = rng(1000 + Math.floor(frame / 2));
+  ctx.fillStyle = 'rgba(255,248,235,0.7)';
+  for (let i = 0; i < 480; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, 0.6 + r() * 1.8, 0, 7); ctx.fill(); }
+  ctx.fillStyle = 'rgba(28,34,48,0.25)';
+  for (let i = 0; i < 80; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, 0.6 + r() * 1.3, 0, 7); ctx.fill(); }
+}
+
+// ============================================================
+// render
+// ============================================================
+const SHAKES = [[0.0, 10, 0.3], [HIT.stampAmex, 18, 0.32], [T.s5, 8, 0.25], [HIT.paper, 20, 0.4], [HIT.closed, 22, 0.32]];
+const FLASHES = [[HIT.stampAmex, 0.35], [HIT.paper, 0.45], [HIT.closed, 0.4]];
+const boilT = document.getElementById('boilT');
+function render(t) {
+  const frame = Math.round(t * FPS);
+  boilT.setAttribute('seed', 1 + (Math.floor(t * 10) % 40));
+  for (const s of scenes) {
+    const on = t >= s.t0 && t < s.t1;
+    show(s.g, on);
+    if (on) s.update(t);
+  }
+  let dx = 0, dy = 0;
+  for (const [t0, a, d] of SHAKES) {
+    if (t >= t0 && t < t0 + d) { const k = 1 - (t - t0) / d; dx += a * k * k * Math.sin(t * 91 + t0); dy += a * k * k * Math.cos(t * 77 + t0 * 3); }
+  }
+  cam.setAttribute('transform', `translate(${dx.toFixed(2)} ${dy.toFixed(2)})`);
+  let fl = 0;
+  for (const [f, a] of FLASHES) if (t >= f && t < f + 0.14) fl = Math.max(fl, a * (1 - (t - f) / 0.14));
+  op(flash, fl);
+  captionUpdate(t);
+  hudUpdate(t);
+  wipeUpdate(t);
+  drawFx(frame);
+}
+window.TEXTS = (t) => TEXTS_LIST.filter(x => t >= x.t0 && t < x.t1).map(x => ({ id: x.id, text: x.text, x0: x.x0, y0: x.y0, x1: x.x1, y1: x.y1, pass: x.pass }));
+window.EV = [
+  { t: 0.0, type: 'open' }, { t: T.s3, type: 'wipe' }, { t: HIT.stampAmex, type: 'stamp' }, { t: T.s5, type: 'slosh' },
+  { t: HIT.hatch, type: 'hatch' }, { t: HIT.tick, type: 'tick' }, { t: T.s7, type: 'wipe' }, { t: T.s8, type: 'wipe' },
+  { t: HIT.paper, type: 'paper' }, { t: T.s9, type: 'wipe' }, { t: HIT.closed, type: 'stampBig' },
+];
+window.DUR = DUR;
+
+async function init() {
+  const fams = ['400 50px "Alfa Slab One"', '400 50px "Bagel Fat One"', '400 50px "Archivo Black"', '800 50px "JetBrains Mono"', '500 50px "JetBrains Mono"'];
+  const sample = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$/.,·-←';
+  await Promise.all(fams.map(f => document.fonts.load(f, sample)));
+  await document.fonts.ready;
+  buildPaper();
+  buildAll();
+  const raw = await (await fetch('cues.json')).json();
+  buildCaptions(raw);
+  const q = new URLSearchParams(location.search);
+  render(parseFloat(q.get('t') || '0'));
+  window.READY = true;
+}
+window.render = render;
+init();
+</script>
+</body>
+</html>
