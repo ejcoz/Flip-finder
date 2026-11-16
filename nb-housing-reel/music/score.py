@@ -108,7 +108,7 @@ play([5], ['F7'], mel={0: .36})
 # ================================================================ TITLE bars 6–8 (10.71–17.14)
 t = T(6, 0); vib(t, V['Bb69'], 1.2 * B, .55, hard=True); bass(t, 'Bb1', .8, .8); dk(t, 'kick_drum_left', .4, gain=.5)
 vib(T(6, 1.5), V['Gm7'], .8 * B, .4, hard=True); bass(T(6, 1.5), 'G1', .8, .7)
-SIL1 = (T(6, 2.9), T(7, 0))                         # "So, why?" → silence → the first stamp
+SIL1 = (T(6, 3.42), T(7, 0))                         # "So, why?" → silence → the first stamp
 for i, ch in enumerate(['Ebmaj7', 'Cm9', 'F13']):
     t = T(7, i); vib(t, V[ch], 1.6 * B, .55, hard=True, trem=.2); bass(t, ROOT[ch], .9, .75); celesta(t, tones(ch, 79, 92)[-1], .5)
 comp(7, 'F13', .2, charleston=False); vib(T(7, 3), V['F7'], .8 * B, .25)
@@ -128,9 +128,9 @@ play(range(21, 25), ['F13', 'F13', 'Eb9', 'D7#9'], mel={0: .32, 1: .3, 2: .3}, v
 ride(21, 25, .3)
 # ================================================================ SUMMARY bars 25–28
 su = SEC['sum']['t0']
-for x, ch in zip([.27, 1.07, 1.88], ['Ebmaj7', 'Cm9', 'F13']):
+for x, ch in zip([.2, 1.15, 2.1], ['Ebmaj7', 'Cm9', 'F13']):
     vib(su + x, V[ch], 1.6 * B, .55, hard=True, trem=.2); bass(su + x, ROOT[ch], .9, .72)
-SIL2 = (su + 2.62, su + 6 * B)                       # room tone only, then the see-saw thump
+SIL2 = (su + 2.86, su + 6 * B)                       # room tone only, then the see-saw thump
 t = su + 6 * B; dk(t, 'kick_drum_left', .6, gain=.7); bass(t, 'G1', 1.8, .8); vib(t, V['Gm7'], 1.4 * B, .45)
 play([27, 28], ['Cm7', 'F7'], mel={0: .34}, vel=.3); brushes(26, 29, .3)
 vib_run(su + 5.9, ['F4', 'G4', 'Bb4', 'C5', 'D5', 'F5', 'G5', 'Bb5'], .05, .3, .55)

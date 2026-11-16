@@ -1,6 +1,6 @@
 Why Are Homes So Pricey in New Brunswick? — credits for third-party assets
 
-Voice: Kokoro TTS v1.0 (voice am_adam), Apache License 2.0 — https://github.com/thewh1teagle/kokoro-onnx
+Voice: Kokoro TTS v1.0 (voice af_heart), Apache License 2.0 — https://github.com/thewh1teagle/kokoro-onnx
 Fonts (SIL Open Font License 1.1, fetched by tools/fonts.sh from google/fonts):
   Oleo Script (Soytutype), Alfa Slab One (JM Solé), Jost (Owen Earl / indestructible type*)
 Music: original score generated in code (music/score.py), played with these sample libraries:

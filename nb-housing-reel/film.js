@@ -403,7 +403,7 @@ function sceneSum(ctx, t, s) {
   const u = t - s.t0;
   bg(ctx, COL.sum);
   rays(ctx, PIV[0], PIV[1], 30, 1500, PAL.paper, { rot: t * 0.02, alpha: 0.45 });
-  const ts = [0.27, 1.07, 1.88];
+  const ts = [0.2, 1.15, 2.1];
   for (let i = 0; i < 3; i++) {
     const x = 200 + i * 340; medallion(ctx, x, 400, i, 74, pop(u, ts[i], 0.24));
     const kt = ss(seg(u, ts[i] + 0.06, ts[i] + 0.3));
@@ -517,7 +517,7 @@ function buildEvents() {
   [2.95, 3.48, 4.02].forEach(x => ev(r3 + x + 0.25, 'whistle_up', { gain: 0.5, short: 1 }));
   for (let k = 0; k < 8; k++) ev(r3 + 2.4 + k * 0.67, 'hammer', { gain: 0.35 });
   ev(r3 + 5.9, 'pop', {});
-  ev(su, 'paper_swish', {}); [0.27, 1.07, 1.88].forEach(x => ev(su + x, 'stamp', { gain: 0.8 }));
+  ev(su, 'paper_swish', {}); [0.2, 1.15, 2.1].forEach(x => ev(su + x, 'stamp', { gain: 0.8 }));
   ev(su + 2.0, 'wood_knock', { gain: 0.6 }); ev(su + B(6), 'thump', {}); ev(su + 4.8, 'pop', {}); ev(su + 5.9, 'whistle_up', {});
   ev(en, 'paper_swish', { gain: 0.6 }); ev(en + 0.3, 'pen_write', { dur: 1.4 }); ev(en + 1.7, 'pop', { gain: 0.4 });
   ev(en + 4.9, 'iris', { dur: 0.7 }); ev(en + 5.85, 'iris', { dur: 0.4 });

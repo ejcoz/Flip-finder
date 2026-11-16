@@ -1,6 +1,6 @@
 # Why Are Homes So Pricey in New Brunswick? — Treatment
 
-Style: Mid-century Cartoon (`midcentury-toon`). Format: Instagram Reel, 1080×1920 vertical, 24 fps, ~60 s, English narration (AI voice), burned-in captions + `.srt`.
+Style: Mid-century Cartoon (`midcentury-toon`). Format: Instagram Reel, 1080×1920 vertical, 24 fps, ~60 s, English narration (AI voice, Kokoro af_heart), burned-in captions + `.srt`.
 
 ## 1. Three candidate structures
 
