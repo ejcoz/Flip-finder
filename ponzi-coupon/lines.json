@@ -1,0 +1,46 @@
+[
+ {
+  "id": "L1",
+  "text": "In 1920, a Boston clerk found a loophole in the mail.",
+  "voice": "am_michael",
+  "speed": 1.12
+ },
+ {
+  "id": "L2",
+  "text": "Buy this postal coupon in Italy for pennies. Trade it in America for stamps worth more.",
+  "voice": "am_michael",
+  "speed": 1.12
+ },
+ {
+  "id": "L3",
+  "text": "Charles Ponzi promised investors fifty percent in forty-five days.",
+  "voice": "am_michael",
+  "speed": 1.1,
+  "asr": "Charles Ponzi promised investors 50% in 45 days."
+ },
+ {
+  "id": "L4",
+  "text": "By summer, a quarter million dollars poured in every day.",
+  "voice": "am_michael",
+  "speed": 1.12
+ },
+ {
+  "id": "L5",
+  "text": "But he barely bought any coupons. New money paid old investors.",
+  "voice": "am_michael",
+  "speed": 1.0
+ },
+ {
+  "id": "L6",
+  "text": "His promises needed a hundred and sixty million coupons. About twenty-seven thousand existed.",
+  "voice": "am_michael",
+  "speed": 1.1,
+  "asr": "His promises needed 160 million coupons, about 27,000 existed."
+ },
+ {
+  "id": "L7",
+  "text": "By August, it collapsed. The scheme still bears his name.",
+  "voice": "am_michael",
+  "speed": 0.98
+ }
+]

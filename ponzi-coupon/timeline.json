@@ -1,0 +1,90 @@
+{
+ "dur": 35.5,
+ "vo": {
+  "L1": [
+   0.5,
+   4.103
+  ],
+  "L2": [
+   4.9,
+   5.184
+  ],
+  "L3": [
+   10.4,
+   4.309
+  ],
+  "L4": [
+   15.0,
+   3.082
+  ],
+  "L5": [
+   19.4,
+   4.214
+  ],
+  "L6": [
+   24.0,
+   6.005
+  ],
+  "L7": [
+   30.4,
+   3.461
+  ]
+ },
+ "cues": [
+  {
+   "t0": 0.5,
+   "t1": 4.82,
+   "en": "In 1920, a Boston clerk found a loophole in the mail."
+  },
+  {
+   "t0": 4.9,
+   "t1": 7.71,
+   "en": "Buy this postal coupon in Italy for pennies."
+  },
+  {
+   "t0": 7.75,
+   "t1": 10.32,
+   "en": "Trade it in America for stamps worth more."
+  },
+  {
+   "t0": 10.4,
+   "t1": 14.92,
+   "en": "Charles Ponzi promised investors 50% in 45 days."
+  },
+  {
+   "t0": 15.0,
+   "t1": 18.68,
+   "en": "By summer, a quarter million dollars poured in every day."
+  },
+  {
+   "t0": 19.4,
+   "t1": 21.51,
+   "en": "But he barely bought any coupons."
+  },
+  {
+   "t0": 21.55,
+   "t1": 23.92,
+   "en": "New money paid old investors."
+  },
+  {
+   "t0": 24.0,
+   "t1": 27.71,
+   "en": "His promises needed 160 million coupons."
+  },
+  {
+   "t0": 27.75,
+   "t1": 30.32,
+   "en": "About 27,000 existed."
+  },
+  {
+   "t0": 30.4,
+   "t1": 32.21,
+   "en": "By August, it collapsed."
+  },
+  {
+   "t0": 32.25,
+   "t1": 34.46,
+   "en": "The scheme still bears his name."
+  }
+ ]
+}
