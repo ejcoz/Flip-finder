@@ -205,7 +205,6 @@ export function render(ctx, t, Q) {
   ctx.translate(W / 2, H / 2); ctx.scale(c.z, c.z); ctx.translate(-c.x, -c.y);
   drawSheet(ctx, { W, H, plate: [22, 60, 1058, 1880] });
   washMain.draw(ctx, t);
-  if (Q && Q.get('debug') === 'water') { ctx.fillStyle = 'rgba(255,0,0,0.3)'; ctx.fill(main.landPath); }
   main.draw(ctx, t, { wScale: 1 / Math.pow(c.z, 0.6) });
   const P = main.P;
   // place names on the sheet
