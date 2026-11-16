@@ -1,6 +1,6 @@
 """Cap the pauses inside each narration line (Kokoro breathes long at commas and before numbers).
 Run after tts.py: python tools/tighten.py lines.json voices/   -> rewrites voices/*.wav and voices/dur.json"""
-import sys, os, json, numpy as np, soundfile as sf
+import sys, os, re, json, numpy as np, soundfile as sf
 lines, D = json.load(open(sys.argv[1])), sys.argv[2]
 MID, SENT, THR = 0.18, 0.32, 0.01          # max pause mid-sentence / after . ! ? ; silence threshold (RMS)
 dur = {}
@@ -14,7 +14,7 @@ for l in lines:
         if not v and s is not None:
             if s > 0: gaps.append((s, k))
             s = None
-    nsent = sum(l['text'].count(c) for c in '.!?') - 1     # sentence breaks inside the line
+    nsent = len(re.findall(r'(?<!\.)[.!?](?!\.)\s', l['text']))     # sentence breaks inside the line (an ellipsis is not one)
     longest = sorted(gaps, key=lambda g: g[1] - g[0], reverse=True)[:max(0, nsent)]
     out, pos, f = [], 0, int(.01 * sr)
     for a, b in gaps:

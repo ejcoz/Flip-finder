@@ -7,7 +7,7 @@ In 2019, a typical New Brunswick home cost about $172,000.
 Today? About $352,000.
 
 3
-00:00:10,834 --> 00:00:13,144
+00:00:10,834 --> 00:00:12,870
 It doubled. So, why?
 
 4
@@ -39,7 +39,7 @@ In 2022, builders started about 4,680.
 Reason 3: building got expensive.
 
 11
-00:00:45,557 --> 00:00:50,955
+00:00:45,557 --> 00:00:50,815
 Lumber, labour and borrowing all cost more, so every new home costs more to build.
 
 12
@@ -51,5 +51,5 @@ More people. Too few homes. Higher costs.
 And when demand outruns supply, prices only go one way.
 
 14
-00:01:00,250 --> 00:01:03,401
+00:01:00,250 --> 00:01:03,281
 So, New Brunswick: how do we build faster?
