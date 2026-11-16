@@ -8,7 +8,7 @@ PY="$LIB/.venv/bin/python"; NAME=nb-housing-reel; SIZE=1080x1920
 sh "$HERE/tools/fonts.sh"                                                     # OFL fonts → fonts/
 cd "$LIB"
 $PY core/tts/tts.py "$HERE/lines.json" "$HERE/voices"                         # 1. Kokoro narration (af_heart)
-$PY core/tts/asr_check.py "$HERE/lines.json" "$HERE/voices" || echo "! voice check skipped or failed (needs huggingface.co for the Whisper model)"
+HF_HUB_DISABLE_XET=1 $PY core/tts/asr_check.py "$HERE/lines.json" "$HERE/voices" || echo "! voice check skipped or failed (needs huggingface.co for the Whisper model)"
 $PY "$HERE/music/score.py"                                                    # 2. original cool-jazz score
 node core/render/events.mjs "$HERE"                                           # 3. picture events → events.json
 $PY "$HERE/mix.py"                                                            # 4. foley + voice + ducking + silences
