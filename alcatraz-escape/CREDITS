@@ -1,0 +1,16 @@
+Alcatraz: Case Open — credits
+
+Narration: the user's own recording (voice/narration.mp3), used as delivered. No synthetic voice.
+
+Picture: drawn in code (HTML Canvas 2D) and rendered with headless Chromium (Playwright). No generated images, footage or photos.
+
+Fonts (SIL Open Font License 1.1, from github.com/google/fonts):
+  - Alfa Slab One — JM Solé
+  - Archivo Black — Omnibus-Type
+  - Bagel Fat One — Kyungwon Kim, JAMO
+  - JetBrains Mono — JetBrains
+
+Music and sound effects: synthesized in code (mix.py, using numpy/scipy). No samples.
+Speech timing: faster-whisper (MIT) for word timestamps of the narration.
+
+Style: "Halftone Dossier" from the Lemo-Opuscar style library (github.com/lemomo-ai/lemo-opuscar); its tools rendered and mastered the film.
