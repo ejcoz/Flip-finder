@@ -34,21 +34,22 @@ def dots(d):                        # the dotted road: a little burin flick for 
     for k in range(n):
         s = burin(.07, .5) * .8; o = int(k / 6.5 * SR); x[o:o + len(s)] += s[:len(x) - o]
     return norm(x)
-fx = np.zeros((N, 2)); vo = np.zeros((N, 2)); amb = np.zeros((N, 2))
+DRAW = {'burin', 'hatch', 'scribe', 'ticks', 'rule', 'dots'}
+draw = np.zeros((N, 2)); fx = np.zeros((N, 2)); vo = np.zeros((N, 2)); amb = np.zeros((N, 2))
 for e in EV:
     t, ty, g = e['t'], e['type'], e.get('gain', 1.0)
     d = e.get('dur', .5)
     if ty == 'vo': continue
-    if ty == 'burin': add(fx, burin(d), max(0, t), .16 * g, -.2)
-    elif ty == 'hatch': add(fx, hatch(d), t, .1, .25)
-    elif ty == 'scribe': add(fx, scribe(d), t, .16, .1)
-    elif ty == 'ticks': add(fx, ticks(d), t, .08, -.1)
-    elif ty == 'rule': add(fx, burin(d, .12), t, .2, 0)
+    if ty == 'burin': add(draw, burin(d), max(0, t), .16 * g, -.2)
+    elif ty == 'hatch': add(draw, hatch(d), t, .1, .25)
+    elif ty == 'scribe': add(draw, scribe(d), t, .16, .1)
+    elif ty == 'ticks': add(draw, ticks(d), t, .08, -.1)
+    elif ty == 'rule': add(draw, burin(d, .12), t, .2, 0)
     elif ty == 'brush': add(fx, brush(d), t, .22, .2)
     elif ty == 'plip': add(fx, plip(), t + .15, .12, .3)
     elif ty == 'sheet': add(fx, sheet(d), t, .2, .3)
     elif ty == 'land': add(fx, land(), t, .3, .1)
-    elif ty == 'dots': add(fx, dots(d), t, .12, .15)
+    elif ty == 'dots': add(draw, dots(d), t, .12, .15)
 venv = np.zeros(N)
 for e in EV:
     if e['type'] != 'vo': continue
@@ -60,6 +61,11 @@ for k in range(int(DUR / 1.0)): add(amb, clack(1.0, 1)[:int(.06 * SR)], k * 1.0,
 mus, msr = sf.read(f'{D}/music/score.wav'); mus = mus[:N] if len(mus) >= N else np.pad(mus, ((0, N - len(mus)), (0, 0)))
 k = int(.15 * SR); sm = np.convolve(venv, np.ones(k) / k, 'same'); mus = mus * (1 - sm * (1 - 10 ** (-9 / 20)))[:, None]
 a, b = int(SIL[0] * SR), int(SIL[1] * SR); amb[a:b] *= 0; fx[a:b] *= 0.3    # the silence before "tip": room tone off too
-mix = limit(mus * .75 + fx + vo + amb, .95)
+def rms(x, m=None): x = x.mean(1); x = x[m] if m is not None else x[np.abs(x) > 1e-4]; return 20 * np.log10(np.sqrt(np.mean(x ** 2)) + 1e-12)
+draw = lp(draw.T, 6500).T                                  # soften the steel: less top end
+DRAW_DB = float(os.environ.get('DRAW_DB', '-22'))          # drawing sounds sit this far (RMS) under the voice
+g = 10 ** ((rms(vo) + DRAW_DB - rms(draw)) / 20); draw *= g
+print(f'voice {rms(vo):.1f} dB, drawing {rms(draw):.1f} dB (gain {20*np.log10(g):+.1f} dB), music {rms(mus*.75):.1f} dB')
+mix = limit(mus * .75 + draw + fx + vo + amb, .95)
 os.makedirs(f'{D}/out', exist_ok=True); sf.write(f'{D}/out/mix.wav', mix.astype(np.float32), SR)
 print('mix', mix.shape, 'peak', float(np.abs(mix).max()))
