@@ -1,6 +1,6 @@
 # The Ponzi File — treatment
 
-Style: Halftone Dossier. 1080×1920 vertical, 30 fps, 25.0 s, ending on the last spoken word. English voice (Kokoro `am_fenrir`, confident documentary read at about 160 words per minute; every pause under 0.3 s except one 0.55 s beat after "He wasn't."). Numbers are spelled out for the voice and shown as digits in the captions. Captions in Archivo Black, 2–4 words per card, centred at 65 % of the frame height (y ≈ 1248). Nothing is placed in the bottom 20 % (below y = 1536). No title card. No user material: everything is drawn in code, and the portrait is a generic 1920s man, not a likeness.
+Style: Halftone Dossier. 1080×1920 vertical, 30 fps, 25.0 s, ending on the last spoken word. English voice (Kokoro `am_michael`, brisk read at about 160 words per minute; every pause under 0.3 s except one 0.55 s beat after "He wasn't."). Numbers are spelled out for the voice and shown as digits in the captions. Captions in Archivo Black, 2–4 words per card, centred at 65 % of the frame height (y ≈ 1248). Nothing is placed in the bottom 20 % (below y = 1536). No title card. No user material: everything is drawn in code, and the portrait is a generic 1920s man, not a likeness.
 
 ## Three candidate structures
 
@@ -38,3 +38,8 @@ Synth pop-print kit (kick, snare, hats, square bass, marimba-like pluck, finger 
 - Voice: Kokoro `am_fenrir` at speed 0.9. Internal pauses are trimmed (`voice_trim.py`), with 0.25 s between sentences and a 0.55 s beat after "He wasn't." The narration runs 24.3 s at about 162 wpm, so the film is now 25.0 s.
 - Every cue is anchored to a spoken word (`make_timeline.py` → `timeline.js`). The order is now man → chain → crowd ("and the crowds kept coming") → chain (reporters' math, snap) → clippings, CLOSED on "August".
 - Mix: sound effects play only in the silent gaps (opening stamp, FAKE stamp, chain snap) and are cut 20 ms before the next word. Visual hits inside speech are accented by the score instead. Music and effects are held 16 dB under the voice wherever it speaks; `mix.py` measures it in 100 ms windows (worst 14.2 dB, none under 12 dB).
+
+## Revision 3 (voice choice)
+
+- Voice changed to Kokoro `am_michael` (picked from the audition reel), speed 0.98, internal pauses trimmed to 0.2 s or less. The narration runs 24.3 s at about 163 wpm, and the film is 24.9 s.
+- Mix check: worst 12.8 dB of voice over music + effects while speaking, no 100 ms window under 12 dB.

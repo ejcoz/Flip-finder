@@ -3,37 +3,37 @@
   "id": "l1",
   "text": "In nineteen twenty, one man promised to grow your money by fifty percent in forty five days.",
   "asr": "In 1920, one man promised to grow your money by 50% in 45 days.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  },
  {
   "id": "l2",
   "text": "Charles Ponzi said he was trading international postal coupons.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  },
  {
   "id": "l3",
   "text": "He wasn't.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  },
  {
   "id": "l4",
   "text": "He paid early investors with money from new ones, and the crowds kept coming.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  },
  {
   "id": "l5",
   "text": "When reporters checked, there weren't enough coupons in the world to cover it.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  },
  {
   "id": "l6",
   "text": "The scheme collapsed in August, and it still carries his name.",
-  "voice": "am_fenrir",
-  "speed": 0.9
+  "voice": "am_michael",
+  "speed": 0.98
  }
 ]
