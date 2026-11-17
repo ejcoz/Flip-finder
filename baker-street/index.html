@@ -322,10 +322,10 @@ function sListen() {
   // hook headline (top): one block, readable from frame 0, held until 5.35
   const out = ei(seg(t, 5.35, 5.65)) * -700 - (1 - eo(seg(t, 0, .1))) * 24;
   ctx.save(); ctx.translate(0, out);
-  const L = [['Police heard the', C.K, C.T], ['robbery happening.', C.K, C.T], ['They couldn\'t', C.R, C.K], ['find it.', C.R, C.K]];
-  ctx.font = '100px Slab'; const size = Math.min(80, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 150;
-  L.forEach(([s, col, sh], i) => { txt(s, 64, y, `${size}px Slab`, col, 'left', sh, 7); y += i === 1 ? size * 1.36 : size * 1.13; });
-  if (t < 5.36) reg('hook', 'Police heard the robbery happening. They couldn\'t find it.', 64, 80, 1020, 460);
+  const L = [['Police heard it live.', C.K, C.T], ['Couldn\'t find it.', C.R, C.K]];
+  ctx.font = '100px Slab'; const size = Math.min(112, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 250;
+  L.forEach(([s, col, sh]) => { txt(s, 64, y, `${size}px Slab`, col, 'left', sh, 8); y += size * 1.32; });
+  if (t < 5.36) reg('hook', 'Police heard it live. Couldn\'t find it.', 64, 250 - size, 1020, 250 + size * 1.32 + size * .3);
   ctx.restore();
 }
 // dossier card, enters over the listening room, then pinned above the street
