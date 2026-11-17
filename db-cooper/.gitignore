@@ -1,0 +1,3 @@
+out/*
+!out/words.json
+stills/

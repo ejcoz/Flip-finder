@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Case File: Dan Cooper</title>
+<style>
+  @font-face { font-family: 'Alfa Slab One'; font-weight: 400; font-display: block; src: url(fonts/alfa.woff2) format('woff2'); }
+  @font-face { font-family: 'Archivo Black'; font-weight: 400; font-display: block; src: url(fonts/archivo.woff2) format('woff2'); }
+  @font-face { font-family: 'JetBrains Mono'; font-weight: 800; font-display: block; src: url(fonts/jbm.woff2) format('woff2'); }
+  html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #efe4cc; }
+  svg, canvas { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  #paper { mix-blend-mode: multiply; pointer-events: none; }
+  #fx { pointer-events: none; }
+  .mul { mix-blend-mode: multiply; }
+</style>
+<script src="cues.js"></script>
+</head>
+<body>
+<svg id="stage" viewBox="0 0 1080 1920" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="boil" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence id="boilT" type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="1" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" seed="4" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -22 15.2" result="gm"/>
+      <feComposite in="d" in2="gm" operator="in"/>
+    </filter>
+    <filter id="stampInk" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="11" result="w"/>
+      <feDisplacementMap in="SourceGraphic" in2="w" scale="7" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="21" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -9 5.9" result="gm"/>
+      <feComposite in="d" in2="gm" operator="in"/>
+    </filter>
+    <clipPath id="frameClip"><rect width="1080" height="1920"/></clipPath>
+  </defs>
+  <g clip-path="url(#frameClip)">
+    <g id="cam"><g id="world"></g></g>
+    <g id="top"></g>
+    <g id="caps"></g>
+    <g id="hud"></g>
+    <g id="wipe"></g>
+    <rect id="flash" width="1080" height="1920" fill="#FFFFFF" opacity="0"/>
+  </g>
+</svg>
+<canvas id="paper" width="1080" height="1920"></canvas>
+<canvas id="fx" width="1080" height="1920"></canvas>
+
+<script>
+// ============================================================ basics
+const NS = 'http://www.w3.org/2000/svg';
+const W = 1080, H = 1920, FPS = 30, DUR = 36.15;
+const C = {
+  paper: '#efe4cc', navy: '#16203a', slate: '#4f6d9a', mustard: '#e7b33b', red: '#c8322b', ochre: '#b9894a',
+  ink: '#0b1020',
+};
+const F = { slab: "'Alfa Slab One'", sans: "'Archivo Black'", mono: "'JetBrains Mono'" };
+
+function el(tag, attrs = {}, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, str, attrs) { const e = el('text', attrs, parent); e.textContent = str; return e; }
+function tf(e, x = 0, y = 0, s = 1, r = 0, sy) {
+  e.setAttribute('transform', `translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${r.toFixed(2)}) scale(${s.toFixed(4)} ${(sy ?? s).toFixed(4)})`);
+}
+function op(e, o) { e.setAttribute('opacity', Math.max(0, Math.min(1, o)).toFixed(3)); }
+function show(e, v) { e.style.display = v ? '' : 'none'; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, p) => a + (b - a) * p;
+const E = {
+  out: p => 1 - Math.pow(1 - p, 3),
+  in: p => p * p * p,
+  io: p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2,
+  back: p => { const c = 1.9; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); },
+};
+const pop = (t, t0, d = 0.35) => t < t0 ? 0 : E.back(seg(t, t0, t0 + d));
+function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const mctx = document.createElement('canvas').getContext('2d');
+function measure(str, size, family, weight = 400) { mctx.font = `${weight} ${size}px ${family}`; return mctx.measureText(str).width; }
+const L = (fill, stroke = C.navy, sw = 6) => ({ fill, stroke, 'stroke-width': sw, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' });
+
+// per-character text with misregistration shadow
+function chars(parent, str, o) {
+  const { x, y, size, family, weight = 400, fill = C.navy, anchor = 'start', ls = 0, shadow, stroke, sw = 0 } = o;
+  const g = el('g', {}, parent);
+  const arr = [...str];
+  const widths = arr.map(c => measure(c, size, family, weight));
+  const total = widths.reduce((a, b) => a + b, 0) + ls * (arr.length - 1);
+  let cx = anchor === 'middle' ? x - total / 2 : anchor === 'end' ? x - total : x;
+  const items = arr.map((ch, i) => {
+    const cg = el('g', {}, g);
+    const base = { x: 0, y: 0, 'font-size': size, 'font-family': family, 'font-weight': weight, 'text-anchor': 'middle' };
+    if (shadow) txt(cg, ch, { ...base, x: shadow.dx, y: shadow.dy, fill: shadow.fill, class: 'mul' });
+    const st = stroke ? { stroke, 'stroke-width': sw, 'paint-order': 'stroke', 'stroke-linejoin': 'round' } : {};
+    txt(cg, ch, { ...base, fill: (o.colorOf && o.colorOf(i)) || fill, ...st });
+    const it = { g: cg, x: cx + widths[i] / 2, y, w: widths[i], size };
+    cx += widths[i] + ls;
+    tf(cg, it.x, it.y);
+    return it;
+  });
+  return { g, items, total, x0: anchor === 'middle' ? x - total / 2 : x, y, size };
+}
+function charsPop(c, t, t0, stagger = 0.03, d = 0.3, from = 50) {
+  c.items.forEach((it, i) => {
+    const s = t0 + i * stagger;
+    const p = seg(t, s, s + d);
+    const h = it.size * 0.35;
+    if (t < s) { op(it.g, 0); return; }
+    op(it.g, 1);
+    const sc = E.back(p);
+    const sq = 1 + 0.25 * Math.sin(p * Math.PI) * (1 - p);
+    it.g.setAttribute('transform', `translate(${it.x} ${it.y + from * (1 - E.out(p))}) translate(0 ${-h}) scale(${(sc / sq).toFixed(3)} ${(sc * sq).toFixed(3)}) translate(0 ${h})`);
+  });
+}
+
+// halftone: rotated grid of circles in one path; f(x,y) → 0..1
+function htPath({ x0 = 0, y0 = 0, w = W, h = H, step = 22, angle = 15, f, maxK = 0.66 }) {
+  const a = angle * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const n = Math.ceil(Math.hypot(w, h) / step / 2) + 2;
+  let d = '';
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const u = i * step, v = j * step;
+    const x = x0 + w / 2 + u * ca - v * sa, y = y0 + h / 2 + u * sa + v * ca;
+    if (x < x0 - step || x > x0 + w + step || y < y0 - step || y > y0 + h + step) continue;
+    const s = clamp(f(x, y)); if (s < 0.05) continue;
+    const r = s * step * maxK;
+    d += `M${(x - r).toFixed(1)} ${y.toFixed(1)}a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(2 * r).toFixed(1)} 0a${r.toFixed(1)} ${r.toFixed(1)} 0 1 0 ${(-2 * r).toFixed(1)} 0`;
+  }
+  return d;
+}
+function halftone(parent, o) { const p = el('path', { d: htPath(o), fill: o.color }, parent); if (o.mul) p.setAttribute('class', 'mul'); return p; }
+const radial = (cx, cy, R, pw = 1.2) => (x, y) => Math.pow(clamp(1 - Math.hypot(x - cx, y - cy) / R), pw);
+const edge = (R = 1100, pw = 1.6) => (x, y) => Math.pow(clamp(Math.hypot((x - 540) * 1.6, y - 960) / R - 0.4), pw) * 1.3;
+const ramp = (ya, yb, lo = 0, hi = 1) => (x, y) => lerp(lo, hi, seg(y, ya, yb));
+function bg(parent, color) { return el('rect', { x: -400, y: -400, width: W + 800, height: H + 800, fill: color }, parent); }
+
+// stamp
+function stampEl(parent, str, { size = 150, color = C.red, family = F.sans, padX = 44, padY = 22, border = 11 } = {}) {
+  const g = el('g', {}, parent);
+  const inner = el('g', { filter: 'url(#stampInk)' }, g);
+  const w = measure(str, size, family) + padX * 2, h = size * 1.0 + padY * 2;
+  el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 20, fill: 'none', stroke: color, 'stroke-width': border }, inner);
+  el('rect', { x: -w / 2 + border * 1.8, y: -h / 2 + border * 1.8, width: w - border * 3.6, height: h - border * 3.6, rx: 10, fill: 'none', stroke: color, 'stroke-width': border * 0.35 }, inner);
+  txt(inner, str, { x: 0, y: size * 0.36, 'font-size': size, 'font-family': family, fill: color, 'text-anchor': 'middle' });
+  return { g, w, h, str };
+}
+function stampAnim(s, t, t0, x, y, rot) {
+  if (t < t0 - 0.09) { op(s.g, 0); return; }
+  const p = seg(t, t0 - 0.09, t0);
+  const after = Math.max(0, t - t0);
+  const bounce = 1 + 0.05 * Math.sin(after * 30) * Math.exp(-after * 9);
+  op(s.g, p < 1 ? 0.3 + 0.7 * p : 0.93);
+  tf(s.g, x, y, lerp(2.6, 1, E.in(p)) * bounce, rot);
+}
+
+// ============================================================ figures
+// Cooper: faceless silhouette, dark suit, narrow tie, dark sunglasses. origin = body centre (hip), height ≈ 640
+function cooper(parent, { rim = C.paper, rimW = 5 } = {}) {
+  const g = el('g', {}, parent);
+  const R = { fill: C.navy, stroke: rim, 'stroke-width': rimW, 'stroke-linejoin': 'round' };
+  const legL = el('g', {}, g), legR = el('g', {}, g);
+  [legL, legR].forEach(lg => {
+    el('path', { d: 'M-26 0 L26 0 L24 285 L-24 285 Z', ...R }, lg);
+    el('path', { d: 'M-26 280 L34 280 Q40 300 30 304 L-26 304 Z', ...R }, lg);
+  });
+  const armL = el('g', {}, g), armR = el('g', {}, g);
+  [armL, armR].forEach(ag => {
+    el('path', { d: 'M-21 0 L21 0 L18 225 L-18 225 Z', ...R }, ag);
+    el('ellipse', { cx: 0, cy: 240, rx: 18, ry: 24, ...R }, ag);
+  });
+  // torso (jacket)
+  el('path', { d: 'M-98 -205 Q-104 -170 -86 10 L86 10 Q104 -170 98 -205 Q60 -228 0 -230 Q-60 -228 -98 -205 Z', ...R }, g);
+  // shirt V, narrow tie, lapels
+  el('path', { d: 'M-34 -224 L34 -224 L0 -120 Z', fill: C.paper, stroke: C.navy, 'stroke-width': 3 }, g);
+  el('path', { d: 'M-7 -218 L7 -218 L9 -205 L5 -128 L0 -118 L-5 -128 L-9 -205 Z', fill: C.slate, stroke: C.navy, 'stroke-width': 2.5 }, g);
+  el('path', { d: 'M-34 -224 L-6 -150 M34 -224 L6 -150', stroke: C.slate, 'stroke-width': 4, fill: 'none' }, g);
+  // neck + head (no face), slick hair edge
+  el('path', { d: 'M-20 -262 L20 -262 L22 -222 L-22 -222 Z', ...R }, g);
+  const head = el('g', {}, g);
+  el('ellipse', { cx: 0, cy: -312, rx: 46, ry: 58, ...R }, head);
+  el('path', { d: 'M-46 -318 Q-44 -372 2 -372 Q44 -372 47 -322 Q30 -352 -6 -346 Q-34 -342 -46 -318 Z', fill: C.ink, stroke: 'none' }, head);
+  // sunglasses
+  el('path', { d: 'M-42 -322 L-6 -322 L-8 -300 Q-24 -294 -40 -302 Z M42 -322 L6 -322 L8 -300 Q24 -294 40 -302 Z M-6 -318 L6 -318', fill: C.ink, stroke: C.slate, 'stroke-width': 3.5, 'stroke-linejoin': 'round' }, head);
+  el('path', { d: 'M-34 -316 L-26 -316 M14 -316 L22 -316', stroke: C.paper, 'stroke-width': 3, 'stroke-linecap': 'round' }, head);
+  const set = ({ arm = 6, leg = 3, armR: ar, legR: lr } = {}) => {
+    armL.setAttribute('transform', `translate(-92 -200) rotate(${arm})`);
+    armR.setAttribute('transform', `translate(92 -200) rotate(${-(ar ?? arm)})`);
+    legL.setAttribute('transform', `translate(-30 0) rotate(${leg})`);
+    legR.setAttribute('transform', `translate(30 0) rotate(${-(lr ?? leg)})`);
+  };
+  set();
+  return { g, set, head };
+}
+// generic walking person (side), origin at feet, height ≈ 100
+function person(parent, fill, { rim = C.navy, rw = 2.5, hat = false, dress = false } = {}) {
+  const g = el('g', {}, parent);
+  const R = { fill, stroke: rim, 'stroke-width': rw, 'stroke-linejoin': 'round' };
+  const l1 = el('rect', { x: -5, y: 0, width: 10, height: 44, rx: 5, ...R }, g);
+  const l2 = el('rect', { x: -5, y: 0, width: 10, height: 44, rx: 5, ...R }, g);
+  if (dress) el('path', { d: 'M-14 -84 L14 -84 L22 -38 L-22 -38 Z', ...R }, g);
+  else el('rect', { x: -14, y: -86, width: 28, height: 52, rx: 10, ...R }, g);
+  el('circle', { cx: 0, cy: -100, r: 13, ...R }, g);
+  if (hat) el('rect', { x: -10, y: -118, width: 20, height: 8, rx: 3, ...R }, g);
+  const walk = (ph, amp = 22) => {
+    l1.setAttribute('transform', `translate(0 -42) rotate(${Math.sin(ph) * amp})`);
+    l2.setAttribute('transform', `translate(0 -42) rotate(${-Math.sin(ph) * amp})`);
+  };
+  walk(0);
+  return { g, walk };
+}
+
+// generic three-engine jet, side view, nose right, length 900, fuselage centre y=0
+function jetSide(parent, { body = C.slate, line = C.navy, win = C.paper, lw = 5 } = {}) {
+  const g = el('g', {}, parent);
+  const S = L(body, line, lw);
+  el('path', { d: 'M520 -8 L405 -52 L385 -52 L455 -10 Z', ...L(line, line, lw) }, g); // far wing
+  const stair = el('g', {}, g);
+  el('path', { d: 'M0 -8 L-178 -8 L-178 10 L0 10 Z', ...S }, stair);
+  for (let k = 1; k < 9; k++) el('path', { d: `M${-k * 20} -8 L${-k * 20} 10`, stroke: line, 'stroke-width': 3 }, stair);
+  const light = el('path', { d: 'M150 34 L205 34 L198 44 L156 44 Z', fill: C.mustard, opacity: 0 }, g);
+  el('path', { d: 'M30 -40 L820 -40 Q884 -40 902 0 Q884 40 820 40 L130 40 Q60 38 8 -4 Q14 -36 30 -40 Z', ...S }, g);
+  el('path', { d: 'M60 -38 L28 -232 L92 -232 L192 -38 Z', ...S }, g);
+  el('path', { d: 'M0 -236 L132 -242 L150 -230 L12 -224 Z', ...S }, g);
+  el('path', { d: 'M150 -40 L150 -66 Q150 -74 160 -74 L214 -74 L218 -40 Z', ...S }, g);
+  el('ellipse', { cx: 214, cy: -58, rx: 6, ry: 13, fill: line }, g);
+  el('path', { d: 'M75 -60 L198 -60 Q212 -42 198 -24 L75 -24 Q66 -42 75 -60 Z', ...S }, g);
+  el('ellipse', { cx: 200, cy: -42, rx: 7, ry: 15, fill: line }, g);
+  el('path', { d: 'M180 -40 L170 -28 M120 -40 L130 -26', stroke: line, 'stroke-width': lw }, g);
+  el('path', { d: 'M248 6 L860 6', stroke: line, 'stroke-width': 7, opacity: 0.9 }, g); // plain cheatline
+  let wd = '';
+  for (let x = 250; x <= 790; x += 22) wd += `M${x - 4.5} -16 a4.5 6 0 1 0 9 0 a4.5 6 0 1 0 -9 0`;
+  el('path', { d: wd, fill: win }, g);
+  el('path', { d: 'M852 -24 L876 -24 L888 -12 L856 -12 Z', fill: win, stroke: line, 'stroke-width': 3 }, g);
+  el('rect', { x: 798, y: -32, width: 30, height: 56, rx: 5, fill: 'none', stroke: line, 'stroke-width': 3.5 }, g);
+  el('path', { d: 'M565 16 L380 74 L338 76 L440 20 Z', ...S }, g); // near wing
+  const setStair = (deg, lit = 0) => { stair.setAttribute('transform', `translate(205 34) rotate(${deg})`); op(light, lit); };
+  setStair(20);
+  // world position of the stair tip for a given group transform
+  const tip = (gx, gy, s, deg) => { const a = deg * Math.PI / 180; return [gx + s * (205 - 178 * Math.cos(a)), gy + s * (34 - 178 * Math.sin(a))]; };
+  return { g, setStair, tip };
+}
+
+// ============================================================ scenes
+const scenes = [];
+function scene(t0, t1, build) { const g = el('g', {}, document.getElementById('world')); const update = build(g); scenes.push({ t0, t1, g, update }); return scenes[scenes.length - 1]; }
+window.EV = [];
+const TEXT_REG = []; // {t0,t1,id,text,box:()=>[x0,y0,x1,y1],pass}
+
+function streaks(parent, n, seed, color, w = 3) {
+  const r = rng(seed); const arr = [];
+  for (let i = 0; i < n; i++) arr.push({ e: el('line', { stroke: color, 'stroke-width': w * (0.6 + r()), 'stroke-linecap': 'round' }, parent), x: r(), y: r(), sp: 0.6 + r() * 0.8, len: 40 + r() * 90 });
+  return arr;
+}
+
+function buildAll() {
+  const top = document.getElementById('top');
+
+  // ---------------------------------------------------- S1 0–4.6 the jump (hook)
+  const S1 = scene(0, 4.6, (g) => {
+    bg(g, C.navy);
+    const r = rng(7); let sd = '';
+    for (let i = 0; i < 70; i++) { const x = r() * W, y = 470 + r() * 900, s = 1.2 + r() * 2.4; sd += `M${x - s} ${y}a${s} ${s} 0 1 0 ${2 * s} 0a${s} ${s} 0 1 0 ${-2 * s} 0`; }
+    const stars = el('path', { d: sd, fill: C.paper }, g);
+    const sky = el('g', {}, g);
+    halftone(sky, { color: C.mustard, step: 22, angle: 30, f: radial(700, 760, 300, 0.55), maxK: 0.72 });
+    halftone(sky, { color: C.slate, step: 22, angle: 70, f: (x, y) => 0.15 + ramp(1250, 1900, 0, 0.95)(x, y) + 0.25 * Math.sin(x / 90 + y / 140) * seg(y, 1250, 1500), maxK: 0.66 });
+    const jg = el('g', {}, g); const jet = jetSide(jg);
+    const wind = el('g', {}, g); const sk = streaks(wind, 16, 31, C.paper, 3);
+    const figG = el('g', {}, g); const fig = cooper(figG);
+    // hook text (on top layer, outside the camera)
+    const hook = el('g', {}, top);
+    const lines = [['He jumped out of a plane', C.paper], ['with $200,000.', C.paper], ['Then vanished.', C.paper]];
+    const hc = lines.map(([s], i) => {
+      const size = Math.min(84, 84 * 960 / measure(s, 84, F.slab));
+      return chars(hook, s, { x: 540, y: 190 + i * 110, size, family: F.slab, fill: C.paper, anchor: 'middle', shadow: { fill: C.slate, dx: 7, dy: 7 },
+        colorOf: (k) => (i === 1 && k >= 5 && k <= 12) || (i === 2 && k >= 5) ? C.mustard : null });
+    });
+    TEXT_REG.push({ id: 'hook', text: 'He jumped out of a plane with $200,000. Then vanished.', t0: 0, t1: 4.6, box: () => [40, 110, 1040, 430] });
+    return (t) => {
+      hc.forEach((c, i) => { const p = E.back(seg(t, 0, 0.32)); c.items.forEach((it, k) => { tf(it.g, it.x, it.y + Math.sin(t * 2.2 + k * 0.4 + i) * 1.5, lerp(1.08, 1, p)); }); });
+      op(stars, 0.6 + 0.15 * Math.sin(t * 7));
+      tf(sky, 0, -t * 10);
+      const u = t / 4.6;
+      const gx = lerp(150, 420, u), gy = lerp(660, 560, u), s = lerp(0.86, 0.6, u);
+      tf(jg, gx, gy, s, -3);
+      jet.setStair(-42, 0.9);
+      const [x0, y0] = jet.tip(150, 660, 0.86, -42 - 3);
+      const v = t + 0.25;
+      const fx = x0 - 30 * v - 6 * v * v, fy = y0 + 70 + 95 * v + 30 * v * v, fs = 0.1 + 0.05 * v * v;
+      tf(figG, fx, fy, fs, 25 + v * 55);
+      fig.set({ arm: 120 + 30 * Math.sin(v * 3), leg: 18 + 8 * Math.sin(v * 4 + 1), armR: 100 + 30 * Math.sin(v * 3.3 + 2) });
+      sk.forEach((s2, i) => {
+        const yy = ((s2.y - t * s2.sp * 1.4) % 1 + 1) % 1;
+        const x = fx + (s2.x - 0.5) * 380 * (0.4 + fs), y = fy + (yy - 0.5) * 700 * (0.4 + fs);
+        s2.e.setAttribute('x1', x.toFixed(1)); s2.e.setAttribute('x2', x.toFixed(1));
+        s2.e.setAttribute('y1', y.toFixed(1)); s2.e.setAttribute('y2', (y + s2.len * (0.5 + fs)).toFixed(1));
+        op(s2.e, 0.55);
+      });
+    };
+  });
+
+  // ---------------------------------------------------- S2 4.6–9.14 the date card + ticket
+  scene(4.6, 9.14, (g) => {
+    bg(g, C.paper);
+    halftone(g, { color: C.slate, step: 22, angle: 20, f: edge(1250, 1.4), maxK: 0.6 });
+    halftone(g, { color: C.mustard, step: 22, angle: 70, f: radial(540, 900, 650, 1.1), maxK: 0.6, mul: true });
+    const push = el('g', {}, g);
+    const card = el('g', {}, push);
+    el('path', { d: 'M110 360 L380 360 L410 320 L620 320 L650 360 L970 360 L970 1450 L110 1450 Z', ...L(C.mustard, C.navy, 7) }, card);
+    txt(card, 'NORJAK', { x: 515, y: 352, 'font-size': 28, 'font-family': F.mono, 'font-weight': 800, fill: C.navy, 'text-anchor': 'middle' });
+    el('rect', { x: 150, y: 400, width: 780, height: 1010, rx: 6, ...L(C.paper, C.navy, 6) }, card);
+    txt(card, 'CASE FILE', { x: 190, y: 480, 'font-size': 56, 'font-family': F.slab, fill: C.navy });
+    el('path', { d: 'M190 505 L890 505', stroke: C.navy, 'stroke-width': 5 }, card);
+    txt(card, 'DATE OF INCIDENT', { x: 190, y: 560, 'font-size': 26, 'font-family': F.mono, 'font-weight': 800, fill: C.slate });
+    const date = chars(card, 'NOV 24, 1971', { x: 186, y: 680, size: 108, family: F.slab, fill: C.navy, shadow: { fill: C.mustard, dx: 8, dy: 8 } });
+    // ticket
+    const tk = el('g', {}, card);
+    el('rect', { x: -380, y: -165, width: 760, height: 330, rx: 10, ...L(C.paper, C.navy, 6) }, tk);
+    el('rect', { x: -380, y: -165, width: 760, height: 70, rx: 10, fill: C.slate, stroke: C.navy, 'stroke-width': 6 }, tk);
+    txt(tk, 'PASSENGER TICKET', { x: -350, y: -118, 'font-size': 32, 'font-family': F.mono, 'font-weight': 800, fill: C.paper });
+    el('path', { d: 'M200 -95 L200 165', stroke: C.navy, 'stroke-width': 4, 'stroke-dasharray': '10 10' }, tk);
+    txt(tk, 'NAME OF PASSENGER', { x: -350, y: -50, 'font-size': 22, 'font-family': F.mono, 'font-weight': 800, fill: C.slate });
+    el('path', { d: 'M-350 40 L170 40', stroke: C.navy, 'stroke-width': 3 }, tk);
+    txt(tk, 'FROM PORTLAND', { x: -350, y: 95, 'font-size': 26, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    txt(tk, 'TO SEATTLE', { x: -350, y: 135, 'font-size': 26, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    txt(tk, 'ONE', { x: 290, y: -20, 'font-size': 34, 'font-family': F.slab, fill: C.navy, 'text-anchor': 'middle' });
+    txt(tk, 'WAY', { x: 290, y: 22, 'font-size': 34, 'font-family': F.slab, fill: C.navy, 'text-anchor': 'middle' });
+    tf(tk, 540, 1000, 1, -3);
+    const st = stampEl(card, 'DAN COOPER', { size: 74, color: C.red, border: 8, padX: 26, padY: 14 });
+    window.EV.push({ t: 7.0, type: 'stamp' }, { t: 4.32, type: 'whoosh' }, { t: 4.62, type: 'slide' });
+    TEXT_REG.push({ id: 'date', text: 'NOV 24, 1971', t0: 5.3, t1: 9.14, box: () => [186, 600, 900, 700] });
+    TEXT_REG.push({ id: 'stampname', text: 'DAN COOPER', t0: 7.0, t1: 9.14, box: () => [300, 920, 820, 1060] });
+    TEXT_REG.push({ id: 'ticket', text: 'PASSENGER TICKET NAME OF PASSENGER FROM PORTLAND TO SEATTLE ONE WAY CASE FILE DATE OF INCIDENT NORJAK', t0: 4.6, t1: 9.14, box: () => [150, 300, 930, 1200], pass: true });
+    return (t) => {
+      const p = E.back(seg(t, 4.6, 5.02));
+      tf(card, lerp(1000, 0, p), 0, 1, lerp(8, 0, p));
+      charsPop(date, t, 4.9, 0.035);
+      const z = lerp(1, 1.1, E.io(seg(t, 5.0, 9.14)));
+      push.setAttribute('transform', `translate(${540 - 540 * z} ${1000 - 1000 * z + lerp(0, -40, seg(t, 5, 9.14))}) scale(${z})`);
+      stampAnim(st, t, 7.0, 520, 985, -6);
+    };
+  });
+
+  // ---------------------------------------------------- S3 9.14–11.2 the note across the armrest
+  scene(9.14, 11.2, (g) => {
+    bg(g, C.paper);
+    halftone(g, { color: C.slate, step: 22, angle: 20, f: (x, y) => 0.22 + 0.25 * seg(y, 200, 1000), maxK: 0.62 });
+    const track = el('g', {}, g);
+    // cabin windows
+    [[200, 430], [560, 430], [920, 430]].forEach(([x, y]) => {
+      el('rect', { x: x - 95, y: y - 135, width: 190, height: 270, rx: 90, ...L(C.paper, C.navy, 7) }, track);
+      el('rect', { x: x - 72, y: y - 110, width: 144, height: 220, rx: 70, fill: C.navy }, track);
+      halftone(track, { x0: x - 72, y0: y - 110, w: 144, h: 220, color: C.slate, step: 18, angle: 45, f: radial(x + 30, y + 80, 160, 1), maxK: 0.6 });
+    });
+    // flight attendant silhouette (faceless), background
+    const fa = el('g', {}, track); const faP = person(fa, C.navy, { rim: C.paper, rw: 1.5, hat: true, dress: true });
+    // seat + armrest
+    el('path', { d: 'M-100 1060 L1200 1060 L1200 1700 L-100 1700 Z', ...L(C.slate, C.navy, 7) }, track);
+    halftone(track, { x0: -100, y0: 1060, w: 1300, h: 640, color: C.navy, step: 20, angle: 15, f: ramp(1100, 1500, 0.2, 0.75), maxK: 0.62, mul: true });
+    el('path', { d: 'M-100 960 L1200 960 Q1215 1010 1200 1060 L-100 1060 Z', ...L(C.paper, C.navy, 7) }, track);
+    halftone(track, { x0: -100, y0: 960, w: 1300, h: 100, color: C.slate, step: 18, angle: 30, f: ramp(960, 1060, 0.1, 0.6), maxK: 0.6, mul: true });
+    // note + hand
+    const note = el('g', {}, track);
+    el('path', { d: 'M-90 -34 L90 -34 L96 26 L-96 26 Z', ...L(C.paper, C.navy, 5) }, note);
+    el('path', { d: 'M-4 -34 L-2 26', stroke: C.slate, 'stroke-width': 3 }, note);
+    const hand = el('g', { filter: 'url(#boil)' }, track);
+    el('path', { d: 'M-900 -60 L-70 -64 L-60 52 L-900 60 Z', ...L(C.navy, C.paper, 5) }, hand);
+    el('path', { d: 'M-80 -66 L-40 -66 L-34 54 L-74 54 Z', ...L(C.paper, C.navy, 4) }, hand);
+    el('path', { d: 'M-40 -40 Q30 -60 90 -30 L150 -18 Q170 -8 150 2 L100 2 Q120 14 100 22 L40 30 Q-10 40 -38 30 Z', ...L(C.navy, C.paper, 5) }, hand);
+    window.EV.push({ t: 10.95, type: 'paper' });
+    return (t) => {
+      tf(track, lerp(0, -70, E.io(seg(t, 9.14, 11.2))), 0);
+      const p = E.io(seg(t, 9.25, 10.35));
+      const nx = lerp(140, 600, p);
+      tf(note, nx, 1000);
+      const back = E.io(seg(t, 10.5, 11.1));
+      tf(hand, nx - 40 - back * 420, 975 + Math.sin(t * 9) * 2 * (1 - back));
+      // attendant: walks in, then pauses
+      const wp = E.out(seg(t, 9.14, 10.05));
+      const fx = lerp(1180, 820, wp);
+      tf(fa, fx, 1060, 8.2);
+      faP.walk(t * 9 * (1 - wp * wp), 20 * (1 - wp));
+    };
+  });
+
+  // ---------------------------------------------------- S4 11.2–12.85 the note → the briefcase
+  scene(11.2, 12.85, (g) => {
+    bg(g, C.paper);
+    halftone(g, { color: C.slate, step: 22, angle: 20, f: edge(1200, 1.4), maxK: 0.6 });
+    const pulse = el('path', { fill: C.red, class: 'mul' }, g);
+    const cam4 = el('g', {}, g);
+    const note = el('g', {}, cam4);
+    const bottom = el('g', {}, note);
+    el('rect', { x: -330, y: 0, width: 660, height: 250, ...L(C.paper, C.navy, 6) }, bottom);
+    txt(bottom, 'IN MY BRIEFCASE.', { x: -290, y: 110, 'font-size': 50, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    const topH = el('g', {}, note);
+    const front = el('g', {}, topH), backS = el('g', {}, topH);
+    el('rect', { x: -330, y: -250, width: 660, height: 250, ...L(C.paper, C.navy, 6) }, front);
+    txt(front, 'I HAVE A BOMB', { x: -290, y: -110, 'font-size': 50, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    el('rect', { x: -330, y: -250, width: 660, height: 250, ...L(C.paper, C.navy, 6) }, backS);
+    halftone(backS, { x0: -330, y0: -250, w: 660, h: 250, color: C.slate, step: 18, angle: 45, f: () => 0.35, maxK: 0.6 });
+    // briefcase, top-down, open
+    const bc = el('g', {}, cam4);
+    el('rect', { x: -390, y: -330, width: 780, height: 300, rx: 22, ...L(C.navy, C.navy, 7) }, bc);
+    halftone(bc, { x0: -360, y0: -300, w: 720, h: 240, color: C.slate, step: 18, angle: 15, f: () => 0.55, maxK: 0.65 });
+    el('rect', { x: -390, y: -20, width: 780, height: 360, rx: 22, ...L(C.navy, C.navy, 7) }, bc);
+    el('rect', { x: -360, y: 10, width: 720, height: 300, rx: 10, fill: C.ink }, bc);
+    for (let k = 0; k < 5; k++) {
+      const y = 40 + k * 52;
+      el('rect', { x: -330, y, width: 500, height: 44, rx: 20, ...L(C.red, C.navy, 4) }, bc);
+      el('ellipse', { cx: -312, cy: y + 22, rx: 9, ry: 18, fill: C.navy }, bc);
+    }
+    [-210, 60].forEach(x => el('rect', { x, y: 28, width: 38, height: 280, ...L(C.mustard, C.navy, 4) }, bc));
+    el('rect', { x: 210, y: 60, width: 120, height: 200, rx: 8, ...L(C.slate, C.navy, 5) }, bc);
+    el('rect', { x: 235, y: 45, width: 26, height: 18, fill: C.paper, stroke: C.navy, 'stroke-width': 3 }, bc);
+    el('path', { d: 'M248 60 C 200 0, 120 20, 140 70 S 60 120, 40 90', fill: 'none', stroke: C.mustard, 'stroke-width': 8, 'stroke-linecap': 'round' }, bc);
+    el('path', { d: 'M300 260 C 300 330, 120 320, 150 250 S -40 260, -90 300', fill: 'none', stroke: C.paper, 'stroke-width': 7, 'stroke-linecap': 'round' }, bc);
+    el('path', { d: 'M270 260 C 240 300, 210 210, 175 190', fill: 'none', stroke: C.red, 'stroke-width': 6, 'stroke-linecap': 'round' }, bc);
+    [-260, 260].forEach(x => el('rect', { x: x - 30, y: -36, width: 60, height: 30, rx: 6, ...L(C.mustard, C.navy, 4) }, bc));
+    TEXT_REG.push({ id: 'note', text: 'I HAVE A BOMB IN MY BRIEFCASE.', t0: 11.2, t1: 12.2, box: () => [210, 300, 870, 800], pass: true });
+    window.EV.push({ t: 12.55, type: 'whoosh' });
+    return (t) => {
+      const u = seg(t, 11.3, 11.75); const s = Math.cos(Math.PI * (1 - E.io(u)));  // -1 → 1
+      topH.setAttribute('transform', `scale(1 ${Math.abs(s) < 0.02 ? 0.02 : s.toFixed(3)})`);
+      show(front, s >= 0); show(backS, s < 0);
+      const out = E.in(seg(t, 11.92, 12.12));
+      tf(note, 540, lerp(780, 380, out), lerp(1, 0.75, out), lerp(0, -12, out) + Math.sin(t * 3) * 0.6);
+      op(note, 1 - seg(t, 12.0, 12.12));
+      const bp = pop(t, 11.95, 0.4);
+      show(bc, t >= 11.95);
+      const z = lerp(1.0, 1.12, seg(t, 12.0, 12.85));
+      tf(bc, 540, 980, bp * z, -2 + Math.sin(t * 2) * 0.6);
+      if (t >= 11.95) {
+        const k = 0.7 + 0.3 * Math.sin((t - 11.95) * 2 * Math.PI * 2.2);
+        pulse.setAttribute('d', htPath({ color: C.red, step: 24, angle: 15, f: radial(540, 980, 560 + 120 * k, 0.9), maxK: 0.45 + 0.25 * k }));
+      } else pulse.setAttribute('d', '');
+    };
+  });
+
+  // ---------------------------------------------------- S5 12.85–17.65 Seattle: the trade
+  scene(12.85, 17.65, (g) => {
+    bg(g, C.navy);
+    halftone(g, { color: C.slate, step: 22, angle: 30, f: (x, y) => radial(540, 1000, 900, 1.3)(x, y) * 0.9, maxK: 0.62 });
+    el('rect', { x: -100, y: 1000, width: 1300, height: 1000, fill: C.navy }, g);
+    halftone(g, { x0: 0, y0: 1000, w: W, h: 920, color: C.slate, step: 20, angle: 60, f: (x, y) => 0.25 + 0.35 * Math.abs(Math.sin(x / 70)) * seg(y, 1000, 1300) * (1 - seg(y, 1300, 1700)), maxK: 0.6 });
+    const pan = el('g', {}, g);
+    let ld = ''; for (let i = 0; i < 26; i++) { const x = -200 + i * 90, y = 1030 + (i % 2) * 4; ld += `M${x - 7} ${y}a7 7 0 1 0 14 0a7 7 0 1 0 -14 0`; }
+    el('path', { d: ld, fill: C.mustard }, pan);
+    const jg = el('g', {}, pan); const jet = jetSide(jg);
+    // gear
+    const gear = el('g', {}, jg);
+    [[300, 0], [330, 0], [800, 0]].forEach(([x]) => { el('path', { d: `M${x} 38 L${x} 82`, stroke: C.navy, 'stroke-width': 7 }, gear); el('circle', { cx: x, cy: 88, r: 14, ...L(C.ink, C.slate, 3) }, gear); });
+    // mobile stairs from front door (800,24) down to ground (610,103)
+    const stairs = el('g', {}, jg);
+    el('path', { d: 'M800 22 L612 103 L640 103 L815 30 Z', ...L(C.slate, C.navy, 4) }, stairs);
+    el('path', { d: 'M800 -10 L612 70 M612 70 L612 103 M800 -10 L800 22', stroke: C.paper, 'stroke-width': 3, fill: 'none' }, stairs);
+    el('path', { d: 'M600 103 L700 103 L700 114 L600 114 Z', ...L(C.slate, C.navy, 3) }, stairs);
+    const pax = [0, 1, 2, 3].map(i => ({ p: person(jg, C.slate, { rim: C.navy, rw: 2, hat: i === 2 }), t0: 13.25 + i * 0.5 }));
+    const crew1 = person(jg, C.paper, { rim: C.navy, rw: 2 });
+    const sack = el('g', {}, crew1.g);
+    el('path', { d: 'M8 -88 Q40 -96 46 -60 Q50 -30 24 -26 Q2 -30 6 -60 Q4 -80 8 -88 Z', ...L(C.mustard, C.navy, 3) }, sack);
+    el('path', { d: 'M10 -88 Q24 -100 30 -90', stroke: C.navy, 'stroke-width': 3, fill: 'none' }, sack);
+    const crew2 = person(jg, C.paper, { rim: C.navy, rw: 2 });
+    for (let k = 0; k < 4; k++) el('rect', { x: 8, y: -112 + k * 22, width: 34, height: 20, rx: 4, ...L(C.slate, C.navy, 2.5) }, crew2.g);
+    const rain = el('g', {}, g); const rs = streaks(rain, 110, 55, C.paper, 2.2);
+    window.EV.push({ t: 12.6, type: 'whoosh' });
+    const along = (u, a, b) => [lerp(a[0], b[0], u), lerp(a[1], b[1], u)];
+    const TOP = [800, 26], BOT = [624, 103];
+    return (t) => {
+      const u = E.io(seg(t, 12.85, 16.2));
+      const gx = lerp(80, -310, u);
+      pan.setAttribute('transform', `translate(${gx.toFixed(1)} 0)`);
+      tf(jg, 0, 850, 1.45);
+      jet.setStair(20, 0);
+      pax.forEach(({ p, t0 }) => {
+        if (t < t0) { tf(p.g, 800, 24, 0.0001); return; }
+        const d = t - t0; let pos;
+        if (d < 1.1) pos = along(d / 1.1, TOP, BOT); else pos = [BOT[0] - (d - 1.1) * 90, BOT[1]];
+        p.walk(t * 10, 24);
+        tf(p.g, pos[0], pos[1], -0.9, 0, 0.9);
+      });
+      const c1 = (k) => { // crew climbing carrying load: ground walk → up the stairs
+        const t0 = k === 1 ? 15.05 : 16.25; const person_ = k === 1 ? crew1 : crew2;
+        if (t < t0) { tf(person_.g, 460, 103, 0.0001); return; }
+        const d = t - t0; let pos;
+        if (d < 0.5) pos = [lerp(470, BOT[0], d / 0.5), BOT[1]]; else pos = along(Math.min(1, (d - 0.5) / 1.2), BOT, TOP);
+        tf(person_.g, pos[0], pos[1], 0.9); person_.walk(t * 10, 24);
+        if (d > 1.7) tf(person_.g, pos[0], pos[1], 0.9 * (1 - seg(d, 1.7, 1.9)) + 0.0001);
+      };
+      c1(1); c1(2);
+      rs.forEach(s => {
+        const yy = ((s.y + t * s.sp * 1.6) % 1);
+        const x = ((s.x * 1300 - yy * 260) % 1300) - 100, y = yy * 2000 - 60;
+        s.e.setAttribute('x1', x.toFixed(1)); s.e.setAttribute('y1', y.toFixed(1));
+        s.e.setAttribute('x2', (x - 14).toFixed(1)); s.e.setAttribute('y2', (y + s.len * 0.7).toFixed(1));
+        op(s.e, 0.45);
+      });
+    };
+  });
+
+  // ---------------------------------------------------- S6 17.65–20.0 the route south
+  scene(17.65, 20.0, (g) => {
+    bg(g, C.paper);
+    const tilt = el('g', {}, g);
+    const P = (lon, lat) => [150 + (lon + 126) * 48, 230 + (49 - lat) * 62.4];
+    const land = [[-122.9, 49.5], [-122.75, 48.6], [-122.5, 48.0], [-122.35, 47.6], [-122.45, 47.25], [-122.9, 47.1], [-123.1, 47.3], [-122.85, 47.75], [-123.3, 48.1], [-124.0, 48.2], [-124.7, 48.4],
+      [-124.1, 46.9], [-124.0, 46.2], [-123.9, 45.5], [-124.1, 44.0], [-124.5, 42.8], [-124.2, 41.9], [-124.4, 40.4], [-123.8, 39.4], [-123.0, 38.0], [-122.5, 37.7], [-122.0, 36.9], [-121.9, 36.6],
+      [-121.3, 35.6], [-120.6, 34.9], [-120.5, 34.5], [-119.5, 34.4], [-118.5, 34.0], [-117.3, 33.0], [-117.1, 32.5], [-116.6, 31.7], [-116.0, 30.5], [-115.2, 29.8], [-114.2, 28.6], [-114.1, 27.7],
+      [-113.0, 26.7], [-112.1, 24.8], [-111.0, 24.2], [-110.0, 23.0], [-109.5, 22.9], [-105.5, 22.0], [-104, 15], [-100, 15], [-100, 49.5]];
+    const gulf = [[-114.8, 31.8], [-114.2, 30.0], [-112.6, 28.0], [-111.0, 25.5], [-109.6, 23.4], [-108.0, 24.5], [-108.5, 25.2], [-110.0, 27.5], [-111.2, 29.0], [-112.8, 30.8], [-114.0, 31.6]];
+    const pd = pts => 'M' + pts.map(p => P(...p).map(v => v.toFixed(1)).join(' ')).join('L') + 'Z';
+    el('rect', { x: -50, y: 0, width: W + 100, height: 2400, fill: C.paper }, tilt);
+    halftone(tilt, { x0: 0, y0: 0, w: W, h: 2300, color: C.slate, step: 22, angle: 20, f: (x, y) => 0.35 + 0.4 * seg(-x, -500, 0), maxK: 0.64 });
+    el('path', { d: pd(land), ...L(C.paper, C.navy, 6) }, tilt);
+    halftone(tilt, { x0: 0, y0: 0, w: W, h: 2300, color: C.mustard, step: 22, angle: 70, f: (x, y) => 0.18 + 0.2 * Math.sin(x / 160 + y / 210) ** 2, maxK: 0.6, mul: true }).setAttribute('clip-path', 'url(#landClip)');
+    const defs = document.querySelector('defs');
+    const cp = el('clipPath', { id: 'landClip' }, defs); el('path', { d: pd(land) }, cp);
+    el('path', { d: pd(gulf), ...L(C.slate, C.navy, 5) }, tilt);
+    const route = [[-122.33, 47.61], [-122.6, 45.6], [-121.6, 43.0], [-120.2, 40.2], [-118.6, 37.0], [-117.0, 34.0], [-115.9, 31.5], [-115.2, 30.2]].map(p => P(...p));
+    const lens = [0]; for (let i = 1; i < route.length; i++) lens.push(lens[i - 1] + Math.hypot(route[i][0] - route[i - 1][0], route[i][1] - route[i - 1][1]));
+    const total = lens[lens.length - 1];
+    const line = el('path', { d: 'M' + route.map(p => p.join(' ')).join('L'), fill: 'none', stroke: C.navy, 'stroke-width': 9, 'stroke-dasharray': '22 16', 'stroke-linecap': 'round' }, tilt);
+    const cover = el('path', { d: 'M' + route.map(p => p.join(' ')).join('L'), fill: 'none', 'stroke-width': 0 }, tilt);
+    const clipId = 'routeMask';
+    const mk = el('mask', { id: clipId }, defs);
+    const mkPath = el('path', { d: 'M' + route.map(p => p.join(' ')).join('L'), fill: 'none', stroke: '#fff', 'stroke-width': 30, 'stroke-dasharray': `${total} ${total}`, 'stroke-dashoffset': total }, mk);
+    line.setAttribute('mask', `url(#${clipId})`);
+    const [sx, sy] = P(-122.33, 47.61);
+    el('circle', { cx: sx, cy: sy, r: 18, ...L(C.red, C.navy, 5) }, tilt);
+    txt(tilt, 'SEATTLE', { x: sx + 34, y: sy + 14, 'font-size': 44, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    const [mx, my] = P(-111.6, 30.2);
+    const mex = el('g', {}, tilt);
+    txt(mex, 'MEXICO', { x: 6, y: 6, 'font-size': 76, 'font-family': F.sans, fill: C.mustard, 'text-anchor': 'middle', class: 'mul' });
+    txt(mex, 'MEXICO', { x: 0, y: 0, 'font-size': 76, 'font-family': F.sans, fill: C.navy, 'text-anchor': 'middle' });
+    const arrow = el('path', { d: 'M0 -26 L22 18 L0 8 L-22 18 Z', ...L(C.red, C.navy, 4) }, tilt);
+    TEXT_REG.push({ id: 'seattle', text: 'SEATTLE', t0: 17.65, t1: 20.0, box: () => [sx + 30, sy - 40 + tiltY, sx + 260, sy + 20 + tiltY] });
+    TEXT_REG.push({ id: 'mexico', text: 'MEXICO', t0: 17.75, t1: 20.0, box: () => [mx - 160, my - 70 + tiltY, mx + 160, my + 20 + tiltY] });
+    let tiltY = 0;
+    window.EV.push({ t: 17.5, type: 'whoosh' });
+    return (t) => {
+      tiltY = lerp(0, -330, E.io(seg(t, 17.85, 19.7)));
+      tf(tilt, 0, tiltY, 1);
+      const p = E.io(seg(t, 17.85, 19.45));
+      mkPath.setAttribute('stroke-dashoffset', (total * (1 - p)).toFixed(1));
+      const L_ = total * p; let i = 1; while (i < lens.length - 1 && lens[i] < L_) i++;
+      const q = clamp((L_ - lens[i - 1]) / (lens[i] - lens[i - 1]));
+      const ax = lerp(route[i - 1][0], route[i][0], q), ay = lerp(route[i - 1][1], route[i][1], q);
+      const ang = Math.atan2(route[i][1] - route[i - 1][1], route[i][0] - route[i - 1][0]) * 180 / Math.PI + 90;
+      tf(arrow, ax, ay, 1.2 * pop(t, 17.8, 0.3) + 0.0001, ang);
+      tf(mex, mx, my, pop(t, 17.75, 0.35) + 0.0001 + 0.02 * Math.sin(t * 6), -4);
+    };
+  });
+
+  // ---------------------------------------------------- S7 20.0–24.45 the rear stairs, the jump
+  scene(20.0, 24.45, (g) => {
+    bg(g, C.navy);
+    const world7 = el('g', {}, g);
+    const r = rng(17); let sd = ''; for (let i = 0; i < 50; i++) { const x = r() * W, y = r() * 1200, s = 1 + r() * 2; sd += `M${x - s} ${y}a${s} ${s} 0 1 0 ${2 * s} 0a${s} ${s} 0 1 0 ${-2 * s} 0`; }
+    el('path', { d: sd, fill: C.paper, opacity: 0.6 }, world7);
+    halftone(world7, { x0: 0, y0: 1000, w: W, h: 2000, color: C.slate, step: 22, angle: 30, f: (x, y) => seg(y, 1250, 1900) * (0.55 + 0.45 * Math.sin(x / 110 + y / 90) ** 2), maxK: 0.7 });
+    const wind = el('g', {}, world7); const ws = streaks(wind, 40, 77, C.paper, 2.4);
+    // plane from behind / below
+    const pl = el('g', {}, world7);
+    const S = L(C.slate, C.navy, 6);
+    el('path', { d: 'M-60 30 L-540 -20 L-545 -2 L-60 70 Z M60 30 L540 -20 L545 -2 L60 70 Z', ...S }, pl);
+    el('path', { d: 'M-22 -150 L-14 -470 L14 -470 L22 -150 Z', ...S }, pl);
+    el('path', { d: 'M-290 -478 L290 -478 L292 -460 L-292 -460 Z', ...S }, pl);
+    [-1, 1].forEach(sg => { el('path', { d: `M${sg * 120} -60 L${sg * 150} -70`, stroke: C.navy, 'stroke-width': 18 }, pl); });
+    el('circle', { cx: 0, cy: 0, r: 150, ...S }, pl);
+    halftone(pl, { x0: -150, y0: -150, w: 300, h: 300, color: C.navy, step: 16, angle: 45, f: (x, y) => clamp(Math.hypot(x, y) / 150) * seg(y, -150, 150) * 0.9, maxK: 0.6 }).setAttribute('clip-path', 'url(#fusClip)');
+    const defs = document.querySelector('defs'); const fc = el('clipPath', { id: 'fusClip' }, defs); el('circle', { cx: 0, cy: 0, r: 147 }, fc);
+    [-205, 205].forEach(x => { el('circle', { cx: x, cy: -70, r: 64, ...S }, pl); el('circle', { cx: x, cy: -70, r: 42, fill: C.ink, stroke: C.navy, 'stroke-width': 4 }, pl); });
+    el('circle', { cx: 0, cy: -160, r: 52, ...S }, pl); el('circle', { cx: 0, cy: -160, r: 34, fill: C.ink }, pl);
+    const glow = el('path', { d: 'M-58 100 L58 100 L52 142 L-52 142 Z', fill: C.mustard }, pl);
+    const stair = el('g', {}, pl);
+    const stairPoly = el('path', { ...L(C.slate, C.navy, 5) }, stair);
+    const steps = el('path', { stroke: C.navy, 'stroke-width': 4, fill: 'none' }, stair);
+    const figG = el('g', {}, world7); const fig = cooper(figG);
+    const clouds = el('g', {}, world7);
+    halftone(clouds, { x0: -200, y0: 1500, w: W + 400, h: 1200, color: C.ink, step: 24, angle: 15, f: (x, y) => seg(y, 1620, 1820) * (0.7 + 0.3 * Math.sin(x / 140)), maxK: 0.75 });
+    el('rect', { x: -200, y: 1820, width: W + 400, height: 900, fill: C.ink }, clouds);
+    window.EV.push({ t: 19.6, type: 'whoosh' }, { t: 19.7, type: 'jet' }, { t: 24.36, type: 'gust' });
+    return (t) => {
+      const push = lerp(1, 1.12, E.io(seg(t, 20.0, 22.2)));
+      const tilt = lerp(0, -820, E.io(seg(t, 23.55, 24.4)));
+      tf(world7, 0, tilt);
+      const bob = Math.sin(t * 2.1) * 6;
+      const PX = 540, PY = 560 + bob;
+      tf(pl, PX, PY, push * 1.05, Math.sin(t * 1.3) * 1.2);
+      // stair lowering 22.2 → 23.0
+      const lo = E.io(seg(t, 22.2, 23.0));
+      const len = 430 * lo;
+      stairPoly.setAttribute('d', `M-58 142 L58 142 L${58 + 26 * lo} ${142 + len} L${-58 - 26 * lo} ${142 + len} Z`);
+      let sdp = ''; for (let k = 1; k < 9; k++) { const yy = 142 + len * k / 9, ww = 58 + 26 * lo * k / 9; sdp += `M${-ww} ${yy} L${ww} ${yy}`; }
+      steps.setAttribute('d', lo > 0.02 ? sdp : '');
+      op(glow, 0.3 + 0.7 * lo);
+      // figure: walks down stairs 22.95–23.38, pauses at edge, drops at 23.45
+      const sc = push * 1.05;
+      const toW = (lx, ly) => [PX + lx * sc, PY + ly * sc];
+      if (t < 22.9) { show(figG, false); }
+      else {
+        show(figG, true);
+        const w = E.io(seg(t, 22.9, 23.36));
+        const [x, y] = toW(0, lerp(120, 142 + 430 - 40, w));
+        const s = lerp(0.18, 0.36, w) * sc;
+        if (t < 23.45) {
+          const lean = seg(t, 23.36, 23.45) * 8;
+          tf(figG, x, y - 300 * s, s, lean);
+          fig.set({ arm: 8 + Math.sin(t * 14) * 6, leg: 4 + Math.sin(t * 14) * 8 * (1 - seg(t, 23.3, 23.36)), legR: 4 - Math.sin(t * 14) * 8 });
+        } else {
+          const d = t - 23.45;
+          tf(figG, x + d * 30, y - 300 * s + 420 * d * d + 60 * d, s * (1 + d * 0.25), 8 + d * 70);
+          fig.set({ arm: 140, leg: 20, armR: 120 });
+        }
+      }
+      ws.forEach((s2) => {
+        const ph = ((s2.y + t * s2.sp * 1.1) % 1);
+        const a = s2.x * Math.PI * 2, rr = 160 + ph * 900;
+        const x = PX + Math.cos(a) * rr, y = PY + Math.sin(a) * rr * 1.1;
+        s2.e.setAttribute('x1', x.toFixed(1)); s2.e.setAttribute('y1', y.toFixed(1));
+        s2.e.setAttribute('x2', (x + Math.cos(a) * s2.len * (0.5 + ph)).toFixed(1)); s2.e.setAttribute('y2', (y + Math.sin(a) * s2.len * (0.5 + ph)).toFixed(1));
+        op(s2.e, 0.25 + 0.5 * lo);
+      });
+    };
+  });
+
+  // ---------------------------------------------------- S8 24.45–26.85 the search: forest, MISSING
+  scene(24.45, 26.85, (g) => {
+    bg(g, C.paper);
+    halftone(g, { color: C.slate, step: 22, angle: 20, f: edge(1200, 1.3), maxK: 0.6 });
+    txt(g, 'SEARCH AREA - SW WASHINGTON', { x: 540, y: 262, 'font-size': 30, 'font-family': F.mono, 'font-weight': 800, fill: C.navy, 'text-anchor': 'middle' });
+    el('rect', { x: 70, y: 290, width: 940, height: 860, ...L(C.paper, C.navy, 6) }, g);
+    const defs = document.querySelector('defs'); const cp = el('clipPath', { id: 'photoClip' }, defs); el('rect', { x: 96, y: 316, width: 888, height: 808 }, cp);
+    const ph = el('g', { 'clip-path': 'url(#photoClip)' }, g);
+    el('rect', { x: 0, y: 0, width: W, height: H, fill: C.navy }, ph);
+    const forest = el('g', {}, ph);
+    const r = rng(41); let cd = '', hd = '';
+    for (let i = 0; i < 260; i++) {
+      const x = -300 + r() * 1700, y = 0 + r() * 1500, rr = 30 + r() * 46;
+      cd += `M${x - rr} ${y}a${rr} ${rr} 0 1 0 ${2 * rr} 0a${rr} ${rr} 0 1 0 ${-2 * rr} 0`;
+      const h = rr * 0.45; hd += `M${x - rr * 0.3 - h} ${y - rr * 0.3}a${h} ${h} 0 1 0 ${2 * h} 0a${h} ${h} 0 1 0 ${-2 * h} 0`;
+    }
+    el('path', { d: cd, fill: C.slate, stroke: C.ink, 'stroke-width': 5 }, forest);
+    halftone(forest, { x0: -300, y0: 0, w: 1700, h: 1500, color: C.ink, step: 16, angle: 45, f: (x, y) => 0.45 + 0.3 * Math.sin(x / 50) * Math.cos(y / 60), maxK: 0.6, mul: true });
+    el('path', { d: hd, fill: C.slate, opacity: 0.8 }, forest);
+    const rain = el('g', {}, ph); const rs = streaks(rain, 70, 91, C.paper, 2);
+    el('rect', { x: 430, y: 262, width: 220, height: 56, rx: 8, ...L(C.slate, C.navy, 5) }, g);
+    const st = stampEl(g, 'MISSING', { size: 150, color: C.red });
+    TEXT_REG.push({ id: 'missing', text: 'MISSING', t0: 24.62, t1: 26.85, box: () => [200, 600, 880, 860] });
+    TEXT_REG.push({ id: 'searcharea', text: 'SEARCH AREA - SW WASHINGTON', t0: 24.45, t1: 26.85, box: () => [100, 230, 980, 275], pass: true });
+    window.EV.push({ t: 24.62, type: 'stamp' });
+    return (t) => {
+      const u = seg(t, 24.45, 26.85);
+      tf(forest, lerp(-60, 40, u), lerp(-80, 40, u), lerp(1.0, 1.08, u), lerp(-2, 2, u));
+      rs.forEach(s => {
+        const yy = ((s.y + t * s.sp * 1.5) % 1);
+        const x = 96 + s.x * 888 - yy * 60, y = 300 + yy * 860;
+        s.e.setAttribute('x1', x.toFixed(1)); s.e.setAttribute('y1', y.toFixed(1));
+        s.e.setAttribute('x2', (x - 8).toFixed(1)); s.e.setAttribute('y2', (y + s.len * 0.5).toFixed(1));
+        op(s.e, 0.5);
+      });
+      stampAnim(st, t, 24.62, 540, 730, -9);
+    };
+  });
+
+  // ---------------------------------------------------- S10 (drawn under S9) 32.35–34.85 the money, crossed out
+  const S10 = scene(32.35, 34.85, (g) => {
+    bg(g, C.paper);
+    halftone(g, { color: C.slate, step: 22, angle: 20, f: edge(1250, 1.4), maxK: 0.6 });
+    const push = el('g', {}, g);
+    el('path', { d: 'M110 340 L380 340 L410 300 L620 300 L650 340 L970 340 L970 1160 L110 1160 Z', ...L(C.mustard, C.navy, 7) }, push);
+    el('rect', { x: 150, y: 380, width: 780, height: 740, rx: 6, ...L(C.paper, C.navy, 6) }, push);
+    txt(push, 'RANSOM PAID', { x: 190, y: 460, 'font-size': 40, 'font-family': F.mono, 'font-weight': 800, fill: C.slate });
+    const big = chars(push, '$200,000', { x: 540, y: 690, size: 176, family: F.slab, fill: C.navy, anchor: 'middle', shadow: { fill: C.mustard, dx: 9, dy: 9 } });
+    const bx = 190, bw = 700, by = 820, bh = 110, keep = bw * 5800 / 200000;
+    el('rect', { x: bx, y: by, width: bw, height: bh, ...L(C.paper, C.navy, 5) }, push);
+    el('rect', { x: bx, y: by, width: keep, height: bh, fill: C.mustard, stroke: C.navy, 'stroke-width': 5 }, push);
+    const hatch = el('g', {}, push);
+    const marks = [];
+    for (let k = 0; k < 15; k++) { const x = bx + keep + 20 + k * 45; marks.push(el('path', { d: `M${x} ${by + bh - 8} L${x + 40} ${by + 8}`, stroke: C.red, 'stroke-width': 10, 'stroke-linecap': 'round', 'stroke-dasharray': '200', 'stroke-dashoffset': 200 }, hatch)); }
+    const strike = el('path', { d: `M${big.x0 - 10} 650 L${big.x0 + big.total * 0.86} 630`, stroke: C.red, 'stroke-width': 22, 'stroke-linecap': 'round', fill: 'none', 'stroke-dasharray': '900', 'stroke-dashoffset': 900, class: 'mul' }, push);
+    const strike2 = el('path', { d: `M${big.x0} 615 L${big.x0 + big.total * 0.83} 668`, stroke: C.red, 'stroke-width': 16, 'stroke-linecap': 'round', fill: 'none', 'stroke-dasharray': '900', 'stroke-dashoffset': 900, class: 'mul' }, push);
+    txt(push, 'FOUND $5,800', { x: bx, y: by + bh + 60, 'font-size': 32, 'font-family': F.mono, 'font-weight': 800, fill: C.navy });
+    txt(push, 'NEVER FOUND', { x: bx + bw, y: by + bh + 60, 'font-size': 32, 'font-family': F.mono, 'font-weight': 800, fill: C.red, 'text-anchor': 'end' });
+    TEXT_REG.push({ id: 'ransom', text: '$200,000', t0: 32.5, t1: 34.85, box: () => [140, 520, 940, 720] });
+    TEXT_REG.push({ id: 'ransomsmall', text: 'RANSOM PAID FOUND $5,800 NEVER FOUND', t0: 32.35, t1: 34.85, box: () => [150, 410, 930, 1000], pass: true });
+    return (t) => {
+      const z = lerp(1, 1.07, E.io(seg(t, 32.35, 34.85)));
+      push.setAttribute('transform', `translate(${540 - 540 * z} ${760 - 760 * z}) scale(${z}) rotate(${lerp(-1.5, 0.5, seg(t, 32.35, 34.85))} 540 760)`);
+      big.items.forEach((it, k) => tf(it.g, it.x, it.y + Math.sin(t * 3 + k * 0.6) * 2));
+      const sp = E.io(seg(t, 33.0, 33.5)); strike.setAttribute('stroke-dashoffset', (900 * (1 - sp)).toFixed(1));
+      const sp2 = E.io(seg(t, 33.35, 33.8)); strike2.setAttribute('stroke-dashoffset', (900 * (1 - sp2)).toFixed(1));
+      marks.forEach((m, k) => { const p = E.out(seg(t, 33.5 + k * 0.045, 33.62 + k * 0.045)); m.setAttribute('stroke-dashoffset', (200 * (1 - p)).toFixed(1)); });
+    };
+  });
+
+  // ---------------------------------------------------- S9 26.85–32.85 the riverbank (fades out 32.35–32.85 onto S10)
+  const S9 = scene(26.85, 32.85, (g) => {
+    const all = el('g', {}, g);
+    bg(all, C.paper);
+    const push = el('g', {}, all);
+    halftone(push, { x0: -100, y0: 300, w: 1300, h: 1900, color: C.ochre, step: 20, angle: 15, f: (x, y) => 0.55 + 0.2 * Math.sin(x / 70 + y / 50) * Math.cos(y / 90), maxK: 0.7 });
+    halftone(push, { x0: -100, y0: 300, w: 1300, h: 1900, color: C.mustard, step: 20, angle: 70, f: radial(900, 300, 900, 1), maxK: 0.55, mul: true });
+    // river
+    const riv = 'M-100 0 L1200 0 L1200 470 Q1050 520 900 480 Q700 430 520 500 Q330 560 150 500 Q30 470 -100 520 Z';
+    el('path', { d: riv, ...L(C.slate, C.navy, 7) }, push);
+    const rip = el('g', {}, push); const r = rng(5); const ripples = [];
+    for (let i = 0; i < 22; i++) ripples.push({ e: el('path', { stroke: C.paper, 'stroke-width': 5, 'stroke-linecap': 'round', fill: 'none' }, rip), x: r() * 1300 - 100, y: 40 + r() * 380, w: 60 + r() * 120, sp: 40 + r() * 60 });
+    // bundles of $20 bills (rotted)
+    const money = el('g', {}, push);
+    const bundle = (x, y, rot) => {
+      const b = el('g', {}, money);
+      el('path', { d: 'M-160 -70 L-120 -74 L-100 -66 L60 -72 L90 -64 L160 -70 L164 70 L120 66 L80 74 L-60 68 L-110 74 L-162 70 Z', ...L(C.paper, C.navy, 5) }, b);
+      el('rect', { x: -132, y: -48, width: 264, height: 96, rx: 6, fill: 'none', stroke: C.slate, 'stroke-width': 4 }, b);
+      el('ellipse', { cx: 0, cy: 0, rx: 34, ry: 40, fill: 'none', stroke: C.slate, 'stroke-width': 4 }, b);
+      txt(b, '20', { x: -112, y: -14, 'font-size': 30, 'font-family': F.mono, 'font-weight': 800, fill: C.slate });
+      txt(b, '20', { x: 112, y: 40, 'font-size': 30, 'font-family': F.mono, 'font-weight': 800, fill: C.slate, 'text-anchor': 'end' });
+      el('rect', { x: -40, y: -76, width: 16, height: 152, fill: C.navy }, b);
+      halftone(b, { x0: -165, y0: -75, w: 330, h: 150, color: C.ochre, step: 14, angle: 30, f: (xx, yy) => 0.25 + 0.55 * Math.max(0, Math.sin(xx / 30) * Math.cos(yy / 22)), maxK: 0.7, mul: true });
+      tf(b, x, y, 1, rot); return b;
+    };
+    bundle(400, 860, -8); bundle(690, 940, 11); bundle(470, 1060, 4);
+    // sand covering the bundles, brushed away
+    const cover = el('g', {}, push); const r2 = rng(9); const lumps = [];
+    for (let i = 0; i < 44; i++) {
+      const x = 200 + (i % 8) * 95 + r2() * 30, y = 740 + Math.floor(i / 8) * 85 + r2() * 30, rr = 70 + r2() * 30;
+      const lg = el('g', {}, cover);
+      el('circle', { cx: 0, cy: 0, r: rr, fill: C.ochre }, lg);
+      halftone(lg, { x0: -rr, y0: -rr, w: 2 * rr, h: 2 * rr, color: C.navy, step: 14, angle: 15, f: (xx, yy) => 0.3 * radial(0, 0, rr, 1)(xx, yy), maxK: 0.5, mul: true });
+      lumps.push({ g: lg, x, y, at: 29.75 + ((x - 200) / 700) * 1.1 + r2() * 0.35 });
+    }
+    // child's hand (top-down)
+    const hand = el('g', { filter: 'url(#boil)' }, push);
+    el('path', { d: 'M40 60 L200 330 L120 380 L-30 110 Z', ...L(C.slate, C.navy, 5) }, hand);
+    el('path', { d: 'M-48 -30 Q-58 -95 -44 -110 Q-30 -118 -26 -60 L-18 -120 Q-6 -136 6 -118 L4 -60 L22 -116 Q36 -126 42 -108 L28 -48 L52 -86 Q66 -92 66 -76 L40 -10 Q60 10 70 -10 Q86 -16 80 6 Q60 60 20 90 Q-20 100 -46 60 Q-60 20 -48 -30 Z', ...L(C.navy, C.paper, 4) }, hand);
+    const grains = el('g', {}, push); const r3 = rng(13); const gr = [];
+    for (let i = 0; i < 30; i++) gr.push({ e: el('circle', { r: 4 + r3() * 6, fill: C.ochre, stroke: C.navy, 'stroke-width': 1.5 }, grains), a: r3(), b: r3() });
+    TEXT_REG.push({ id: 'bills', text: '20 20', t0: 29.4, t1: 32.4, box: () => [250, 780, 860, 1130], pass: true });
+    window.EV.push({ t: 26.86, type: 'river' }, { t: 32.1, type: 'slide' });
+    return (t) => {
+      const z = lerp(1, 1.13, E.io(seg(t, 26.85, 32.35)));
+      push.setAttribute('transform', `translate(${540 - 540 * z} ${940 - 940 * z}) scale(${z})`);
+      ripples.forEach(rp => { const x = ((rp.x + t * rp.sp) % 1400) - 150; rp.e.setAttribute('d', `M${x} ${rp.y} q${rp.w / 4} -10 ${rp.w / 2} 0 t${rp.w / 2} 0`); });
+      // hand: digs (27.2–29.1) then sweeps (29.1–31.4), withdraws
+      let hx, hy, hr;
+      const inn = E.out(seg(t, 26.95, 27.5)), outp = E.io(seg(t, 31.45, 32.1));
+      if (t < 29.1) { hx = 640 + Math.sin(t * 3) * 40; hy = 900 + Math.abs(Math.sin(t * 9)) * -45; hr = -20 + Math.sin(t * 9) * 6; }
+      else { const ph = (t - 29.1) * 5.2; hx = 560 + Math.sin(ph) * 260; hy = 930 + Math.cos(ph * 0.5) * 70; hr = -25 + Math.cos(ph) * 18; }
+      tf(hand, lerp(1150, hx, inn) + outp * 600, lerp(1500, hy, inn) + outp * 500, 1.15, hr);
+      lumps.forEach(l => { const p = E.in(seg(t, l.at, l.at + 0.35)); tf(l.g, l.x + p * 60, l.y - p * 20, Math.max(0.0001, 1 - p)); });
+      gr.forEach((q, i) => {
+        const cyc = ((t * 2.2 + q.a) % 1); const active = t > 27.2 && t < 31.5;
+        const x = hx + (q.a - 0.5) * 160 + cyc * 120 * (q.b - 0.3), y = hy + 60 - cyc * 120 + cyc * cyc * 140;
+        q.e.setAttribute('cx', x.toFixed(1)); q.e.setAttribute('cy', y.toFixed(1)); op(q.e, active ? 1 - cyc : 0);
+      });
+      op(money, 1 - seg(t, 32.2, 32.6));
+      op(all, 1 - seg(t, 32.4, 32.85));
+    };
+  });
+
+  // ---------------------------------------------------- S11 34.85–36.15 neither has he: dissolve into dots
+  scene(34.85, DUR + 0.1, (g) => {
+    bg(g, C.navy);
+    const halo = el('g', {}, g);
+    halftone(halo, { color: C.slate, step: 22, angle: 30, f: radial(540, 820, 620, 0.5), maxK: 0.72 });
+    halftone(halo, { color: C.mustard, step: 22, angle: 70, f: radial(540, 640, 240, 1.4), maxK: 0.5, mul: true });
+    const defs = document.querySelector('defs');
+    const mk = el('mask', { id: 'dissolve', maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, defs);
+    const dots = []; const r = rng(23); const step = 18;
+    for (let y = 300; y <= 1560; y += step) for (let x = 250; x <= 830; x += step) {
+      const ny = (y - 300) / 1260;
+      dots.push({ e: el('circle', { cx: x, cy: y, r: step * 0.75, fill: '#fff' }, mk), x, y, s: 35.25 + 0.2 * r() + 0.25 * (1 - ny) + 0.1 * r(), dx: (r() - 0.5) * 80, dy: -40 - r() * 120 });
+    }
+    const figWrap = el('g', { mask: 'url(#dissolve)' }, g);
+    const figG = el('g', {}, figWrap); const fig = cooper(figG, { rim: C.paper, rimW: 4 });
+    return (t) => {
+      const z = lerp(1, 1.06, seg(t, 34.85, DUR));
+      tf(halo, 540 - 540 * z, 820 - 820 * z, z);
+      tf(figG, 540, 1040 + Math.sin(t * 1.6) * 3, 1.75 * z);
+      fig.set({ arm: 7 + Math.sin(t * 2) * 1.5, leg: 3 });
+      dots.forEach(d => {
+        const p = seg(t, d.s, d.s + 0.4);
+        d.e.setAttribute('r', (step * 0.75 * (1 - E.in(p)) * (p > 0 ? 0.62 : 1)).toFixed(2));
+        if (p > 0) { d.e.setAttribute('cx', (d.x + d.dx * p).toFixed(1)); d.e.setAttribute('cy', (d.y + d.dy * p).toFixed(1)); }
+        else { d.e.setAttribute('cx', d.x); d.e.setAttribute('cy', d.y); }
+      });
+    };
+  });
+
+  // keep S9 drawn above S10 for the fade
+  document.getElementById('world').appendChild(S9.g);
+
+  // ---------------------------------------------------- captions
+  const caps = document.getElementById('caps');
+  window.CAPS = CUES.map((c, i) => {
+    const size0 = 70;
+    const g = el('g', {}, caps); const inner = el('g', {}, g);
+    let w = measure(c.text, size0, F.sans); const size = Math.min(size0, size0 * 900 / w); w = measure(c.text, size, F.sans);
+    const padX = 34, hgt = size * 1.55;
+    el('rect', { x: -w / 2 - padX + 8, y: -hgt / 2 + 8, width: w + padX * 2, height: hgt, rx: 16, fill: C.slate, class: 'mul' }, inner);
+    el('rect', { x: -w / 2 - padX, y: -hgt / 2, width: w + padX * 2, height: hgt, rx: 16, fill: C.navy, stroke: C.paper, 'stroke-width': 4 }, inner);
+    const te = el('text', { x: -w / 2, y: size * 0.36, 'font-size': size, 'font-family': F.sans }, inner);
+    const k = c.kw ? c.text.lastIndexOf(c.kw) : -1;
+    const parts = k < 0 ? [[c.text]] : [[c.text.slice(0, k)], [c.kw, C.mustard], [c.text.slice(k + c.kw.length)]];
+    parts.forEach(([s, col]) => { if (!s) return; const sp = el('tspan', { fill: col || C.paper }, te); sp.textContent = s; sp.setAttribute('xml:space', 'preserve'); });
+    te.setAttribute('style', 'white-space: pre');
+    return { g, c };
+  });
+
+  // ---------------------------------------------------- HUD
+  const hud = document.getElementById('hud');
+  const caseT = txt(hud, 'FILE: NORJAK', { x: 54, y: 84, 'font-size': 26, 'font-family': F.mono, 'font-weight': 800 });
+  const chipBg = el('rect', { x: 50, y: 100, height: 44, rx: 6 }, hud);
+  const chipT = txt(hud, '', { x: 64, y: 131, 'font-size': 24, 'font-family': F.mono, 'font-weight': 800 });
+  const rec = el('circle', { cx: 846, cy: 76, r: 10, fill: C.red }, hud);
+  const dateT = txt(hud, '', { x: 1028, y: 85, 'font-size': 26, 'font-family': F.mono, 'font-weight': 800, 'text-anchor': 'end' });
+  const chips = [[4.6, 'EXHIBIT 01 · THE PASSENGER'], [9.14, 'EXHIBIT 02 · THE NOTE'], [12.85, 'EXHIBIT 03 · THE TRADE'], [17.65, 'EXHIBIT 04 · THE ROUTE'], [20.0, 'EXHIBIT 05 · THE JUMP'],
+    [24.45, 'EXHIBIT 06 · THE SEARCH'], [26.85, 'EXHIBIT 07 · THE RIVERBANK'], [32.35, 'EXHIBIT 08 · THE MONEY'], [34.85, 'EXHIBIT 09 · THE MAN']];
+  const darkAt = t => (t >= 12.85 && t < 17.65) || (t >= 20.0 && t < 24.45) || t >= 34.85;
+  hudUpdate = (t) => {
+    show(hud, t >= 4.6);
+    const c = [...chips].reverse().find(([a]) => t >= a); if (!c) return;
+    chipT.textContent = c[1]; chipBg.setAttribute('width', measure(c[1], 24, F.mono, 800) + 28);
+    dateT.textContent = t < 26.85 ? 'NOV 24 1971' : t < 32.35 ? 'FEB 1980' : 'UNSOLVED';
+    const dk = darkAt(t), ink = dk ? C.paper : C.navy, inv = dk ? C.navy : C.paper;
+    caseT.setAttribute('fill', ink); chipBg.setAttribute('fill', ink); chipT.setAttribute('fill', inv); dateT.setAttribute('fill', ink);
+    op(rec, Math.floor(t * 2) % 2 ? 0.25 : 1);
+  };
+  TEXT_REG.push({ id: 'hud', text: 'HUD', t0: 4.6, t1: DUR, box: () => [50, 60, 1030, 145], pass: true });
+
+  // ---------------------------------------------------- dot wipe
+  const wipe = document.getElementById('wipe');
+  const dotsG = el('g', {}, wipe); const wipeDots = [];
+  for (let y = 0; y <= H + 80; y += 80) for (let x = 0; x <= W + 80; x += 80) wipeDots.push({ e: el('circle', { cx: x, cy: y, r: 0 }, dotsG), x, y });
+  const WIPES = [[4.6, C.mustard], [11.2, C.slate], [12.85, C.navy], [17.65, C.paper], [20.0, C.navy], [24.45, C.navy], [34.85, C.navy]];
+  wipeUpdate = (t) => {
+    const w = WIPES.find(([b]) => Math.abs(t - b) < 0.22);
+    show(dotsG, !!w); if (!w) return;
+    dotsG.setAttribute('fill', w[1]);
+    const u = (t - w[0] + 0.22) / 0.44;
+    wipeDots.forEach(d => {
+      const delay = (d.x / W * 0.4 + d.y / H * 0.6) * 0.35;
+      const p = clamp((u - delay) / 0.65);
+      d.e.setAttribute('r', (Math.sin(p * Math.PI) * 62).toFixed(1));
+    });
+  };
+}
+let hudUpdate = () => {}, wipeUpdate = () => {};
+
+// ============================================================ paper & grain
+function buildPaper() {
+  const cv = document.getElementById('paper'), ctx = cv.getContext('2d');
+  const r = rng(3);
+  const small = document.createElement('canvas'); small.width = 54; small.height = 96;
+  const sctx = small.getContext('2d'); const sim = sctx.createImageData(54, 96);
+  for (let i = 0; i < sim.data.length; i += 4) { const v = 242 + r() * 13; sim.data[i] = sim.data[i + 1] = sim.data[i + 2] = v; sim.data[i + 3] = 255; }
+  sctx.putImageData(sim, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.drawImage(small, 0, 0, W, H);
+  const base = ctx.getImageData(0, 0, W, H);
+  for (let i = 0; i < base.data.length; i += 4) {
+    const n = (r() - 0.5) * 24;
+    base.data[i] = clamp(base.data[i] + n, 0, 255); base.data[i + 1] = clamp(base.data[i + 1] + n, 0, 255); base.data[i + 2] = clamp(base.data[i + 2] + n - 4, 0, 255);
+  }
+  ctx.putImageData(base, 0, 0);
+  const gr = ctx.createRadialGradient(540, 960, 500, 540, 960, 1150);
+  gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(120,100,80,0.35)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(140,120,100,0.18)'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, 960); ctx.lineTo(W, 962); ctx.stroke();
+}
+function drawFx(frame) {
+  const cv = document.getElementById('fx'), ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  const r = rng(1000 + Math.floor(frame / 2));
+  ctx.fillStyle = 'rgba(250,244,230,0.7)';
+  for (let i = 0; i < 480; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, 0.6 + r() * 1.8, 0, 7); ctx.fill(); }
+  ctx.fillStyle = 'rgba(22,32,58,0.25)';
+  for (let i = 0; i < 80; i++) { ctx.beginPath(); ctx.arc(r() * W, r() * H, 0.6 + r() * 1.3, 0, 7); ctx.fill(); }
+}
+
+// ============================================================ render
+const SHAKES = [[7.0, 14, 0.3], [11.95, 8, 0.25], [22.25, 5, 0.8], [23.45, 9, 0.3], [24.62, 16, 0.35]];
+const FLASHES = [[7.0, 0.35], [24.62, 0.45]];
+const boilT = document.getElementById('boilT');
+function render(t) {
+  const frame = Math.round(t * FPS);
+  boilT.setAttribute('seed', 1 + (Math.floor(t * 10) % 40));
+  for (const s of scenes) { const on = t >= s.t0 && t < s.t1; show(s.g, on); if (on) s.update(t); }
+  let dx = 0, dy = 0;
+  for (const [t0, a, d] of SHAKES) if (t >= t0 && t < t0 + d) { const k = 1 - (t - t0) / d; dx += a * k * k * Math.sin(t * 91 + t0); dy += a * k * k * Math.cos(t * 77 + t0 * 3); }
+  document.getElementById('cam').setAttribute('transform', `translate(${dx.toFixed(2)} ${dy.toFixed(2)})`);
+  let fl = 0; for (const [f, a] of FLASHES) if (t >= f && t < f + 0.14) fl = Math.max(fl, a * (1 - (t - f) / 0.14));
+  op(document.getElementById('flash'), fl);
+  // captions
+  for (const { g, c } of window.CAPS) {
+    const on = t >= c.t0 && t < c.t1; show(g, on); if (!on) continue;
+    const p = seg(t, c.t0, c.t0 + 0.16);
+    tf(g, 540, 1248 + 18 * (1 - E.out(p)), lerp(0.86, 1, E.back(p)));
+  }
+  show(document.getElementById('top'), t < 4.6);
+  hudUpdate(t); wipeUpdate(t); drawFx(frame);
+}
+window.TEXTS = (t) => TEXT_REG.filter(x => t >= x.t0 && t < x.t1).map(x => { const [x0, y0, x1, y1] = x.box(); return { id: x.id, text: x.text, x0, y0, x1, y1, pass: !!x.pass }; });
+
+async function init() {
+  const fams = ['400 50px "Alfa Slab One"', '400 50px "Archivo Black"', '800 50px "JetBrains Mono"'];
+  const sample = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789$,.:·-';
+  await Promise.all(fams.map(f => document.fonts.load(f, sample)));
+  await document.fonts.ready;
+  buildPaper();
+  buildAll();
+  window.DUR = DUR;
+  const q = new URLSearchParams(location.search);
+  render(parseFloat(q.get('t') || '0'));
+  window.READY = true;
+}
+window.render = render;
+window.DUR = DUR;
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+Case File: Dan Cooper — credits
+
+Narration: the user's own recording (voice/narration_original.mp3), used as recorded; only the leading silence was trimmed.
+Picture, score and sound effects: made in code for this film (SVG/Canvas, synthesized with numpy/scipy). No samples, stock footage or generated images.
+Map: coastline hand-traced from approximate coordinates for this film; no borders drawn.
+
+Fonts (SIL Open Font License 1.1, from Google Fonts, self-hosted in fonts/):
+- Alfa Slab One — JM Solé
+- Archivo Black — Omnibus-Type
+- JetBrains Mono — JetBrains
+
+Speech timing: faster-whisper (MIT), model base.en (Whisper, MIT) — used only to time captions.
+Tools: Lemo-Opuscar core render/mux tools; Playwright + Chromium; FFmpeg.
