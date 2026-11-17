@@ -1,0 +1,22 @@
+The Gardner Heist — credits
+
+Narration
+- Voice recording supplied by the film's author (Gardner.mp3), used as recorded; only the leading silence was trimmed.
+
+Fonts (SIL Open Font License 1.1, LICENSES/OFL-1.1.txt; source: github.com/google/fonts)
+- Alfa Slab One — Copyright JM Solé. Hook headline, REWARD.
+- Archivo Black — Copyright Omnibus-Type. Captions, stamps.
+- Bagel Fat One — Copyright The Bagel Fat One Project Authors. Date, clock, timer, reward amount.
+- JetBrains Mono — Copyright The JetBrains Mono Project Authors. Dossier and HUD text.
+
+Music and sound effects
+- Original score and all foley synthesised in code for this film (mix.py, numpy/scipy), using the
+  procedural sound helpers of the Lemo-Opuscar library (core/audio/sfx.py). No samples.
+
+Pictures
+- Drawn entirely in code (index.html, Canvas 2D). Paintings are simplified halftone shapes, not copies.
+  People are generic silhouettes.
+
+Tools (not in the film)
+- faster-whisper (MIT) with OpenAI Whisper "small.en" weights (MIT), used only to time captions to the narration.
+- Headless Chromium (Playwright) and FFmpeg for rendering and mastering.
