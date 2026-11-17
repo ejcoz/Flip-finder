@@ -188,13 +188,17 @@ function walker(x, y, s, ph, seed) {  // generic figure in coat and flat cap, fa
 function sListen() {
   const t = T;
   ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
-  ctx.save(); camera(lerp(1, 1.07, ss(t / 6.25)) * (1 + .006 * Math.sin(t * TAU * 1.6)), 560, 900);
-  ht(0, 520, W, 900, 22, 15, radial(640, 880, 60, 640, 1, 0), C.M, .7);
-  mul(() => ht(0, 520, W, 900, 22, 45, radial(640, 880, 260, 760, .55, 0), C.T, .62));
-  // desk
-  ctx.fillStyle = C.K; ctx.fillRect(-60, 1080, W + 120, 150); ctx.fillStyle = C.M; ctx.fillRect(-60, 1080, W + 120, 10);
+  ctx.save(); camera(lerp(1, 1.06, ss(t / 6.25)) * (1 + .006 * Math.sin(t * TAU * 1.6)), 560, 600);
+  const below = y => clamp((y - 470) / 140);          // keep the hook's paper clear
+  ht(-100, 380, W + 200, 1000, 22, 15, (x, y) => radial(640, 900, 60, 760, 1, .18)(x, y) * below(y), C.M, .7);
+  mul(() => ht(-100, 380, W + 200, 1000, 22, 45, (x, y) => radial(640, 900, 260, 820, .55, .12)(x, y) * below(y), C.T, .62));
+  // desk, and the halftone floor below it to the bottom of the frame
+  ctx.fillStyle = C.K; ctx.fillRect(-100, 1150, W + 200, 190); ctx.fillStyle = C.M; ctx.fillRect(-100, 1150, W + 200, 10);
+  ht(-100, 1340, W + 200, 800, 22, 15, ramp(1340, 1900, .35, .85), C.M, .7);
+  mul(() => ht(-100, 1340, W + 200, 800, 22, 45, ramp(1340, 1900, .2, .75), C.T, .62));
+  ctx.fillStyle = C.K; ctx.fillRect(-100, 1338, W + 200, 8);
   // reel-to-reel
-  ctx.save(); ctx.translate(800, 1080); ctx.scale(.86, .86); ctx.translate(-800, -1080);
+  ctx.save(); ctx.translate(800, 1150); ctx.scale(1.08, 1.08); ctx.translate(-800, -1080);
   rr(590, 600, 420, 480, 22); fill(C.P); ink(8);
   mul(() => clipTo(() => rr(590, 600, 420, 480, 22), () => ht(590, 600, 420, 480, 20, 30, ramp(600, 1080, .15, .62), C.T, .66)));
   for (const [cx, dir] of [[690, 1], [910, 1]]) {
@@ -222,7 +226,7 @@ function sListen() {
   ctx.restore();
   // the officer: seated, leaning toward the machine
   const lean = ss(t / 3) * 18 + Math.sin(t * 2.1) * 6, rot = -.05 - ss(t / 3) * .05 + Math.sin(t * 1.7) * .015;
-  ctx.save(); ctx.translate(290 + lean, 1080); ctx.scale(.84, .84); ctx.rotate(rot);
+  ctx.save(); ctx.translate(290 + lean, 1150); ctx.scale(.98, .98); ctx.rotate(rot);
   ctx.fillStyle = C.K;
   poly([[-170, 0], [-150, -250], [-90, -330], [30, -350], [110, -300], [150, -180], [120, 0]], 3, 2.2); ctx.fill();
   ctx.save(); ctx.translate(70, -310); ctx.rotate(-.75 + Math.sin(t * 2.3) * .05); rr(-26, -10, 52, 210, 24); ctx.fill(); ctx.translate(0, 190); ctx.rotate(-.9); rr(-22, -8, 44, 150, 20); ctx.fill(); circ(0, 150, 28); ctx.fill(); ctx.restore();
@@ -239,11 +243,11 @@ function sListen() {
   ctx.restore();
   ctx.restore();
   // hook headline (top), held until 5.35
-  const out = ei(seg(t, 5.35, 5.65)) * -700;
+  const out = ei(seg(t, 5.35, 5.65)) * -700 - (1 - eo(seg(t, 0, .1))) * 24;   // whole block, settled by frame 3
   ctx.save(); ctx.translate(0, out);
   const L = [['Police heard the', C.K, C.T, -.55], ['robbery happening.', C.K, C.T, -.45], ['They couldn\'t', C.R, C.K, -.25], ['find it.', C.R, C.K, -.15]];
   ctx.font = '100px Slab'; const size = Math.min(92, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 180;
-  L.forEach(([s, col, sh, t0], i) => { popLine(s, 64, y, size, 'Slab', col, sh, t0, .018); y += i === 1 ? size * 1.36 : size * 1.13; });
+  L.forEach(([s, col, sh], i) => { txt(s, 64, y, `${size}px Slab`, col, 'left', sh, 7); y += i === 1 ? size * 1.36 : size * 1.13; });
   if (t < 5.36) reg('hook', 'Police heard the robbery happening. They couldn\'t find it.', 64, 120, 1020, 610);
   ctx.restore();
 }
@@ -461,15 +465,15 @@ function nightSky(y1, seed) {
 function sRoof() {
   const t = T, lt = t - CUT.roof;
   nightSky(1200);
-  ctx.save(); camera(1.05, 540, 960, 0, lerp(260, 0, eio(seg(lt, 0, 3.6))));
+  ctx.save(); camera(1.05, 540, 960, 0, lerp(110, 0, eio(seg(lt, 0, 3.6)))); ctx.translate(0, -200);
   // moon
   circ(540, 900, 230); fill(C.M); mul(() => clipTo(() => circ(540, 900, 230), () => ht(300, 660, 480, 480, 18, 45, radial(600, 840, 20, 300, 0, .6), C.T, .66)));
   // distant skyline with flickering windows
   ctx.fillStyle = C.K; const rnd = mulberry(3); let x = -150; const bl = [];
-  while (x < W + 150) { const w = 60 + rnd() * 110, h = 50 + rnd() * 110; bl.push([x, w, h]); ctx.fillRect(x, 1130 - h, w, h + 20); x += w + 4; }
+  while (x < W + 150) { const w = 60 + rnd() * 110, h = 50 + rnd() * 110; bl.push([x, w, h]); ctx.fillRect(x, 1130 - h, w, h + 220); x += w + 4; }
   ctx.fillStyle = C.M; bl.forEach(([bx, bw, bh], i) => { for (let k = 0; k < 4; k++) { const on = hash(i * 9 + k + Math.floor(t * 2 + i) * 3.3) > .55; if (on) ctx.fillRect(bx + 10 + (k % 2) * (bw / 2), 1130 - bh + 26 + Math.floor(k / 2) * 46, 12, 16); } });
   // foreground roof and chimneys
-  poly([[-200, 1250], [W + 200, 1170], [W + 200, 1800], [-200, 1800]]); fill(C.K);
+  poly([[-200, 1250], [W + 200, 1170], [W + 200, 2500], [-200, 2500]]); fill(C.K);
   ctx.beginPath(); ctx.moveTo(-200, 1250); ctx.lineTo(W + 200, 1170); ink(5, C.M);
   for (const [cx, base, n] of [[90, 1244, 3], [820, 1186, 2]]) {
     ctx.fillStyle = C.K; ctx.fillRect(cx, base - 260, 150, 262); ctx.fillRect(cx - 12, base - 272, 174, 22);

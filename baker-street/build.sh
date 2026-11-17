@@ -11,4 +11,4 @@ node core/render/video.mjs "$HERE" --fps 30 --workers 4 --size 1080x1920 --out "
 "$LIB/.venv/bin/python" "$HERE/mix.py"
 "$LIB/.venv/bin/python" "$HERE/srt.py"
 sh core/render/mux.sh "$HERE/out/video.mp4" "$HERE/out/mix.wav" "$HERE/baker-street.mp4" 30 1
-ffmpeg -y -loglevel error -ss 34.9 -i "$HERE/baker-street.mp4" -frames:v 1 -q:v 2 "$HERE/poster.jpg"
+ffmpeg -y -loglevel error -ss 1.5 -i "$HERE/baker-street.mp4" -frames:v 1 -q:v 2 "$HERE/poster.jpg"
