@@ -1,0 +1,814 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:Slab;src:url(fonts/AlfaSlabOne-Regular.ttf);font-display:block}
+@font-face{font-family:Cap;src:url(fonts/ArchivoBlack-Regular.ttf);font-display:block}
+@font-face{font-family:Fat;src:url(fonts/BagelFatOne-Regular.ttf);font-display:block}
+@font-face{font-family:Mono;src:url(fonts/JetBrainsMono.ttf);font-weight:100 900;font-display:block}
+html,body{margin:0;background:#efe2c4;overflow:hidden}
+canvas{display:block}
+</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import { clamp, lerp, seg, ss, eio, eo, ei, back, mulberry, hash, TAU } from '/core/lib.js';
+
+const W = innerWidth, H = innerHeight;            // 1080 × 1920
+const cv = document.getElementById('c'); cv.width = W; cv.height = H;
+const ctx = cv.getContext('2d');
+const C = { P: '#efe2c4', K: '#231a14', T: '#1f6f78', M: '#e0a526', R: '#d8432c' };
+const DUR = 35.10;
+window.DUR = DUR;
+const CAPY = Math.round(H * 0.65);                  // caption centre: 1248
+
+// ───────────────────────── narration-locked timeline ─────────────────────────
+// times are seconds in the trimmed narration (first word at ≈0.01 s, last word ends ≈35.0 s)
+const CAPS = [
+  ['Police heard this *bank*', 0.00],
+  ['robbery happening *live,*', 0.98],
+  ['and still couldn\'t', 2.59],
+  ['*stop* it.', 3.28, 3.95],
+  ['In *1971,*', 4.58],
+  ['a *gang* rented', 6.10],
+  ['a *shop* two doors', 6.78],
+  ['from a *Lloyds* bank', 7.74],
+  ['on *Baker* *Street*', 8.66],
+  ['in *London.*', 9.48, 10.30],
+  ['They dug a', 10.76],
+  ['*40* *ft* tunnel', 11.20],
+  ['under the *restaurant*', 12.02],
+  ['in between,', 12.86],
+  ['straight into the *vault.*', 13.76, 15.10],
+  ['A *lookout*', 15.94],
+  ['on a *rooftop*', 16.24],
+  ['talked to them', 17.04],
+  ['by *walkie-talkie.*', 17.70, 18.95],
+  ['*Half* *a* *mile* away,', 19.56],
+  ['*Robert* *Rowlands*', 20.52],
+  ['picked up *every* *word,*', 21.16],
+  ['and *taped* it.', 22.55, 23.45],
+  ['But the *tapes*', 24.14],
+  ['*never* named the bank.', 24.60, 26.25],
+  ['Police checked', 26.78],
+  ['*750* of them.', 27.42, 29.25],
+  ['By the time', 29.70],
+  ['they found', 30.14],
+  ['the *right* *one,*', 30.60],
+  ['*268* safe deposit boxes', 31.70],
+  ['had been *emptied.*', 34.12, DUR],
+];
+CAPS.forEach((c, i) => { c.t0 = c[1]; c.t1 = c[2] ?? CAPS[i + 1][1]; c.words = c[0].split(' ').map(w => ({ s: w.replace(/\*/g, ''), hi: w.includes('*') })); c.text = c.words.map(w => w.s).join(' '); });
+
+// scenes (cut times); W = dot wipe at the cut, X = hard cut
+const CUT = { street: 6.25, tunnel: 10.45, wall: 13.65, roof: 15.60, window: 19.30, map: 21.60, eject: 23.30, pins: 26.72, door: 30.45, boxes: 31.60 };
+const WIPES = [[CUT.street, C.T], [CUT.tunnel, C.M], [CUT.roof, C.K], [CUT.window, C.M], [CUT.map, C.T], [CUT.eject, C.M], [CUT.pins, C.R], [CUT.boxes, C.K]];
+const SHAKES = [[14.92, 24, .5], [26.05, 16, .35], [31.40, 10, .3], [32.00, 14, .35], [13.65, 6, .2]];
+const FLASH = [[14.92, .45], [26.05, .3], [32.00, .35]];
+const SFX = [  // every effect sits in a measured pause in the narration
+  { t: 4.02, type: 'slide' }, { t: 10.18, type: 'whoosh' }, { t: 14.90, type: 'burst' },
+  { t: 18.74, type: 'walkie' }, { t: 23.22, type: 'eject' }, { t: 23.70, type: 'slide' },
+  { t: 26.02, type: 'stamp' }, { t: 29.03, type: 'taps' }, { t: 29.36, type: 'whoosh' }, { t: 31.39, type: 'clunk' },
+];
+const GAPS = [[2.28, 2.59], [3.76, 4.58], [10.11, 10.78], [13.58, 13.77], [14.87, 15.96], [18.69, 19.58], [22.34, 22.57], [23.18, 24.16], [25.96, 26.79], [28.99, 29.72], [31.37, 31.70]];
+window.EV = [...SFX, ...CAPS.map(c => ({ t: c.t0, type: 'cap', t1: c.t1, text: c.text })), ...GAPS.map(g => ({ t: g[0], type: 'gap', t1: g[1] })), { t: 31.37, type: 'musicstop' }];
+
+// ───────────────────────── helpers ─────────────────────────
+let T = 0, BOIL = 0, TX = [];
+const jit = (s, a = 2.4) => (hash(s * 13.37 + BOIL * 7.91) - .5) * 2 * a;
+const R2 = Math.PI / 180;
+function rr(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function ink(lw = 7, col = C.K) { ctx.lineWidth = lw; ctx.strokeStyle = col; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke(); }
+function fill(col) { ctx.fillStyle = col; ctx.fill(); }
+function circ(x, y, r) { ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); }
+function ell(x, y, rx, ry, rot = 0) { ctx.beginPath(); ctx.ellipse(x, y, Math.max(.1, rx), Math.max(.1, ry), rot, 0, TAU); }
+function poly(pts, seed = 0, amp = 0, close = true) {
+  ctx.beginPath();
+  pts.forEach(([x, y], i) => { const X = x + (amp ? jit(seed + i * 3.1, amp) : 0), Y = y + (amp ? jit(seed + i * 5.7 + 1, amp) : 0); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+  if (close) ctx.closePath();
+}
+// halftone: rotated dot grid, radius from a density field
+function ht(x, y, w, h, step, ang, f, col, k = .68) {
+  const a = ang * R2, ca = Math.cos(a), sa = Math.sin(a), cx = x + w / 2, cy = y + h / 2, n = Math.ceil(Math.hypot(w, h) / 2 / step) + 1;
+  ctx.beginPath();
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const u = i * step, v = j * step, px = cx + u * ca - v * sa, py = cy + u * sa + v * ca;
+    if (px < x - step || px > x + w + step || py < y - step || py > y + h + step) continue;
+    const d = f(px, py); if (!(d > 0)) continue;
+    const r = Math.min(d, 1.1) * step * k; if (r < .7) continue;
+    ctx.moveTo(px + r, py); ctx.arc(px, py, r, 0, TAU);
+  }
+  ctx.fillStyle = col; ctx.fill();
+}
+const radial = (cx, cy, r0, r1, d0 = 1, d1 = 0) => (x, y) => { const q = clamp((Math.hypot(x - cx, y - cy) - r0) / (r1 - r0)); return lerp(d0, d1, q); };
+const ramp = (y0, y1, d0, d1) => (x, y) => lerp(d0, d1, clamp((y - y0) / (y1 - y0)));
+function mul(fn) { ctx.save(); ctx.globalCompositeOperation = 'multiply'; fn(); ctx.restore(); }
+function clipTo(pathFn, fn) { ctx.save(); pathFn(); ctx.clip(); fn(); ctx.restore(); }
+function camera(s, fx, fy, dx = 0, dy = 0, rot = 0) { ctx.translate(fx + dx, fy + dy); ctx.rotate(rot); ctx.scale(s, s); ctx.translate(-fx, -fy); }
+function reg(id, text, x0, y0, x1, y1, pass = false) {
+  const m = ctx.getTransform(), p = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]].map(([x, y]) => [m.a * x + m.c * y + m.e, m.b * x + m.d * y + m.f]);
+  TX.push({ id, text, x0: Math.min(...p.map(q => q[0])), y0: Math.min(...p.map(q => q[1])), x1: Math.max(...p.map(q => q[0])), y1: Math.max(...p.map(q => q[1])), pass });
+}
+function txt(s, x, y, font, col, align = 'left', shadow = null, off = 8) {
+  ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+  if (shadow) mul(() => { ctx.fillStyle = shadow; ctx.fillText(s, x + off, y + off); });
+  ctx.fillStyle = col; ctx.fillText(s, x, y);
+}
+// per-character pop line, returns width
+function popLine(s, x, y, size, family, col, shadow, t0, stagger = .022) {
+  ctx.font = `${size}px ${family}`; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  let cx = x;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i], w = ctx.measureText(ch).width, a = seg(T, t0 + i * stagger, t0 + i * stagger + .3);
+    if (a > 0 && ch !== ' ') {
+      const dy = (1 - back(a, 2.2)) * 70, sq = 1 + .25 * Math.exp(-a * 6) * Math.cos(a * 18);
+      ctx.save(); ctx.translate(cx + w / 2, y + dy); ctx.scale(1 / sq, sq * Math.min(1, a * 4));
+      if (shadow) mul(() => { ctx.fillStyle = shadow; ctx.fillText(ch, -w / 2 + 7, 7); });
+      ctx.fillStyle = col; ctx.fillText(ch, -w / 2, 0); ctx.restore();
+    }
+    cx += w;
+  }
+  return cx - x;
+}
+// rough rubber stamp, pre-rendered
+function makeStamp(lines, w, h, seed) {
+  const c = document.createElement('canvas'); c.width = w + 40; c.height = h + 40; const g = c.getContext('2d');
+  g.translate(20, 20); g.strokeStyle = C.R; g.fillStyle = C.R; g.lineWidth = 14;
+  g.beginPath(); g.roundRect(0, 0, w, h, 26); g.stroke(); g.lineWidth = 5; g.beginPath(); g.roundRect(18, 18, w - 36, h - 36, 14); g.stroke();
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  lines.forEach(([s, font, y]) => { g.font = font; g.fillText(s, w / 2, y); });
+  const rnd = mulberry(seed); g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 1400; i++) { g.globalAlpha = .5 + rnd() * .5; g.beginPath(); g.arc(rnd() * (w + 40) - 20, rnd() * (h + 40) - 20, .6 + rnd() * 2.6, 0, TAU); g.fill(); }
+  for (let i = 0; i < 26; i++) { g.globalAlpha = .35; g.lineWidth = 1 + rnd() * 3; g.beginPath(); const x = rnd() * w, y = rnd() * h; g.moveTo(x, y); g.lineTo(x + 40 + rnd() * 120, y + (rnd() - .5) * 20); g.stroke(); }
+  return c;
+}
+function stampDraw(img, x, y, rot, t0) {
+  const a = T - t0; if (a < 0) return;
+  let s = a < .09 ? lerp(2.6, 1, ei(a / .09)) : 1 + .05 * Math.exp(-(a - .09) * 14) * Math.cos((a - .09) * 40);
+  ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(s, s); ctx.globalAlpha = .93;
+  ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(img, -img.width / 2, -img.height / 2); ctx.restore();
+}
+
+// ───────────────────────── paper ─────────────────────────
+let PAPER;
+function buildPaper() {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+  const tile = document.createElement('canvas'); tile.width = 54; tile.height = 96; const tg = tile.getContext('2d'), rnd = mulberry(11);
+  const id = tg.createImageData(54, 96);
+  for (let i = 0; i < id.data.length; i += 4) { const v = 236 + rnd() * 19; id.data[i] = v; id.data[i + 1] = v - 3; id.data[i + 2] = v - 9; id.data[i + 3] = 255; }
+  tg.putImageData(id, 0, 0); g.imageSmoothingEnabled = true; g.globalCompositeOperation = 'multiply'; g.drawImage(tile, 0, 0, W, H);
+  const d = g.getImageData(0, 0, W, H), r2 = mulberry(5);
+  for (let i = 0; i < d.data.length; i += 4) { const n = (r2() - .5) * 14; d.data[i] += n; d.data[i + 1] += n * .96; d.data[i + 2] += n * .9; }
+  g.putImageData(d, 0, 0);
+  const vg = g.createRadialGradient(W / 2, H / 2, H * .3, W / 2, H / 2, H * .72); vg.addColorStop(0, '#ffffff'); vg.addColorStop(1, '#d9cdb6');
+  g.fillStyle = vg; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = 'multiply'; g.fillStyle = '#ece6da'; g.fillRect(0, H / 2 - 2, W, 3); g.fillStyle = '#f6f2ea'; g.fillRect(0, H / 2 + 1, W, 6);
+  PAPER = c;
+}
+function grain() {
+  const rnd = mulberry(1000 + Math.floor(T * 15));
+  ctx.fillStyle = C.P; for (let i = 0; i < 260; i++) { ctx.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2.5, 1 + rnd() * 2.5); }
+  ctx.fillStyle = C.K; for (let i = 0; i < 70; i++) { ctx.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 1.6, 1 + rnd() * 1.6); }
+}
+
+// ───────────────────────── figures (silhouettes, no faces) ─────────────────────────
+function walker(x, y, s, ph, seed) {  // generic figure in coat and flat cap, facing right, feet at y
+  ctx.save(); ctx.translate(x + jit(seed, 1.5), y); ctx.scale(s, s);
+  const sw = Math.sin(ph), bob = Math.abs(Math.cos(ph)) * 6;
+  ctx.fillStyle = C.K;
+  for (const k of [-1, 1]) { ctx.save(); ctx.translate(0, -100 - bob); ctx.rotate(k * sw * .45); rr(-11, 0, 22, 104, 10); ctx.fill(); ctx.restore(); }
+  poly([[-34, -215 - bob], [30, -215 - bob], [40, -90 - bob], [-42, -90 - bob]], seed, 1.5); fill(C.K);
+  ctx.save(); ctx.translate(18, -205 - bob); ctx.rotate(-sw * .5); rr(-10, 0, 20, 95, 10); ctx.fill(); ctx.restore();
+  circ(4, -245 - bob, 25); fill(C.K);
+  poly([[-26, -258 - bob], [24, -266 - bob], [44, -256 - bob], [-26, -248 - bob]]); fill(C.K);
+  ctx.restore();
+}
+
+// ───────────────────────── scenes ─────────────────────────
+// 1 · the listening room (0 → 6.25)
+function sListen() {
+  const t = T;
+  ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
+  ctx.save(); camera(lerp(1, 1.07, ss(t / 6.25)) * (1 + .006 * Math.sin(t * TAU * 1.6)), 560, 900);
+  ht(0, 520, W, 900, 22, 15, radial(640, 880, 60, 640, 1, 0), C.M, .7);
+  mul(() => ht(0, 520, W, 900, 22, 45, radial(640, 880, 260, 760, .55, 0), C.T, .62));
+  // desk
+  ctx.fillStyle = C.K; ctx.fillRect(-60, 1080, W + 120, 150); ctx.fillStyle = C.M; ctx.fillRect(-60, 1080, W + 120, 10);
+  // reel-to-reel
+  ctx.save(); ctx.translate(800, 1080); ctx.scale(.86, .86); ctx.translate(-800, -1080);
+  rr(590, 600, 420, 480, 22); fill(C.P); ink(8);
+  mul(() => clipTo(() => rr(590, 600, 420, 480, 22), () => ht(590, 600, 420, 480, 20, 30, ramp(600, 1080, .15, .62), C.T, .66)));
+  for (const [cx, dir] of [[690, 1], [910, 1]]) {
+    const a = t * 3.6 * dir;
+    circ(cx, 730, 92); fill(C.K); circ(cx, 730, 82); fill(C.P); ink(5);
+    ctx.save(); ctx.translate(cx, 730); ctx.rotate(a);
+    for (let k = 0; k < 3; k++) { ctx.rotate(TAU / 3); ctx.beginPath(); ctx.moveTo(14, -10); ctx.arc(0, 0, 60, -.45, .45); ctx.lineTo(14, 10); ctx.closePath(); fill(C.K); }
+    circ(0, 0, 13); fill(C.M); ink(4); ctx.restore();
+  }
+  ctx.beginPath(); ctx.moveTo(620, 760); ctx.lineTo(650, 860); ctx.lineTo(950, 860); ctx.lineTo(990, 760); ink(4);
+  rr(735, 845, 130, 34, 8); fill(C.K);
+  // VU meter
+  rr(625, 905, 170, 100, 10); fill(C.P); ink(5);
+  ctx.beginPath(); ctx.arc(710, 1000, 70, -2.5, -.64); ink(3);
+  const lvl = .5 + .35 * Math.sin(t * 17) * Math.sin(t * 5.3) + .1 * Math.sin(t * 41);
+  ctx.save(); ctx.translate(710, 1000); ctx.rotate(lerp(-1.0, 1.0, lvl)); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -82); ink(4, C.R); ctx.restore();
+  // speaker + pulsing dot rings
+  circ(915, 960, 62); fill(C.K); ht(853, 898, 124, 124, 13, 0, (x, y) => Math.hypot(x - 915, y - 960) < 54 ? .7 : 0, C.M, .6);
+  for (let k = 0; k < 4; k++) {
+    const p = ((t * .9 + k / 4) % 1), r = 80 + p * 520, n = Math.floor(r / 14), dr = (1 - p) * 9 + 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) { const a = Math.PI * .55 + (i / n) * Math.PI * 1.1; const px = 915 + Math.cos(a) * r, py = 960 + Math.sin(a) * r * .9; if (py > 1075) continue; ctx.moveTo(px + dr, py); ctx.arc(px, py, dr, 0, TAU); }
+    fill(C.T);
+  }
+  ctx.restore();
+  // the officer: seated, leaning toward the machine
+  const lean = ss(t / 3) * 18 + Math.sin(t * 2.1) * 6, rot = -.05 - ss(t / 3) * .05 + Math.sin(t * 1.7) * .015;
+  ctx.save(); ctx.translate(290 + lean, 1080); ctx.scale(.84, .84); ctx.rotate(rot);
+  ctx.fillStyle = C.K;
+  poly([[-170, 0], [-150, -250], [-90, -330], [30, -350], [110, -300], [150, -180], [120, 0]], 3, 2.2); ctx.fill();
+  ctx.save(); ctx.translate(70, -310); ctx.rotate(-.75 + Math.sin(t * 2.3) * .05); rr(-26, -10, 52, 210, 24); ctx.fill(); ctx.translate(0, 190); ctx.rotate(-.9); rr(-22, -8, 44, 150, 20); ctx.fill(); circ(0, 150, 28); ctx.fill(); ctx.restore();
+  rr(0, -400, 60, 70, 20); ctx.fill();
+  const hx = 70 + jit(9, 1.4), hy = -470;
+  circ(hx, hy, 78); ctx.fill();
+  poly([[hx - 66, hy - 52], [hx - 104, hy - 112], [hx + 96, hy - 134], [hx + 74, hy - 56]], 5, 1.6); ctx.fill();
+  poly([[hx + 40, hy - 60], [hx + 150, hy - 44], [hx + 140, hy - 30], [hx + 30, hy - 42]]); ctx.fill();
+  poly([[hx - 70, hy - 66], [hx + 76, hy - 70], [hx + 76, hy - 58], [hx - 68, hy - 54]]); fill(C.M);
+  ctx.beginPath(); ctx.arc(hx - 30, hy - 10, 92, Math.PI * 1.0, Math.PI * 1.62); ink(16, C.K); ink(4, C.M);
+  ell(hx - 62, hy + 2, 30, 44); fill(C.K); ctx.beginPath(); ctx.ellipse(hx - 62, hy + 2, 30, 44, 0, Math.PI * .6, Math.PI * 1.4); ink(5, C.M);
+  ctx.beginPath(); ctx.moveTo(hx - 70, hy + 40); ctx.bezierCurveTo(hx - 130, hy + 200, 200, 120, 330, 40); ink(5, C.K);
+  ctx.beginPath(); ctx.moveTo(hx + 76, hy - 20); ctx.quadraticCurveTo(hx + 96, hy + 20, hx + 70, hy + 70); ink(5, C.M);
+  ctx.restore();
+  ctx.restore();
+  // hook headline (top), held until 5.35
+  const out = ei(seg(t, 5.35, 5.65)) * -700;
+  ctx.save(); ctx.translate(0, out);
+  const L = [['Police heard the', C.K, C.T, -.55], ['robbery happening.', C.K, C.T, -.45], ['They couldn\'t', C.R, C.K, -.25], ['find it.', C.R, C.K, -.15]];
+  ctx.font = '100px Slab'; const size = Math.min(92, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 180;
+  L.forEach(([s, col, sh, t0], i) => { popLine(s, 64, y, size, 'Slab', col, sh, t0, .018); y += i === 1 ? size * 1.36 : size * 1.13; });
+  if (t < 5.36) reg('hook', 'Police heard the robbery happening. They couldn\'t find it.', 64, 120, 1020, 610);
+  ctx.restore();
+}
+// dossier card, enters over the listening room, then pinned above the street
+function dossierCard() {
+  const t = T; if (t < 4.0 || t >= CUT.tunnel) return;
+  const a = back(seg(t, 4.0, 4.42), 1.6), b = eio(seg(t, 5.95, 6.45));
+  const y = lerp(2500, 1010, a), x = 540;
+  const cx = lerp(x, 540, b), cy = lerp(y, 345, b), s = lerp(1, .74, b), rot = lerp(-3.5, 2.5, b) * R2 + Math.sin(t * 1.3) * .004;
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(s, s);
+  rr(-420, -250, 120, 40, 12); fill(C.M); ink(6);
+  mul(() => { rr(-430 + 12, -220 + 12, 860, 440, 18); fill(C.T); });
+  rr(-430, -220, 860, 440, 18); fill(C.P); ink(7);
+  mul(() => clipTo(() => rr(-430, -220, 860, 440, 18), () => ht(-430, -220, 860, 440, 20, 30, (px, py) => clamp((Math.abs(px) - 330) / 120) * .5 + clamp((Math.abs(py) - 140) / 100) * .4, C.M, .62)));
+  txt('CASE 71/0911', -390, -170, '800 30px Mono', C.T);
+  ctx.beginPath(); ctx.moveTo(-390, -150); ctx.lineTo(390, -150); ink(3);
+  txt('SEPTEMBER 1971', -390, -70, '800 62px Mono', C.K);
+  txt('BAKER STREET,', -390, 40, '86px Slab', C.K, 'left', C.T, 6);
+  txt('LONDON', -390, 150, '86px Slab', C.K, 'left', C.T, 6);
+  // paper clip
+  ctx.beginPath(); ctx.roundRect(300, -260, 46, 150, 23); ink(7, C.K); ctx.beginPath(); ctx.roundRect(312, -238, 22, 100, 11); ink(5, C.K);
+  if (a >= .999 || t > 4.6) reg('card', 'SEPTEMBER 1971 BAKER STREET, LONDON', -400, -120, 400, 170);
+  ctx.restore();
+}
+// 2 · the street (6.25 → 10.45)
+function shopfront(x, w, kind) {
+  const top = 840, bot = 1185;
+  // upper floors: brick (mustard dots), sash windows
+  ctx.fillStyle = C.P; ctx.fillRect(x, 380, w, top - 380);
+  ht(x, 380, w, top - 380, 20, 20, (px, py) => .42 + .18 * Math.sin(py * .21), C.M, .64);
+  mul(() => ht(x, 380, w, top - 380, 22, 70, ramp(380, 840, .5, .05), C.T, .6));
+  ctx.beginPath(); ctx.rect(x, 380, w, top - 380); ink(6);
+  for (const wy of [430, 630]) for (const wx of [x + 40, x + w - 140]) {
+    rr(wx, wy, 100, 150, 4); fill(C.K);
+    ctx.beginPath(); ctx.moveTo(wx, wy + 75); ctx.lineTo(wx + 100, wy + 75); ctx.moveTo(wx + 50, wy); ctx.lineTo(wx + 50, wy + 150); ink(5, C.P);
+    rr(wx - 8, wy + 150, 116, 14, 3); fill(C.P); ink(4);
+  }
+  // cornice + fascia
+  ctx.fillStyle = C.K; ctx.fillRect(x - 6, top - 14, w + 12, 18);
+  const fasc = kind === 'bank' ? C.P : kind === 'leather' ? C.T : C.M;
+  ctx.fillStyle = fasc; ctx.fillRect(x, top + 4, w, 74); ctx.beginPath(); ctx.rect(x, top + 4, w, 74); ink(6);
+  const label = kind === 'bank' ? 'BANK' : kind === 'leather' ? 'LEATHER GOODS' : 'RESTAURANT';
+  const f = kind === 'bank' ? '62px Slab' : kind === 'leather' ? '800 34px Mono' : '800 38px Mono';
+  txt(label, x + w / 2, top + 60, f, kind === 'bank' ? C.K : C.P, 'center', kind === 'bank' ? C.T : C.K, 4);
+  reg('sign-' + kind, label, x + 10, top + 10, x + w - 10, top + 74, true);
+  // ground floor
+  const gy = top + 78;
+  ctx.fillStyle = C.P; ctx.fillRect(x, gy, w, bot - gy);
+  if (kind === 'bank') {
+    for (const cx of [x + 30, x + w - 70]) { ctx.fillStyle = C.P; ctx.fillRect(cx, gy, 40, bot - gy); ctx.beginPath(); ctx.rect(cx, gy, 40, bot - gy); ink(5); mul(() => ht(cx, gy, 40, bot - gy, 14, 0, (px) => (px - cx) / 40 * .8, C.T, .6)); }
+    rr(x + 110, gy + 30, 140, bot - gy - 30, 6); fill(C.K); ctx.beginPath(); ctx.moveTo(x + 180, gy + 30); ctx.lineTo(x + 180, bot); ink(4, C.M);
+    circ(x + 165, gy + 160, 5); fill(C.M); circ(x + 195, gy + 160, 5); fill(C.M);
+  } else {
+    // awning
+    const ac = kind === 'leather' ? C.T : C.M;
+    poly([[x + 6, gy], [x + w - 6, gy], [x + w + 14, gy + 60], [x - 14, gy + 60]]); fill(ac); ink(5);
+    for (let i = 0; i < 6; i++) { const sx = x + 10 + i * (w - 20) / 6; poly([[sx, gy], [sx + (w - 20) / 12, gy], [sx + (w - 20) / 12 - 3, gy + 60], [sx - 6, gy + 60]]); fill(C.P); }
+    rr(x + 20, gy + 80, w * .55, bot - gy - 110, 4); fill(C.K);
+    if (kind === 'leather') {   // bags in the window
+      for (const [bx, bw] of [[x + 40, 70], [x + 125, 60]]) { rr(bx, gy + 150, bw, 60, 8); fill(C.M); ink(4, C.M); ctx.beginPath(); ctx.arc(bx + bw / 2, gy + 150, bw / 3, Math.PI, 0); ink(5, C.M); }
+    } else {
+      for (const tx of [x + 60, x + 140]) { ctx.fillStyle = C.M; ctx.fillRect(tx - 30, gy + 200, 60, 8); ctx.fillRect(tx - 3, gy + 200, 6, 50); circ(tx, gy + 150, 12); fill(C.M); }
+    }
+    const dx = x + w * .62 + 20; rr(dx, gy + 70, w - (dx - x) - 18, bot - gy - 70, 4); fill(C.K); ink(5);
+    circ(dx + 14, gy + 180, 5); fill(C.M);
+  }
+  ctx.beginPath(); ctx.rect(x, gy, w, bot - gy); ink(6);
+}
+function sStreet() {
+  const t = T, lt = t - CUT.street;
+  ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
+  const s = lerp(1.0, 1.16, eio(seg(t, CUT.street, CUT.tunnel))), pan = lerp(0, -36, eio(seg(t, 7.9, 10.0)));
+  ctx.save(); camera(s, 540, 940, pan, 0);
+  ht(-200, 0, W + 400, 400, 22, 15, ramp(0, 400, .55, .1), C.T, .62);
+  // chimney line
+  for (const cx of [60, 300, 420, 690, 930]) { ctx.fillStyle = C.K; ctx.fillRect(cx, 300, 70, 84); for (let k = 0; k < 3; k++) { ctx.fillRect(cx + 6 + k * 22, 270 + jit(cx + k, .8), 14, 32); } }
+  shopfront(0, 360, 'leather'); shopfront(360, 360, 'rest'); shopfront(720, 360, 'bank');
+  // bank glow on "Lloyds bank"
+  const g = seg(t, 8.05, 8.35) * (1 - seg(t, 9.3, 9.8));
+  if (g > 0) mul(() => ht(720, 760, 360, 200, 16, 0, radial(900, 880, 20, 230, g, 0), C.M, .7));
+  // pavement + road
+  ctx.fillStyle = C.P; ctx.fillRect(-200, 1185, W + 400, 60); ctx.beginPath(); ctx.moveTo(-200, 1245); ctx.lineTo(W + 200, 1245); ink(6);
+  ctx.fillStyle = C.K; ctx.fillRect(-200, 1245, W + 400, 700);
+  ht(-200, 1245, W + 400, 700, 20, 45, ramp(1245, 1700, .1, .55), C.T, .62);
+  for (let i = -2; i < 9; i++) { ctx.fillStyle = C.P; ctx.fillRect(i * 160 - ((lt * 90) % 160), 1440, 80, 12); }
+  // the gang walks into the shop
+  for (let k = 0; k < 3; k++) {
+    const st = 6.25 + k * .22, en = 7.35 + k * .18, p = seg(t, st, en);
+    if (p > 0 && p < 1) walker(lerp(-90, 300, p), 1192, .82, (t - st) * 11, 50 + k * 10);
+  }
+  if (t < 6.3) walker(-90, 1192, .82, 0, 50);
+  // a 1970s car crosses
+  const cp = seg(t, 8.4, 10.45);
+  if (cp > 0) {
+    const cx = lerp(1250, -360, cp); ctx.save(); ctx.translate(cx, 1395);
+    poly([[0, 0], [10, -60], [70, -64], [110, -120], [250, -120], [300, -64], [330, -58], [335, 0]], 77, 1.4); fill(C.M); ink(6);
+    poly([[124, -112], [180, -112], [180, -68], [96, -68]]); fill(C.K); poly([[192, -112], [244, -112], [284, -68], [192, -68]]); fill(C.K);
+    for (const wx of [72, 262]) { circ(wx, 0, 32); fill(C.K); circ(wx, 0, 12); fill(C.P); ctx.save(); ctx.translate(wx, 0); ctx.rotate(-lt * 9); ctx.fillStyle = C.K; ctx.fillRect(-2, -12, 4, 24); ctx.restore(); }
+    ctx.restore();
+  }
+  // "2 DOORS" bracket
+  const bp = eo(seg(t, 7.2, 7.6));
+  if (bp > 0) {
+    ctx.beginPath(); const x0 = 230, x1 = lerp(230, 870, bp);
+    ctx.moveTo(x0, 1050); ctx.quadraticCurveTo((x0 + x1) / 2, lerp(1050, 760, bp), x1, 1050); ctx.setLineDash([18, 14]); ink(8, C.R); ctx.setLineDash([]);
+    if (bp > .95) { poly([[870, 1060], [848, 1018], [892, 1022]]); fill(C.R); }
+    const lp = back(seg(t, 7.45, 7.75), 2);
+    if (lp > 0) { ctx.save(); ctx.translate(550, 900); ctx.scale(lp, lp); rr(-120, -40, 240, 80, 40); fill(C.R); ink(6); txt('2 DOORS', 0, 16, '800 44px Mono', C.P, 'center'); reg('doors', '2 DOORS', -110, -36, 110, 36); ctx.restore(); }
+  }
+  ctx.restore();
+}
+// 3 · cutaway (10.45 → 13.65)
+const TUN = { x0: 300, x1: 790, y: 985 };
+function sTunnel() {
+  const t = T;
+  const p = eio(seg(t, 10.65, 13.6)), head = lerp(TUN.x0 + 30, TUN.x1, p);
+  ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
+  ctx.save(); camera(1.1, lerp(430, 640, p), 900, 0, 0);
+  // earth
+  ht(-200, 560, W + 400, 1200, 22, 15, ramp(560, 1500, .25, .75), C.K, .62);
+  mul(() => ht(-200, 560, W + 400, 1200, 26, 50, (x, y) => .25 + .2 * Math.sin(x * .013 + y * .02), C.M, .6));
+  ctx.beginPath(); ctx.moveTo(-200, 560); ctx.lineTo(W + 200, 560); ink(8);
+  // miniature street above
+  const fr = [[20, 340, C.T, 'LEATHER GOODS'], [380, 320, C.M, 'RESTAURANT'], [720, 340, C.P, 'BANK']];
+  fr.forEach(([x, w, col, lab]) => {
+    ctx.fillStyle = C.P; ctx.fillRect(x, 260, w, 300); ht(x, 260, w, 200, 18, 20, () => .4, C.M, .62); ctx.beginPath(); ctx.rect(x, 260, w, 300); ink(6);
+    ctx.fillStyle = col; ctx.fillRect(x, 460, w, 50); ctx.beginPath(); ctx.rect(x, 460, w, 50); ink(5);
+    txt(lab, x + w / 2, 497, lab === 'BANK' ? '40px Slab' : '800 26px Mono', lab === 'BANK' ? C.K : C.P, 'center'); reg('mini-' + lab, lab, x, 460, x + w, 510, true);
+    rr(x + w - 90, 520, 60, 40, 3); fill(C.K);
+  });
+  // basements
+  rr(40, 590, 290, 300, 6); fill(C.P); ink(7); ht(40, 590, 290, 300, 18, 0, ramp(590, 890, .05, .4), C.T, .6);
+  rr(390, 590, 300, 220, 6); fill(C.P); ink(7); ht(390, 590, 300, 220, 18, 0, ramp(590, 810, .05, .4), C.T, .6);
+  for (const tx of [450, 560, 640]) { ctx.fillStyle = C.K; ctx.fillRect(tx - 28, 760, 56, 8); ctx.fillRect(tx - 3, 760, 6, 50); }
+  // vault: thick hatched wall, interior unseen
+  rr(770, 600, 300, 520, 6); fill(C.P); ink(8);
+  clipTo(() => rr(770, 600, 300, 520, 6), () => { ctx.beginPath(); for (let i = -20; i < 40; i++) { ctx.moveTo(770 + i * 22, 600); ctx.lineTo(770 + i * 22 - 520, 1120); } ink(3); });
+  rr(830, 660, 180, 400, 4); fill(C.K);
+  txt('VAULT', 920, 870, '800 34px Mono', C.P, 'center'); reg('vaultlbl', 'VAULT', 860, 840, 980, 880, true);
+  // shop basement shaft + tunnel drawing itself
+  ctx.fillStyle = C.K; ctx.fillRect(270, 880, 60, 130);
+  ctx.beginPath(); ctx.moveTo(300, TUN.y); ctx.lineTo(head, TUN.y); ink(56, C.K);
+  ctx.beginPath(); ctx.moveTo(300, TUN.y); ctx.lineTo(head, TUN.y); ctx.setLineDash([4, 26]); ink(8, C.M); ctx.setLineDash([]);
+  // spoil spray at the head
+  const rnd = mulberry(Math.floor(t * 12));
+  if (p < .995) { ctx.fillStyle = C.K; for (let i = 0; i < 9; i++) { circ(head + 10 + rnd() * 40, TUN.y - 30 + rnd() * 60, 3 + rnd() * 6); ctx.fill(); } }
+  // tiny digger at the head
+  ctx.save(); ctx.translate(head - 28, TUN.y + 22); ctx.fillStyle = C.M;
+  const dg = Math.sin(t * 16) * 4; rr(-44, -26, 44, 20, 8); ctx.fill(); circ(8 + dg * .3, -24, 11); ctx.fill(); ctx.fillRect(10, -20 + dg, 22, 6); ctx.restore();
+  // 40 FT ruler
+  const rx1 = lerp(TUN.x0, TUN.x1, eo(seg(t, 11.1, 12.0)));
+  if (t > 11.1) {
+    ctx.beginPath(); ctx.moveTo(TUN.x0, 1080); ctx.lineTo(rx1, 1080); ink(6, C.K);
+    ctx.beginPath(); ctx.moveTo(TUN.x0, 1058); ctx.lineTo(TUN.x0, 1102); ctx.moveTo(rx1, 1058); ctx.lineTo(rx1, 1102); ink(6);
+    for (let x = TUN.x0 + 49; x < rx1; x += 49) { ctx.beginPath(); ctx.moveTo(x, 1070); ctx.lineTo(x, 1090); ink(3); }
+    const lp = back(seg(t, 11.22, 11.5), 2.2);
+    if (lp > 0) { ctx.save(); ctx.translate((TUN.x0 + TUN.x1) / 2, 1080); ctx.scale(lp, lp); rr(-95, -36, 190, 72, 14); fill(C.M); ink(6); txt('40 FT', 0, 17, '800 48px Mono', C.K, 'center'); reg('40ft', '40 FT', -90, -32, 90, 32); ctx.restore(); }
+  }
+  ctx.restore();
+}
+// 4 · the wall gives (13.65 → 15.60)
+function sWall() {
+  const t = T, lt = t - CUT.wall;
+  ctx.fillStyle = C.K; ctx.fillRect(0, 0, W, H);
+  const s = lerp(.94, 1.12, eo(seg(lt, 0, .22))) + lt * .03;
+  ctx.save(); camera(s, 560, 900);
+  // tunnel interior: lamp halo
+  const sw = Math.sin(t * 2.4) * .12, lx = 300 + Math.sin(sw) * 160, ly = 520 + Math.cos(sw) * 160;
+  ht(-100, 300, 760, 1250, 22, 15, radial(lx, ly + 40, 30, 520, 1, 0), C.M, .7);
+  mul(() => ht(-100, 300, 760, 1250, 24, 60, ramp(300, 1500, .5, .2), C.T, .6));
+  ctx.beginPath(); ctx.moveTo(300, 360); ctx.lineTo(lx, ly); ink(4, C.P); circ(lx, ly + 14, 22); fill(C.M); ink(5, C.K);
+  // the vault wall
+  ctx.fillStyle = C.P; ctx.fillRect(600, 200, 700, 1400); ctx.beginPath(); ctx.moveTo(600, 200); ctx.lineTo(600, 1600); ink(10);
+  clipTo(() => { ctx.beginPath(); ctx.rect(600, 200, 700, 1400); }, () => {
+    ctx.beginPath(); for (let i = -40; i < 60; i++) { ctx.moveTo(600 + i * 30, 200); ctx.lineTo(600 + i * 30 - 900, 1600); } ink(3, C.K);
+    mul(() => ht(600, 200, 700, 1400, 22, 45, (x) => clamp(1 - (x - 600) / 420) * .7, C.T, .66));
+    ctx.fillStyle = C.K; for (let y = 300; y < 1600; y += 180) ctx.fillRect(600, y, 700, 6);
+  });
+  // the digger with a drill against the wall
+  const vib = t < 14.92 ? jit(31, 3) : 0;
+  ctx.save(); ctx.translate(430 + vib, 1100); ctx.fillStyle = C.K;
+  poly([[-120, 0], [-100, -150], [-30, -190], [40, -170], [60, -60], [40, 0]], 21, 2); ctx.fill(); ell(-40, -230, 50, 50); ctx.fill();
+  rr(-60, -280, 80, 24, 8); ctx.fill(); ctx.fillStyle = C.M; ctx.fillRect(-60, -268, 80, 6);
+  ctx.fillStyle = C.K; rr(20, -160, 120, 50, 14); ctx.fill(); ctx.fillRect(140, -142, 50, 14);
+  ctx.beginPath(); ctx.moveTo(-60, -150); ctx.lineTo(60, -135); ink(30, C.K);
+  ctx.restore();
+  // cracks grow, then the hole
+  const cp = seg(t, 14.1, 14.9), hc = [640, 950];
+  if (cp > 0) {
+    const rnd = mulberry(4); ctx.beginPath();
+    for (let k = 0; k < 9; k++) { let x = hc[0], y = hc[1], a = -1.2 + k * .3 + (rnd() - .5) * .3; ctx.moveTo(x, y); const L = (120 + rnd() * 260) * cp; for (let d = 0; d < L; d += 30) { a += (rnd() - .5) * .7; x += Math.cos(a) * 30; y += Math.sin(a) * 30; ctx.lineTo(x, y); } }
+    ink(5, C.K);
+  }
+  const hp = back(seg(t, 14.92, 15.15), 1.4);
+  if (hp > 0) {
+    const rnd = mulberry(9), pts = []; for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r = (150 + rnd() * 70) * hp; pts.push([hc[0] + 20 + Math.cos(a) * r * .8, hc[1] + Math.sin(a) * r]); }
+    poly(pts); fill(C.K); ink(8, C.K);
+    // flying chunks
+    const ft = t - 14.92;
+    for (let i = 0; i < 14; i++) {
+      const a = Math.PI * (.6 + rnd() * .8), v = 500 + rnd() * 900, x = hc[0] + Math.cos(a) * v * ft, y = hc[1] + Math.sin(a) * v * ft + 900 * ft * ft, s2 = 14 + rnd() * 26;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ft * (rnd() * 12 - 6)); poly([[-s2, -s2 * .6], [s2 * .8, -s2], [s2, s2 * .5], [-s2 * .4, s2]]); fill(C.P); ink(5); ctx.restore();
+    }
+    // halftone dust cloud
+    const dr = 80 + eo(seg(ft, 0, .7)) * 420;
+    mul(() => ht(hc[0] - 600, hc[1] - 600, 1200, 1200, 24, 30, (x, y) => { const d = Math.hypot(x - hc[0] + 60, y - hc[1]); return d < dr ? (1 - d / dr) * 1.3 * (1 - seg(ft, .2, .9) * .7) : 0; }, C.M, .72));
+  }
+  ctx.restore();
+}
+// 5 · rooftop lookout (15.60 → 19.30)
+function nightSky(y1, seed) {
+  ctx.fillStyle = C.K; ctx.fillRect(0, 0, W, H);
+  ht(-200, 0, W + 400, y1, 22, 15, ramp(0, y1, .95, .25), C.T, .66);
+}
+function sRoof() {
+  const t = T, lt = t - CUT.roof;
+  nightSky(1200);
+  ctx.save(); camera(1.05, 540, 960, 0, lerp(260, 0, eio(seg(lt, 0, 3.6))));
+  // moon
+  circ(540, 900, 230); fill(C.M); mul(() => clipTo(() => circ(540, 900, 230), () => ht(300, 660, 480, 480, 18, 45, radial(600, 840, 20, 300, 0, .6), C.T, .66)));
+  // distant skyline with flickering windows
+  ctx.fillStyle = C.K; const rnd = mulberry(3); let x = -150; const bl = [];
+  while (x < W + 150) { const w = 60 + rnd() * 110, h = 50 + rnd() * 110; bl.push([x, w, h]); ctx.fillRect(x, 1130 - h, w, h + 20); x += w + 4; }
+  ctx.fillStyle = C.M; bl.forEach(([bx, bw, bh], i) => { for (let k = 0; k < 4; k++) { const on = hash(i * 9 + k + Math.floor(t * 2 + i) * 3.3) > .55; if (on) ctx.fillRect(bx + 10 + (k % 2) * (bw / 2), 1130 - bh + 26 + Math.floor(k / 2) * 46, 12, 16); } });
+  // foreground roof and chimneys
+  poly([[-200, 1250], [W + 200, 1170], [W + 200, 1800], [-200, 1800]]); fill(C.K);
+  ctx.beginPath(); ctx.moveTo(-200, 1250); ctx.lineTo(W + 200, 1170); ink(5, C.M);
+  for (const [cx, base, n] of [[90, 1244, 3], [820, 1186, 2]]) {
+    ctx.fillStyle = C.K; ctx.fillRect(cx, base - 260, 150, 262); ctx.fillRect(cx - 12, base - 272, 174, 22);
+    for (let k = 0; k < n; k++) { const px = cx + 20 + k * 46; ctx.fillRect(px, base - 330, 30, 64); ctx.fillRect(px - 5, base - 334, 40, 10); }
+    ctx.beginPath(); ctx.moveTo(cx + 150, base - 260); ctx.lineTo(cx + 150, base); ink(4, C.M);
+    // a slow smoke curl of dots
+    ctx.fillStyle = C.T;
+    for (let k = 0; k < 6; k++) { const q = (lt * .4 + k / 6) % 1; circ(cx + 40 + Math.sin(q * 6 + k) * 30, base - 340 - q * 260, 6 + q * 14); ctx.fill(); }
+  }
+  // the lookout, crouched, walkie at the head
+  ctx.save(); ctx.translate(470, 1214); const br = Math.sin(t * 2.2) * 3;
+  ctx.fillStyle = C.K;
+  poly([[-120, 0], [-130, -90], [-80, -200 + br], [20, -230 + br], [80, -170 + br], [90, -60], [40, 0]], 41, 2.2); ctx.fill();
+  ell(40, -270 + br, 54, 54); ctx.fill();
+  poly([[-14, -310 + br], [60, -330 + br], [108, -304 + br], [-14, -296 + br]]); ctx.fill();
+  ctx.save(); ctx.translate(60, -190 + br); ctx.rotate(-1.2); rr(-20, 0, 40, 120, 18); ctx.fill(); ctx.restore();
+  // walkie-talkie
+  ctx.save(); ctx.translate(120, -300 + br); ctx.rotate(.12);
+  rr(-24, -10, 48, 110, 8); fill(C.K); ink(4, C.M);
+  ctx.beginPath(); ctx.moveTo(14, -10); ctx.lineTo(16, -120); ink(6, C.K); ink(2, C.M);
+  const gl = Math.pow(Math.abs(Math.sin(t * 2.6)), 6);
+  ctx.save(); ctx.translate(16, -122); ctx.rotate(t); const gs = 8 + gl * 26; ctx.beginPath();
+  for (let k = 0; k < 8; k++) { const r = k % 2 ? gs * .25 : gs; ctx.lineTo(Math.cos(k * Math.PI / 4) * r, Math.sin(k * Math.PI / 4) * r); } ctx.closePath(); fill(C.M); ctx.restore();
+  ctx.fillStyle = C.M; for (let k = 0; k < 3; k++) ctx.fillRect(-14, 20 + k * 14, 28, 5);
+  ctx.restore();
+  // rim light from the moon
+  ctx.beginPath(); ctx.moveTo(80, -170 + br); ctx.lineTo(90, -60); ink(4, C.M);
+  ctx.beginPath(); ctx.arc(40, -270 + br, 54, -1.2, .6); ink(4, C.M);
+  ctx.restore();
+  // radio squiggles while he talks
+  if (t > 16.9 && t < 18.8) for (let k = 0; k < 3; k++) {
+    const q = ((t - 16.9) * 1.6 + k / 3) % 1; ctx.beginPath(); ctx.arc(606, 794, 40 + q * 150, -1.3, -.3); ctx.lineWidth = 8 * (1 - q) + 1; ctx.strokeStyle = C.P; ctx.stroke();
+  }
+  ctx.restore();
+}
+// 6 · the listener's window (19.30 → 21.60)
+function sWindow() {
+  const t = T, lt = t - CUT.window;
+  ctx.fillStyle = C.K; ctx.fillRect(0, 0, W, H);
+  const s = lerp(1, 2.35, eio(seg(lt, 0, 2.3))), wx = 540, wy = 830;
+  ctx.save(); camera(s, wx, wy + 10);
+  ht(-400, -400, W + 800, H + 800, 22, 15, (x, y) => .38 + .14 * ((Math.floor(y / 40) + Math.floor(x / 90 + (Math.floor(y / 40) % 2) * .5)) % 2), C.T, .62);
+  for (let gx = -2; gx < 5; gx++) for (let gy = -2; gy < 6; gy++) {
+    const x = 90 + gx * 300, y = 200 + gy * 320; if (gx === 1 && gy === 2) continue;
+    rr(x, y, 180, 230, 4); fill(C.K); ink(5, C.T);
+    const on = hash(gx * 7 + gy * 13) > .82; if (on) { rr(x + 10, y + 10, 160, 210, 3); fill(C.M); ctx.fillStyle = C.K; ctx.fillRect(x + 10, y + 110, 160, 6); }
+  }
+  // the lit window
+  const x0 = wx - 160, y0 = wy - 200;
+  rr(x0, y0, 320, 400, 4); fill(C.M);
+  clipTo(() => rr(x0, y0, 320, 400, 4), () => {
+    mul(() => ht(x0, y0, 320, 400, 14, 30, radial(wx + 60, wy - 120, 20, 330, 0, .7), C.T, .62));
+    // desk
+    ctx.fillStyle = C.K; ctx.fillRect(x0, wy + 80, 320, 140);
+    // radio set with a moving tuning needle
+    rr(wx - 20, wy - 20, 160, 100, 8); fill(C.K); rr(wx - 8, wy - 8, 90, 34, 4); fill(C.P);
+    const nd = wx - 2 + (Math.sin(t * 1.3) * .5 + .5) * 76; ctx.fillStyle = C.R; ctx.fillRect(nd, wy - 8, 3, 34);
+    circ(wx + 110, wy + 4, 12); fill(C.M); circ(wx + 110, wy + 50, 12); fill(C.M);
+    ctx.save(); ctx.translate(wx + 110, wy + 4); ctx.rotate(t * 1.3); ctx.fillStyle = C.K; ctx.fillRect(-1.5, -12, 3, 10); ctx.restore();
+    // cassette recorder, reels turning
+    rr(wx - 30, wy + 30, 150, 52, 6); fill(C.P); ink(3);
+    for (const rx of [wx + 5, wx + 85]) { circ(rx, wy + 52, 13); fill(C.K); ctx.save(); ctx.translate(rx, wy + 52); ctx.rotate(t * 5); ctx.fillStyle = C.P; for (let k = 0; k < 3; k++) { ctx.rotate(TAU / 3); ctx.fillRect(-2, -12, 4, 8); } ctx.restore(); }
+    // the listener, seated, leaning to the set
+    ctx.save(); ctx.translate(wx - 90, wy + 80); ctx.rotate(.08 + Math.sin(t * 1.9) * .03); ctx.fillStyle = C.K;
+    poly([[-60, 0], [-50, -110], [0, -150], [40, -120], [50, 0]], 61, 1.4); ctx.fill(); circ(14, -185, 34); ctx.fill();
+    ctx.save(); ctx.translate(30, -120); ctx.rotate(-1.1); rr(-12, 0, 24, 100, 12); ctx.fill(); ctx.restore();
+    ctx.beginPath(); ctx.arc(10, -195, 42, Math.PI * 1.1, Math.PI * 1.9); ink(7, C.K); ell(-14, -186, 12, 18); fill(C.K);
+    ctx.restore();
+  });
+  // sash bars + sill
+  ctx.beginPath(); ctx.moveTo(x0, wy - 20); ctx.lineTo(x0 + 320, wy - 20); ctx.moveTo(wx, y0); ctx.lineTo(wx, wy - 20); ink(10, C.K);
+  rr(x0, y0, 320, 400, 4); ink(12, C.K); rr(x0 - 20, y0 + 400, 360, 22, 3); fill(C.K); ink(3, C.M);
+  ctx.restore();
+}
+// city map (shared by 7 and 9/10)
+const RIVER = x => 1240 + Math.sin(x * .006 + .6) * 70 + Math.sin(x * .017) * 22;
+const MAP = (() => {
+  const rnd = mulberry(21), roads = [], minor = [];
+  for (let k = 0; k < 7; k++) { const pts = []; let x = -100, y = 300 + rnd() * 1000, a = (rnd() - .5) * .5; while (x < 1200) { pts.push([x, y]); a += (rnd() - .5) * .25; x += 80; y += Math.sin(a) * 80; } roads.push(pts); }
+  for (let k = 0; k < 5; k++) { const pts = []; let y = -100, x = rnd() * 1080, a = (rnd() - .5) * .5; while (y < 2000) { pts.push([x, y]); a += (rnd() - .5) * .25; y += 80; x += Math.sin(a) * 80; } roads.push(pts); }
+  for (let i = 0; i < 260; i++) { const x = rnd() * 1200 - 60, y = rnd() * 1800 + 100, a = (rnd() < .5 ? 0 : Math.PI / 2) + (rnd() - .5) * .4, l = 40 + rnd() * 120; minor.push([x, y, x + Math.cos(a) * l, y + Math.sin(a) * l]); }
+  return { roads, minor };
+})();
+function drawMap(night) {
+  const g = night ? C.K : C.P, line = night ? C.T : C.K;
+  ctx.fillStyle = g; ctx.fillRect(-600, -600, W + 1200, H + 1200);
+  // parks
+  for (const [px, py, rx, ry] of [[260, 520, 170, 120], [250, 960, 190, 100], [860, 760, 120, 90]]) {
+    ht(px - rx, py - ry, rx * 2, ry * 2, 16, 20, (x, y) => ((x - px) / rx) ** 2 + ((y - py) / ry) ** 2 < 1 ? .55 : 0, C.M, .62);
+  }
+  ctx.beginPath(); MAP.minor.forEach(([a, b, c, d]) => { if (Math.abs(b - RIVER(a)) > 60) { ctx.moveTo(a, b); ctx.lineTo(c, d); } }); ink(3, line);
+  MAP.roads.forEach(pts => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ink(16, line); ink(8, g); });
+  // the river
+  ctx.beginPath(); for (let x = -600; x <= W + 600; x += 20) ctx.lineTo(x, RIVER(x) - 46); for (let x = W + 600; x >= -600; x -= 20) ctx.lineTo(x, RIVER(x) + 46); ctx.closePath();
+  fill(C.T); ink(5, night ? C.T : C.K);
+  ht(-600, 1000, W + 1200, 520, 14, 45, (x, y) => Math.abs(y - RIVER(x)) < 44 ? .45 : 0, night ? C.K : C.P, .55);
+}
+function pinShape(x, y, col, s = 1) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
+  ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -34); ink(5, C.K); circ(0, -40, 14); fill(col); ink(4, C.K); ctx.restore();
+}
+// 7 · waves across the map (21.60 → 23.30)
+const ROOF = [330, 760], WIN = [770, 560];
+function sMapWaves() {
+  const t = T, lt = t - CUT.map;
+  ctx.save(); camera(lerp(1.22, 1.0, eo(seg(lt, 0, 1.7))), 550, 700);
+  drawMap(true);
+  // dashed half-mile line
+  ctx.beginPath(); ctx.moveTo(...ROOF); ctx.lineTo(...WIN); ctx.setLineDash([10, 16]); ink(4, C.P); ctx.setLineDash([]);
+  const ang = Math.atan2(WIN[1] - ROOF[1], WIN[0] - ROOF[0]), dist = Math.hypot(WIN[0] - ROOF[0], WIN[1] - ROOF[1]);
+  for (let k = 0; k < 5; k++) { const q = (lt * 1.1 + k / 5) % 1; ctx.beginPath(); ctx.arc(ROOF[0], ROOF[1], 30 + q * dist, ang - .38, ang + .38); ctx.lineWidth = 12 * (1 - q) + 3; ctx.strokeStyle = C.M; ctx.stroke(); }
+  pinShape(...ROOF, C.M, 1.6); pinShape(...WIN, C.P, 1.6 + Math.sin(t * 8) * .08);
+  ctx.restore();
+  // cassette inset with blinking red record light
+  const ip = back(seg(t, CUT.map + .1, CUT.map + .45), 1.8);
+  ctx.save(); ctx.translate(560, 330); ctx.scale(ip, ip); ctx.rotate(-2 * R2);
+  mul(() => { rr(-330 + 10, -170 + 10, 660, 340, 20); fill(C.T); });
+  rr(-330, -170, 660, 340, 20); fill(C.P); ink(7);
+  rr(-260, -110, 380, 220, 14); fill(C.K); rr(-220, -70, 300, 110, 10); fill(C.P); ink(4);
+  for (const rx of [-160, 20]) { circ(rx, -15, 34); fill(C.K); ctx.save(); ctx.translate(rx, -15); ctx.rotate(t * 6); ctx.fillStyle = C.P; for (let k = 0; k < 6; k++) { ctx.rotate(TAU / 6); ctx.fillRect(-3, -30, 6, 14); } ctx.restore(); }
+  const on = Math.floor(t * 4) % 2 === 0;
+  circ(220, -60, 34); fill(on ? C.R : C.K); ink(5);
+  txt('REC', 220, 40, '800 46px Mono', C.K, 'center'); reg('rec', 'REC', 180, 0, 260, 50, true);
+  ctx.restore();
+}
+// 8 · eject → LOCATION: UNKNOWN (23.30 → 26.72)
+const STAMP_Q = { img: null }, STAMP_268 = { img: null };
+function sEject() {
+  const t = T, lt = t - CUT.eject;
+  ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
+  ctx.save(); camera(lerp(1, 1.06, ss(seg(lt, 0, 3.4))), 540, 800, 0, 0, Math.sin(t * .9) * .006);
+  ht(0, 0, W, H, 22, 15, (x, y) => clamp(Math.max(Math.abs(x - 540) - 380, Math.abs(y - 820) - 700) / 140) * .7, C.T, .66);
+  // deck
+  mul(() => { rr(140 + 12, 220 + 12, 800, 480, 26); fill(C.T); });
+  rr(140, 220, 800, 480, 26); fill(C.T); ink(8);
+  mul(() => clipTo(() => rr(140, 220, 800, 480, 26), () => ht(140, 220, 800, 480, 20, 45, ramp(220, 700, .1, .6), C.K, .6)));
+  for (let k = 0; k < 5; k++) { rr(200 + k * 140, 600, 110, 60, 10); fill(k === 4 ? C.R : C.P); ink(5); }
+  // door opens on eject
+  const ej = seg(t, 23.24, 23.5), op = back(ej, 2.4);
+  ctx.save(); ctx.translate(540, 560); ctx.scale(1, lerp(1, .32, clamp(op))); rr(-260, -290, 520, 290, 14); fill(C.K); ink(6); ctx.restore();
+  // the cassette pops up
+  const cy = lerp(430, 215, op), cr = lerp(0, -7, op) * R2;
+  if (ej > 0) {
+    ctx.save(); ctx.translate(540, cy); ctx.rotate(cr);
+    rr(-230, -130, 460, 260, 18); fill(C.P); ink(7); rr(-180, -70, 360, 100, 12); fill(C.K);
+    for (const rx of [-90, 90]) { circ(rx, -20, 30); fill(C.P); ctx.save(); ctx.translate(rx, -20); ctx.rotate(-t * 2 * (1 - ej)); ctx.fillStyle = C.K; for (let k = 0; k < 6; k++) { ctx.rotate(TAU / 6); ctx.fillRect(-3, -26, 6, 12); } ctx.restore(); }
+    rr(-150, 60, 300, 40, 6); fill(C.M); ink(4);
+    ctx.restore();
+  }
+  // the note
+  const np = back(seg(t, 23.7, 24.05), 1.6);
+  ctx.save(); ctx.translate(lerp(1500, 520, np), 1010); ctx.rotate(lerp(12, -3, np) * R2 + Math.sin(t * 1.1) * .005);
+  mul(() => { rr(-400 + 10, -190 + 10, 800, 380, 14); fill(C.T); });
+  rr(-400, -190, 800, 380, 14); fill(C.P); ink(7);
+  ctx.beginPath(); for (let y = -90; y < 190; y += 56) { ctx.moveTo(-370, y); ctx.lineTo(370, y); } ink(2, C.T);
+  ctx.beginPath(); ctx.moveTo(-300, -190); ctx.lineTo(-300, 190); ink(3, C.R);
+  txt('LOCATION:', -270, -40, '800 64px Mono', C.K);
+  txt('UNKNOWN', -270, 100, '120px Slab', C.K, 'left', C.T, 7);
+  if (np > .99 || t > 24.2) reg('note', 'LOCATION: UNKNOWN', -280, -100, 330, 120);
+  stampDraw(STAMP_Q.img, 250, -20, 9 * R2, 26.03);
+  ctx.restore();
+  ctx.restore();
+}
+// 9/10 · pins fill the map, the right one pulses (26.72 → 30.45)
+const PINS = (() => {
+  const rnd = mulberry(99), out = [];
+  while (out.length < 190) { const x = 70 + rnd() * 940, y = 560 + rnd() * 960; if (Math.abs(y - RIVER(x)) < 70) continue; if (Math.hypot(x - 430, y - 720) < 60) continue; out.push([x, y]); }
+  out.splice(150, 0, [430, 720]); return out;
+})();
+const RIGHT = 150;
+const COUNT = t => Math.round(750 * Math.pow(seg(t, 26.85, 28.75), 1.7));
+function sPins() {
+  const t = T, lt = t - CUT.pins;
+  const z = eio(seg(t, 29.62, 29.98));
+  const s = lerp(lerp(1, 1.08, ss(seg(lt, 0, 2.9))), 2.3, z);
+  const fx = lerp(540, 430, z), fy = lerp(980, 720, z);
+  ctx.save(); camera(s, fx, fy, lerp(0, 540 - fx, z) , lerp(0, 960 - fy, z));
+  drawMap(false);
+  const n = COUNT(t), shown = Math.min(PINS.length, Math.floor(n / 750 * PINS.length + (n > 0 ? 1 : 0)));
+  for (let i = 0; i < shown; i++) {
+    const ti = 26.85 + 1.9 * Math.pow((i + 1) / PINS.length, 1 / 1.7); const a = back(seg(t, ti, ti + .14), 2);
+    const [x, y] = PINS[i]; const right = i === RIGHT && t > 29.55;
+    ctx.save(); ctx.translate(x, y - (1 - a) * 50); pinShape(0, 0, right ? C.M : C.R, right ? 1.25 + Math.sin(t * 14) * .12 : 1); ctx.restore();
+  }
+  if (t > 29.55) { const [x, y] = PINS[RIGHT]; for (let k = 0; k < 3; k++) { const q = ((t - 29.55) * 1.4 + k / 3) % 1; circ(x, y - 40, 20 + q * 90); ctx.lineWidth = 7 * (1 - q) + 1; ctx.strokeStyle = C.M; ctx.stroke(); } }
+  ctx.restore();
+  // counter
+  const cp = back(seg(t, CUT.pins + .05, CUT.pins + .35), 1.8), out = ei(seg(t, 29.55, 29.8));
+  if (cp > 0 && out < 1) {
+    ctx.save(); ctx.translate(540, 330 - out * 600); ctx.scale(cp, cp);
+    mul(() => { rr(-330 + 10, -160 + 10, 660, 320, 22); fill(C.T); });
+    rr(-330, -160, 660, 320, 22); fill(C.P); ink(7);
+    txt('BANKS CHECKED', 0, -95, '800 42px Mono', C.K, 'center');
+    txt(String(COUNT(t)), 0, 105, '190px Fat', C.R, 'center', C.K, 8);
+    reg('counter', 'BANKS CHECKED ' + COUNT(t), -300, -140, 300, 120, true);
+    ctx.restore();
+  }
+}
+// 10b · the vault door swings open (30.45 → 31.60)
+function sDoor() {
+  const t = T, lt = t - CUT.door;
+  ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
+  ctx.save(); camera(lerp(1.08, 1.0, eo(seg(lt, 0, 1.1))), 540, 880);
+  ht(-100, -100, W + 200, H + 200, 22, 15, ramp(0, 1700, .2, .65), C.T, .64);
+  ctx.beginPath(); for (let y = 140; y < 1600; y += 120) { ctx.moveTo(-100, y); ctx.lineTo(W + 100, y); } ink(3);
+  const cx = 540, cy = 880, R = 330;
+  circ(cx, cy, R + 40); fill(C.P); ink(10);
+  mul(() => clipTo(() => circ(cx, cy, R + 40), () => ht(cx - R - 40, cy - R - 40, 2 * R + 80, 2 * R + 80, 16, 30, radial(cx, cy, R - 20, R + 40, 0, .8), C.K, .6)));
+  // doorway: darkness, warm light spilling
+  circ(cx, cy, R); fill(C.K);
+  const open = eio(seg(t, 30.85, 31.6)) * 1.25;
+  if (open > 0) ht(cx - R, cy - R, 2 * R, 2 * R, 18, 45, (x, y) => Math.hypot(x - cx, y - cy) < R ? radial(cx + 40, cy, 0, R, .9 * Math.min(1, open), 0)(x, y) : 0, C.M, .7);
+  // the door (hinged on the left)
+  const c = Math.cos(open), hx = cx - R, th = 70 * Math.sin(open);
+  ell(hx + R * c + th * .6, cy, R * c, R); fill(C.K); ink(6, C.K);
+  ell(hx + R * c, cy, R * c, R); fill(C.P); ink(9);
+  mul(() => clipTo(() => ell(hx + R * c, cy, R * c, R), () => ht(hx, cy - R, 2 * R, 2 * R, 18, 45, ramp(cy - R, cy + R, .15, .6), C.T, .64)));
+  const dcx = hx + R * c;
+  ctx.save(); ctx.translate(dcx, cy); ctx.scale(Math.max(.02, c), 1);
+  ctx.beginPath(); ctx.arc(0, 0, R - 40, 0, TAU); ink(6);
+  for (let k = 0; k < 16; k++) { const a = k / 16 * TAU; circ(Math.cos(a) * (R - 22), Math.sin(a) * (R - 22), 11); fill(C.K); }
+  const wr = seg(t, 30.45, 30.9) * Math.PI * 1.3;
+  ctx.rotate(wr); for (let k = 0; k < 3; k++) { ctx.rotate(TAU / 3); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -150); ink(20, C.K); circ(0, -160, 22); fill(C.M); ink(5); }
+  circ(0, 0, 48); fill(C.M); ink(7); ctx.restore();
+  ctx.restore();
+}
+// 11 · the empty wall (31.60 → end)
+function sBoxes() {
+  const t = T, lt = t - CUT.boxes;
+  ctx.fillStyle = C.K; ctx.fillRect(0, 0, W, H);
+  ctx.save(); camera(lerp(1.0, 1.07, ss(seg(lt, 0, 3.5))), 540, 960, lerp(60, -240, ss(seg(lt, 0, 3.5))), 0);
+  const bw = 170, bh = 132, gx = 20, gy = 18, x0 = -240, y0 = 330;
+  ctx.fillStyle = C.P; ctx.fillRect(x0 - 30, y0 - 30, 9 * (bw + gx) + 60, 9 * (bh + gy) + 60);
+  ht(x0 - 30, y0 - 30, 9 * (bw + gx) + 60, 9 * (bh + gy) + 60, 20, 30, ramp(y0, y0 + 1400, .2, .55), C.T, .62);
+  for (let i = 0; i < 9; i++) for (let j = 0; j < 9; j++) {
+    const x = x0 + i * (bw + gx), y = y0 + j * (bh + gy), h1 = hash(i * 17 + j * 31);
+    rr(x, y, bw, bh, 6); fill(C.P); ink(5);
+    rr(x + 12, y + 12, bw - 24, bh - 24, 4); fill(C.K);
+    ht(x + 12, y + 12, bw - 24, bh - 24, 12, 0, (px, py) => clamp((py - (y + 12)) / (bh - 24)) * .35, C.T, .6);
+    // open door, swaying a touch
+    const sway = .78 + .1 * Math.sin(t * 2.2 + h1 * 6) * Math.exp(-lt * .4), dw = (bw - 20) * (1 - sway) + 18;
+    const hinge = h1 > .5 ? x + 6 : x + bw - 6, dir = h1 > .5 ? -1 : 1;
+    poly([[hinge, y + 8], [hinge + dir * dw, y + 20], [hinge + dir * dw, y + bh - 20], [hinge, y + bh - 8]]); fill(C.P); ink(5);
+    mul(() => { poly([[hinge, y + 8], [hinge + dir * dw, y + 20], [hinge + dir * dw, y + bh - 20], [hinge, y + bh - 8]]); fill(C.M); });
+  }
+  ctx.restore();
+  // the dossier sheet + 268 stamp
+  const sp = back(seg(t, CUT.boxes + .05, CUT.boxes + .4), 1.6);
+  ctx.save(); ctx.translate(lerp(-500, 330, sp), 340); ctx.rotate(-4 * R2 + Math.sin(t * 1.2) * .006);
+  mul(() => { rr(-290 + 10, -180 + 10, 580, 360, 12); fill(C.T); });
+  rr(-290, -180, 580, 360, 12); fill(C.P); ink(7);
+  txt('VAULT INVENTORY', -250, -120, '800 36px Mono', C.K);
+  for (let k = 0; k < 4; k++) { ctx.fillStyle = C.K; ctx.fillRect(-250, -70 + k * 52, 120 + hash(k) * 60, 16); }
+  if (sp > .99 || t > CUT.boxes + .45) reg('inv', 'VAULT INVENTORY', -255, -160, 130, -105);
+  stampDraw(STAMP_268.img, 95, 40, -9 * R2, 32.0);
+  if (t >= 32.0) reg('268', '268', -70, -40, 260, 120);
+  ctx.restore();
+}
+
+// ───────────────────────── overlays ─────────────────────────
+function captions() {
+  const c = CAPS.find(c => T >= c.t0 && T < c.t1); if (!c) return;
+  let size = 68; ctx.font = `${size}px Cap`;
+  const sp = ctx.measureText(' ').width; let tw = c.words.reduce((a, w) => a + ctx.measureText(w.s).width, 0) + sp * (c.words.length - 1);
+  if (tw > 900) { size = Math.floor(size * 900 / tw); ctx.font = `${size}px Cap`; tw = c.words.reduce((a, w) => a + ctx.measureText(w.s).width, 0) + ctx.measureText(' ').width * (c.words.length - 1); }
+  const sp2 = ctx.measureText(' ').width, ph = size + 46, pw = tw + 80, p0 = c.t0 === 0 ? -.3 : c.t0, a = back(seg(T, p0, p0 + .14), 1.8);
+  ctx.save(); ctx.translate(W / 2, CAPY); ctx.scale(lerp(.8, 1, a), lerp(.8, 1, a));
+  mul(() => { rr(-pw / 2 + 9, -ph / 2 + 9, pw, ph, ph / 2); fill(C.T); });
+  rr(-pw / 2, -ph / 2, pw, ph, ph / 2); fill(C.K);
+  let x = -tw / 2;
+  c.words.forEach((w, i) => {
+    const ww = ctx.measureText(w.s).width, q = back(seg(T, p0 + i * .03, p0 + i * .03 + .14), 2);
+    ctx.save(); ctx.translate(x + ww / 2, size * .36 + (1 - q) * 22); ctx.scale(lerp(.6, 1, q), lerp(.6, 1, q));
+    ctx.fillStyle = w.hi ? C.M : C.P; ctx.textAlign = 'center'; ctx.fillText(w.s, 0, 0); ctx.restore();
+    x += ww + sp2;
+  });
+  ctx.restore();
+}
+function hud(dark) {
+  if (T < CUT.street) return;
+  const fg = dark ? C.P : C.K, bg = dark ? C.K : C.P;
+  rr(40, 50, 300, 56, 28); fill(fg); txt('CASE 71/0911', 190, 89, '800 28px Mono', bg, 'center');
+  reg('hud1', 'CASE 71/0911', 40, 50, 340, 106, true);
+  if (Math.floor(T * 2) % 2 === 0) { circ(800, 78, 13); fill(C.R); }
+  txt('SEP 1971', 1040, 89, '800 30px Mono', fg, 'right'); reg('hud2', 'SEP 1971', 830, 55, 1040, 100, true);
+}
+function wipe() {
+  for (const [tc, col] of WIPES) {
+    const p = (T - (tc - .22)) / .44; if (p < 0 || p > 1) continue;
+    const g = 90; ctx.beginPath();
+    for (let gx = 0; gx <= W / g + 1; gx++) for (let gy = 0; gy <= H / g + 1; gy++) {
+      const d = (gx / (W / g) + gy / (H / g)) / 2 * .15;
+      const up = ss(seg(p, d, d + .35)), dn = 1 - ss(seg(p, .5 + d, .85 + d)), r = 66 * Math.min(up, dn);
+      if (r > .5) { ctx.moveTo(gx * g + r, gy * g); ctx.arc(gx * g, gy * g, r, 0, TAU); }
+    }
+    fill(col);
+  }
+}
+
+// ───────────────────────── render ─────────────────────────
+function scene() {
+  const t = T;
+  if (t < CUT.street) return [sListen, false];
+  if (t < CUT.tunnel) return [sStreet, false];
+  if (t < CUT.wall) return [sTunnel, false];
+  if (t < CUT.roof) return [sWall, true];
+  if (t < CUT.window) return [sRoof, true];
+  if (t < CUT.map) return [sWindow, true];
+  if (t < CUT.eject) return [sMapWaves, true];
+  if (t < CUT.pins) return [sEject, false];
+  if (t < CUT.door) return [sPins, false];
+  if (t < CUT.boxes) return [sDoor, false];
+  return [sBoxes, true];
+}
+window.render = (t) => {
+  T = Math.min(t, DUR - 1e-4); BOIL = Math.floor(T * 10); TX = [];
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  let sx = 0, sy = 0;
+  for (const [t0, a, d] of SHAKES) { const q = (T - t0) / d; if (q >= 0 && q < 1) { const k = a * (1 - q) * (1 - q); sx += Math.sin(T * 91) * k; sy += Math.cos(T * 73) * k; } }
+  const [fn, dark] = scene();
+  ctx.save(); ctx.translate(sx, sy); fn(); ctx.restore();
+  ctx.save(); ctx.translate(sx, sy); dossierCard(); ctx.restore();
+  wipe();
+  hud(dark);
+  captions();
+  grain();
+  for (const [t0, a] of FLASH) { const q = (T - t0) / .3; if (q >= 0 && q < 1) { ctx.globalAlpha = Math.min(.5, a) * (1 - q); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; } }
+  ctx.save(); ctx.globalCompositeOperation = 'multiply'; ctx.drawImage(PAPER, 0, 0); ctx.restore();
+};
+window.TEXTS = (t) => { window.render(t); return TX; };
+
+(async () => {
+  await Promise.all(['104px Slab', '68px Cap', '190px Fat', '800 40px Mono'].map(f => document.fonts.load(f, 'Police 0123456789 ABC')));
+  await document.fonts.ready;
+  buildPaper();
+  STAMP_Q.img = makeStamp([['?', '230px Fat', 150]], 230, 270, 3);
+  STAMP_268.img = makeStamp([['268', '150px Fat', 118]], 380, 210, 8);
+  window.render(0);
+  window.READY = true;
+})();
+</script>
+</body></html>

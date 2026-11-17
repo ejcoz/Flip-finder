@@ -1,0 +1,22 @@
+Baker Street, 1971 — third-party material
+
+Narration
+  The user's own recording (London_robbery.mp3), used as recorded; only 0.06 s of leading silence was trimmed.
+
+Fonts (SIL Open Font License 1.1, licence texts in fonts/)
+  Alfa Slab One — The Alfa Slab One Project Authors (JM Solé) — https://github.com/google/fonts/tree/main/ofl/alfaslabone
+  Archivo Black — The Archivo Black Project Authors (Omnibus-Type) — https://github.com/google/fonts/tree/main/ofl/archivoblack
+  Bagel Fat One — The Bagel Fat Project Authors (JAMO) — https://github.com/google/fonts/tree/main/ofl/bagelfatone
+  JetBrains Mono — The JetBrains Mono Project Authors — https://github.com/google/fonts/tree/main/ofl/jetbrainsmono
+
+Music and sound effects
+  Synthesized procedurally in mix.py (numpy/scipy); no samples or recordings.
+  Uses the sound helpers in core/audio/sfx.py and the render/mux tools of the Lemo-Opuscar library
+  (https://github.com/lemomo-ai/lemo-opuscar), MIT License.
+
+Speech-to-text check
+  faster-whisper (MIT) with the Whisper small.en model (MIT), used only to time the captions.
+
+Pictures
+  Drawn in code (index.html). The street, map, bank and figures are generic and invented: no real logos,
+  no real bank branding, no likenesses. The London map is a stylized invention with no borders.
