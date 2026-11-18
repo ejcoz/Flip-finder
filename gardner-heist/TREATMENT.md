@@ -31,7 +31,7 @@ Cream paper `#efe5cf` · navy ink `#1b2236` (outlines, night ground, caption pil
 
 | # | Time | Framing / angle | Camera | Why |
 |---|---|---|---|---|
-| 1 | 0.00–4.50 | Full, frontal: side door glowing gold on navy brick, two capped silhouettes | slow push 1→1.06, door light flickers, buzz shake at 4.0, door swings | Striking first frame; the hook text sits above it from frame 0 |
+| 1 | 0.00–4.50 | Full, frontal: side door thrown wide, gold light flooding onto the ground against a deep-blue night; two capped silhouettes in the doorway (one stepping through), the guard's hand still on a pulsing red buzzer inside | door swings wide in the first 0.55 s, light spill widens over 0.8 s, buzzer pulses; slow push 1→1.03 anchored on the threshold so the figures stay above the caption | Bright, readable first frame; the hook text is static above it from frame 0 |
 | 2 | 4.50–8.90 | Insert: dossier card on cream desk | slides up with overshoot, slow push 1→1.07 | The facts as an exhibit, readable |
 | 3a | 8.90–9.60 | Close: clock face, hands sweep to 1:24 | snap zoom-in | Time stamp of the crime |
 | 3b | 9.60–11.50 | Close: fist on door glass | knock jolts (shake), halftone ripples bloom | The knock as dots |

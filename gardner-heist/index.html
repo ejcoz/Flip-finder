@@ -79,7 +79,11 @@ function cop(c, x, y, s, o = {}) {
   c.save(); c.translate(x, y); c.scale(s, s);
   const col = o.col || N;
   c.fillStyle = col; c.strokeStyle = col; c.lineCap = 'round'; c.lineJoin = 'round';
-  if (o.legs !== false) { rr(c, -80, 300, 72, 450, 24); c.fill(); rr(c, 8, 300, 72, 450, 24); c.fill(); }
+  if (o.legs !== false) {
+    const sd = o.stride || 0;
+    c.save(); c.translate(-44, 300); c.rotate(sd); rr(c, -36, 0, 72, 450, 24); c.fill(); c.restore();
+    c.save(); c.translate(44, 300); c.rotate(-sd); rr(c, -36, 0, 72, 450, 24); c.fill(); c.restore();
+  }
   c.beginPath(); c.moveTo(-100, 22); c.quadraticCurveTo(-110, -4, -78, -8); c.lineTo(78, -8); c.quadraticCurveTo(110, -4, 100, 22);
   c.lineTo(88, 322); c.lineTo(-88, 322); c.closePath(); c.fill();
   c.fillRect(-22, -44, 44, 44);
@@ -175,62 +179,80 @@ const EV = [
 // ---------- scenes ----------
 const KNOCKS = [9.66, 10.95, 11.13, 11.31];
 
-function S1(c, t) { // the door
-  const z = 1 + 0.06 * eio(t / 4.5);
-  const [sx, sy] = shake(t, [4.0, 4.44], 7, 0.35);
-  cam(c, z, 540, 1000, sx, sy);
-  bgFill(c, N);
-  // bricks
-  c.strokeStyle = B; c.lineWidth = 3;
+function S1(c, t) { // the open door: two fake police in the light, the guard's hand still on the buzzer
+  const z = 1 + 0.03 * eio(t / 4.5);
+  const [sx, sy] = shake(t, [4.0, 4.44], 5, 0.3);
+  cam(c, z, 540, 1165, sx, sy + 205);            // the threshold stays put while the camera pushes in
+  const DX0 = 250, DX1 = 830, DY0 = 500, DY1 = 1170;  // doorway
+  // deep blue night wall, warm light bleeding round the door
+  bgFill(c, B);
+  halftone(c, { step: 22, angle: 15, color: N, f: (x, y) => 0.32 + 0.12 * seg(Math.abs(x - 540), 300, 700) });
+  c.strokeStyle = N; c.lineWidth = 3;
   for (let row = 0; row < 40; row++) {
-    const y = -300 + row * 62; c.beginPath(); c.moveTo(-400, y); c.lineTo(1500, y); c.stroke();
+    const y = -300 + row * 62; if (y > DY1) break;
+    c.beginPath(); c.moveTo(-400, y); c.lineTo(1500, y); c.stroke();
     for (let col = -4; col < 14; col++) { const x = col * 150 + (row % 2) * 75; c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 62); c.stroke(); }
   }
-  // ground
-  c.fillStyle = N; c.fillRect(-400, 1585, 1900, 900);
-  halftone(c, { x0: -400, y0: 1585, w: 1900, h: 700, step: 22, angle: 30, color: B, f: (x, y) => 0.25 + 0.4 * seg(y, 1585, 1950) });
-  const open = eio(seg(t, 3.98, 4.5));
-  const flick = 0.82 + 0.18 * vnoise(t * 7) - (t > 1.6 && t < 1.72 ? 0.25 : 0);
-  // light spill on ground
-  c.save(); c.beginPath(); c.moveTo(300, 1585); c.lineTo(780, 1585); c.lineTo(780 + 260 + 300 * open, 2300); c.lineTo(300 - 260 - 300 * open, 2300); c.closePath(); c.clip();
-  halftone(c, { x0: -300, y0: 1585, w: 1700, h: 700, step: 22, angle: 45, color: G, f: (x, y) => (0.55 + 0.5 * open) * flick * clamp(1 - (y - 1585) / 520) });
+  halftone(c, { step: 22, angle: 45, color: G, k: 0.7, f: (x, y) => 1.05 * Math.pow(clamp(1 - Math.hypot((x - 540) / 640, (y - 840) / 760)), 0.8) });
+  // ground with the light pouring out
+  const sp = eo(seg(t, 0, 0.8));
+  c.fillStyle = B; c.fillRect(-400, DY1, 1900, 1000);
+  halftone(c, { x0: -400, y0: DY1, w: 1900, h: 900, step: 22, angle: 30, color: N, f: flat(0.3) });
+  halftone(c, { x0: -400, y0: DY1, w: 1900, h: 900, step: 22, angle: 45, color: G, k: 0.7, f: radial(540, DY1, 520 + 520 * sp, 0.7, 1.1) });
+  c.save(); c.beginPath(); c.moveTo(DX0, DY1); c.lineTo(DX1, DY1); c.lineTo(lerp(900, 1300, sp), 2000); c.lineTo(lerp(180, -220, sp), 2000); c.closePath(); c.clip();
+  c.fillStyle = G; c.fillRect(-400, DY1, 1900, 900);
+  halftone(c, { x0: -400, y0: DY1, w: 1900, h: 900, step: 22, angle: 15, color: P, f: radial(540, DY1, 640, 1.1, 1.05) });
   c.restore();
-  // door frame and interior
-  c.fillStyle = N; c.fillRect(270, 610, 540, 980);
-  c.fillStyle = G; c.fillRect(300, 640, 480, 945);
-  halftone(c, { x0: 300, y0: 640, w: 480, h: 945, step: 22, angle: 15, color: P, f: radial(560, 900, 600, 1.2, 1.1 * flick) });
-  // door panel swings inward (hinge at left)
-  const pw = 480 * Math.cos(open * 1.25);
-  c.fillStyle = B; c.fillRect(300, 640, pw, 945);
-  c.strokeStyle = N; c.lineWidth = 8; c.strokeRect(300, 640, pw, 945);
-  if (pw > 40) {
-    const gx = 300 + pw * 0.09, gw = pw * 0.82;
-    c.fillStyle = G; c.fillRect(gx, 690, gw, 400);
-    c.save(); c.beginPath(); c.rect(gx, 690, gw, 400); c.clip();
-    halftone(c, { x0: gx, y0: 690, w: gw, h: 400, step: 22, angle: 15, color: P, f: radial(gx + gw * 0.55, 860, 420, 1.1, flick) });
-    c.restore();
-    c.lineWidth = 10; c.strokeRect(gx, 690, gw, 400);
-    c.fillStyle = N; c.fillRect(300 + pw * 0.82, 1150, Math.max(6, pw * 0.1), 18);
+  // lit interior
+  c.fillStyle = G; c.fillRect(DX0, DY0, DX1 - DX0, DY1 - DY0);
+  c.save(); c.beginPath(); c.rect(DX0, DY0, DX1 - DX0, DY1 - DY0); c.clip();
+  halftone(c, { x0: DX0, y0: DY0, w: DX1 - DX0, h: DY1 - DY0, step: 22, angle: 15, color: P, f: radial(520, 760, 520, 1.0, 1.15) });
+  c.fillStyle = N; c.fillRect(DX0, 1088, DX1 - DX0, 6);
+  // guard desk with the buzzer; the guard's hand is still on it
+  c.fillStyle = B; c.beginPath(); c.moveTo(650, 900); c.lineTo(840, 900); c.lineTo(840, 936); c.lineTo(636, 936); c.closePath(); c.fill();
+  c.fillStyle = N; c.fillRect(636, 936, 210, 160);
+  c.fillStyle = G; c.fillRect(662, 966, 60, 10); c.fillRect(662, 990, 100, 8);
+  const pulse = 0.5 + 0.5 * Math.sin(t * TAU * 2.2), buzzing = t >= 3.98 && t < 4.44;
+  halftone(c, { x0: 560, y0: 780, w: 320, h: 260, step: 16, angle: 45, color: R, k: 0.7, f: radial(724, 912, 70 + 50 * pulse + (buzzing ? 40 : 0), 1.0, 1.1) });
+  c.fillStyle = N; c.beginPath(); c.ellipse(724, 916, 32, 14, 0, 0, TAU); c.fill();
+  c.fillStyle = R; c.beginPath(); c.ellipse(724, 911, 26, 11, 0, 0, TAU); c.fill();
+  c.fillStyle = P; c.beginPath(); c.ellipse(716, 908, 8, 3.5, 0, 0, TAU); c.fill();
+  c.save(); boil(c, t, 13);
+  c.fillStyle = N; c.strokeStyle = N; c.lineCap = 'round';
+  c.lineWidth = 40; c.beginPath(); c.moveTo(900, 830); c.lineTo(790, 884); c.stroke();
+  c.beginPath(); c.ellipse(770, 892, 34, 22, -0.3, 0, TAU); c.fill();
+  c.lineWidth = 14; c.beginPath(); c.moveTo(752, 896); c.lineTo(732, 906); c.stroke();
+  c.restore();
+  if (buzzing) {
+    c.strokeStyle = N; c.lineWidth = 6; const j = fr(t) % 2 ? 4 : -4;
+    for (const s of [-1, 1]) { c.beginPath(); for (let i = 0; i < 4; i++) c.lineTo(724 + s * (50 + i * 14), 850 + ((i % 2) ? -12 : 12) + j); c.stroke(); }
   }
-  // buzzer box
-  c.fillStyle = P; rr(c, 836, 1010, 56, 86, 10); c.fill(); c.strokeStyle = N; c.lineWidth = 6; c.stroke();
-  c.fillStyle = t > 3.98 && t < 4.5 ? R : N; c.beginPath(); c.arc(864, 1040, 12, 0, TAU); c.fill();
-  if (t > 3.98 && t < 4.5) {
-    c.strokeStyle = G; c.lineWidth = 7; const j = fr(t) % 2 ? 4 : -4;
-    for (const s of [-1, 1]) { c.beginPath(); for (let i = 0; i < 5; i++) c.lineTo(864 + s * (52 + i * 16), 1030 + ((i % 2) ? -14 : 14) + j); c.stroke(); }
-  }
-  // two capped silhouettes
-  const step = eio(seg(t, 4.08, 4.6));
-  for (const [i, x0] of [[0, 395], [1, 690]]) {
-    const br = 1 + 0.008 * Math.sin(t * 3 + i * 2);
-    c.save(); boil(c, t, 11 + i);
-    const look = i === 0 ? 0.04 * Math.sin(t * 1.3) : 0;
-    cop(c, x0 + (i === 0 ? 40 : -40) * step, 860 - 30 * step, 1.0 * br, {
-      armR: i === 1 ? [0.14 + 0.25 * seg(t, 1.2, 1.5) - 0.25 * seg(t, 2.6, 2.9), 0.06 + 0.9 * seg(t, 1.2, 1.5) - 0.9 * seg(t, 2.6, 2.9)] : undefined,
-      capTilt: look,
-    });
-    c.restore();
-  }
+  c.restore();
+  // door frame
+  c.fillStyle = N; c.fillRect(DX0 - 28, DY0 - 28, 28, DY1 - DY0 + 28); c.fillRect(DX1, DY0 - 28, 28, DY1 - DY0 + 28); c.fillRect(DX0 - 28, DY0 - 28, DX1 - DX0 + 56, 28);
+  // the two: one waits on the threshold, one steps through
+  const st = eio(seg(t, 0, 4.4));
+  const strideA = 0.03 * Math.sin(t * 1.7);
+  c.save(); boil(c, t, 11);
+  const sA = 0.7; cop(c, 360, DY1 - 5 - 750 * sA, sA, { stride: strideA, capTilt: 0.03 * Math.sin(t * 1.3) });
+  c.restore();
+  const sB = lerp(0.6, 0.71, st), feetB = lerp(1110, DY1 - 5, st), xB = lerp(585, 545, st);
+  const ph = t * TAU * 0.95, sw = 0.2 * (1 - 0.6 * seg(t, 3.8, 4.4));
+  c.save(); boil(c, t, 12);
+  cop(c, xB, feetB - 750 * sB + 8 * Math.abs(Math.sin(ph)), sB, { stride: sw * Math.sin(ph), armL: [-0.14 - 0.25 * Math.sin(ph), -0.1], armR: [0.14 + 0.25 * Math.sin(ph), 0.1] });
+  c.restore();
+  // the door, thrown wide open (hinged on the right, swinging out toward us)
+  const a = lerp(85, 118, back(seg(t, 0, 0.55), 1.4)) * Math.PI / 180;
+  const fx = DX1 + 28 - 580 * Math.cos(a), k = 1 + 0.22 * Math.sin(a), cy = (DY0 + DY1) / 2, hh = (DY1 - DY0 + 28) / 2;
+  c.fillStyle = B; c.beginPath(); c.moveTo(DX1 + 28, DY0 - 28); c.lineTo(fx, cy - hh * k); c.lineTo(fx, cy + hh * k); c.lineTo(DX1 + 28, DY1); c.closePath(); c.fill();
+  c.save(); c.clip(); halftone(c, { x0: DX1, y0: DY0 - 300, w: 700, h: 1100, step: 22, angle: 15, color: G, k: 0.7, f: (x, y) => 0.75 - 0.5 * seg(x, DX1, DX1 + 400) }); c.restore();
+  c.beginPath(); c.moveTo(DX1 + 28, DY0 - 28); c.lineTo(fx, cy - hh * k); c.lineTo(fx, cy + hh * k); c.lineTo(DX1 + 28, DY1); c.closePath();
+  c.strokeStyle = N; c.lineWidth = 10; c.stroke();
+  c.strokeStyle = G; c.lineWidth = 8; c.beginPath(); c.moveTo(DX1 + 28, DY0 - 28); c.lineTo(fx, cy - hh * k); c.lineTo(fx, cy + hh * k); c.stroke();
+  c.fillStyle = G; c.beginPath();
+  c.moveTo(lerp(DX1 + 28, fx, 0.15), lerp(DY0 - 28, cy - hh * k, 0.15) + 40); c.lineTo(lerp(DX1 + 28, fx, 0.85), lerp(DY0 - 28, cy - hh * k, 0.85) + 40 * k);
+  c.lineTo(lerp(DX1 + 28, fx, 0.85), lerp(DY0 - 28, cy - hh * k, 0.85) + 560 * k); c.lineTo(lerp(DX1 + 28, fx, 0.15), lerp(DY0 - 28, cy - hh * k, 0.15) + 560); c.closePath(); c.fill();
+  c.strokeStyle = N; c.lineWidth = 8; c.stroke();
 }
 
 function S2(c, t) { // dossier card
@@ -809,16 +831,10 @@ function caption(t) {
 // ---------- hook & HUD ----------
 const HOOK = ['The guards let', 'the thieves in', 'themselves.'];
 let HOOK_S = 110;
-function hook(t) {
+function hook(t) { // static: fully readable from the first frame
   if (t >= 4.5) return;
-  const ys = [270, 400, 530];
-  HOOK.forEach((line, i) => {
-    const p = seg(t, i * 0.04, i * 0.04 + 0.22);
-    const sq = 1 + 0.12 * (1 - p) * Math.cos(p * 9);
-    ctx.save(); ctx.translate(70, ys[i]); ctx.scale(1, sq);
-    txt(ctx, line, 0, 0, { f: 'Slab', s: HOOK_S, align: 'left', fill: i === 2 ? G : P, shadow: B, sd: 8 });
-    ctx.restore();
-  });
+  const ys = [215, 330, 445];
+  HOOK.forEach((line, i) => txt(ctx, line, 70, ys[i], { f: 'Slab', s: HOOK_S, align: 'left', fill: i === 2 ? G : P, sw: 12, stroke: N, shadow: N, sd: 9 }));
 }
 function hud(t) {
   const dark = !(t >= 4.5 && t < 8.9) && !(t >= 14.7 && t < 18.2) && !(t >= 25.85 && t < 30.0) && !(t >= 30.0);
@@ -861,7 +877,7 @@ window.render = (t) => {
 window.TEXTS = (t) => {
   const L = [];
   L.push({ id: 'hud', text: 'CASE', x0: 40, y0: 48, x1: 1040, y1: 102, pass: true });
-  if (t < 4.26) L.push({ id: 'hook', text: HOOK.join(' '), x0: 70, y0: 170, x1: 1010, y1: 560 });
+  if (t < 4.26) L.push({ id: 'hook', text: HOOK.join(' '), x0: 60, y0: 120, x1: 1020, y1: 470 });
   if (t >= 4.9 && t < 8.66) L.push({ id: 'date', text: 'MARCH 18, 1990', x0: 110, y0: 500, x1: 970, y1: 680 });
   if (t >= 5.5 && t < 8.66) { L.push({ id: 'm1', text: 'ISABELLA STEWART', x0: 100, y0: 700, x1: 990, y1: 800 }); L.push({ id: 'm2', text: 'GARDNER MUSEUM,', x0: 100, y0: 790, x1: 990, y1: 880 }); L.push({ id: 'm3', text: 'BOSTON', x0: 100, y0: 870, x1: 990, y1: 980 }); }
   if (t >= 4.6 && t < 8.66) L.push({ id: 'cardsmall', text: 'CASE No. 90-0318 INCIDENT REPORT', x0: 100, y0: 330, x1: 700, y1: 490, pass: true });
@@ -884,7 +900,7 @@ window.TEXTS = (t) => {
   PAPER = buildPaper();
   STAMPS.fake = makeStamp('FAKE', 600, 250, R, 5);
   STAMPS.stolen = makeStamp('STOLEN', 300, 110, R, 9);
-  HOOK_S = Math.min(...HOOK.map(l => fit(l, 'Slab', 930, 124)));
+  HOOK_S = Math.min(...HOOK.map(l => fit(l, 'Slab', 930, 112)));
   window.render(0);
   window.READY = true;
 })();
