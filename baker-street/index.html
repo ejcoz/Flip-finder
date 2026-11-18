@@ -185,14 +185,14 @@ function walker(x, y, s, ph, seed) {  // generic figure in coat and flat cap, fa
 
 // ───────────────────────── scenes ─────────────────────────
 // 1 · split screen: the listening room above, the vault below (0 → 6.25)
-const Q = [540, 888];                                   // where the two signals meet
-const WALKIE = [863, 1040], SPEAKER = [800, 730];
-function officer(t, x, y, s) {   // seated, leaning toward the machine; headphones; no face
+const Q = [540, 816];                                   // where the two signals meet
+const WALKIE = [757, 936], SPEAKER = [900, 690], TORCH = [720, 1045];
+function officer(t, x, y, s, arm = [-.75, -.9]) {   // seated, leaning toward the machine; headphones; no face
   const lean = ss(t / 3) * 10 + Math.sin(t * 2.1) * 5, rot = -.05 - ss(t / 3) * .05 + Math.sin(t * 1.7) * .015;
   ctx.save(); ctx.translate(x + lean, y); ctx.scale(s, s); ctx.rotate(rot);
   ctx.fillStyle = C.K;
   poly([[-170, 0], [-150, -250], [-90, -330], [30, -350], [110, -300], [150, -180], [120, 0]], 3, 2.2); ctx.fill();
-  ctx.save(); ctx.translate(70, -310); ctx.rotate(-.75 + Math.sin(t * 2.3) * .05); rr(-26, -10, 52, 210, 24); ctx.fill(); ctx.translate(0, 190); ctx.rotate(-.9); rr(-22, -8, 44, 150, 20); ctx.fill(); circ(0, 150, 28); ctx.fill(); ctx.restore();
+  ctx.save(); ctx.translate(70, -310); ctx.rotate(arm[0] + Math.sin(t * 2.3) * .05); rr(-26, -10, 52, 210, 24); ctx.fill(); ctx.translate(0, 190); ctx.rotate(arm[1]); rr(-22, -8, 44, 150, 20); ctx.fill(); circ(0, 150, 28); ctx.fill(); ctx.restore();
   rr(0, -400, 60, 70, 20); ctx.fill();
   const hx = 70 + jit(9, 1.4), hy = -470;
   circ(hx, hy, 78); ctx.fill();
@@ -228,110 +228,108 @@ function robber(x, y, s, dir, pose, t, seed) {   // masked silhouette, feet at y
     ctx.beginPath(); ctx.moveTo(14, -158 + br); ctx.lineTo(34, -196 + br); ink(18, C.K);
     rr(26, -238 + br, 22, 46, 5); fill(C.K); ink(2.5, C.M); ctx.beginPath(); ctx.moveTo(42, -238 + br); ctx.lineTo(44, -280 + br); ink(4, C.K); ink(1.5, C.M);
     if (Math.floor(t * 5) % 2 === 0) { circ(37, -228 + br, 4); fill(C.R); }
-    ctx.beginPath(); ctx.moveTo(-6, -150 + br); ctx.lineTo(-30, -112); ink(16, C.K); rr(-40, -118, 16, 26, 4); fill(C.K); ink(2, C.M);
+    if (pose === 'walkie2') { ctx.beginPath(); ctx.moveTo(-6, -150 + br); ctx.lineTo(60, -124); ink(16, C.K); rr(54, -133, 30, 16, 4); fill(C.K); ink(2, C.M); }
+    else { ctx.beginPath(); ctx.moveTo(-6, -150 + br); ctx.lineTo(-30, -112); ink(16, C.K); rr(-40, -118, 16, 26, 4); fill(C.K); ink(2, C.M); }
   }
   ctx.restore();
 }
 function sListen() {
   const t = T;
   ctx.fillStyle = C.P; ctx.fillRect(0, 0, W, H);
-  ctx.save(); camera(lerp(1, 1.025, ss(t / 6.25)), 540, 900);
-  // ── top panel: the listening room ──
-  const TP = [440, 838];
+  ctx.save(); camera(lerp(1, 1.02, ss(t / 6.25)), 540, 950);
+  // ── top panel: close on the listening room ──
+  const TP = [372, 770];
   clipTo(() => { ctx.beginPath(); ctx.rect(-50, TP[0], W + 100, TP[1] - TP[0]); }, () => {
     ctx.fillStyle = C.M; ctx.fillRect(-50, TP[0], W + 100, TP[1] - TP[0]);
-    ht(-50, TP[0], W + 100, TP[1] - TP[0], 18, 15, radial(640, 650, 120, 640, .05, .38), C.P, .6);
-    mul(() => ht(-50, TP[0], W + 100, TP[1] - TP[0], 20, 45, (x, y) => clamp(Math.max(Math.abs(x - 540) - 380, 0) / 200) * .5, C.T, .6));
-    ctx.fillStyle = C.K; ctx.fillRect(-50, 800, W + 100, 50); ctx.fillStyle = C.P; ctx.fillRect(-50, 800, W + 100, 7);
-    ctx.save(); ctx.translate(0, -30);
-    // the tape machine
-    rr(470, 560, 420, 260, 18); fill(C.P); ink(7);
-    mul(() => clipTo(() => rr(470, 560, 420, 260, 18), () => ht(470, 560, 420, 260, 16, 30, ramp(560, 820, .12, .55), C.T, .64)));
-    reel(565, 640, 64, t * 3.6); reel(765, 640, 64, t * 3.6 + .4);
-    ctx.beginPath(); ctx.moveTo(505, 650); ctx.lineTo(530, 712); ctx.lineTo(800, 712); ctx.lineTo(828, 650); ink(3);
-    rr(625, 700, 80, 22, 6); fill(C.K);
-    rr(500, 735, 130, 66, 8); fill(C.P); ink(4); ctx.beginPath(); ctx.arc(565, 798, 46, -2.5, -.64); ink(2.5);
+    ht(-50, TP[0], W + 100, TP[1] - TP[0], 18, 15, radial(620, 560, 120, 640, .05, .38), C.P, .6);
+    mul(() => ht(-50, TP[0], W + 100, TP[1] - TP[0], 20, 45, (x) => clamp(Math.max(Math.abs(x - 540) - 400, 0) / 200) * .5, C.T, .6));
+    // the tape machine, close: reels big, the rest cropped by the desk and the frame edge
+    rr(480, 400, 720, 420, 24); fill(C.P); ink(8);
+    mul(() => clipTo(() => rr(480, 400, 720, 420, 24), () => ht(480, 400, 720, 420, 18, 30, ramp(400, 760, .12, .55), C.T, .64)));
+    reel(650, 530, 112, t * 3.6); reel(962, 530, 112, t * 3.6 + .4);
+    ctx.beginPath(); ctx.moveTo(545, 560); ctx.lineTo(580, 668); ctx.lineTo(1030, 668); ctx.lineTo(1070, 560); ink(4);
+    rr(755, 652, 110, 32, 8); fill(C.K);
+    rr(505, 676, 150, 44, 8); fill(C.P); ink(4);
     const lvl = .5 + .35 * Math.sin(t * 17) * Math.sin(t * 5.3) + .1 * Math.sin(t * 41);
-    ctx.save(); ctx.translate(565, 798); ctx.rotate(lerp(-1, 1, lvl)); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -54); ink(3, C.R); ctx.restore();
-    circ(800, 760, 40); fill(C.K); ht(760, 720, 80, 80, 11, 0, (x, y) => Math.hypot(x - 800, y - 760) < 34 ? .7 : 0, C.M, .6);
+    ctx.save(); ctx.translate(580, 722); ctx.rotate(lerp(-.9, .9, lvl)); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -42); ink(3.5, C.R); ctx.restore();
+    circ(...SPEAKER, 32); fill(C.K); ht(SPEAKER[0] - 32, SPEAKER[1] - 32, 64, 64, 10, 0, (x, y) => Math.hypot(x - SPEAKER[0], y - SPEAKER[1]) < 27 ? .7 : 0, C.M, .6);
     // sound waves pulse out of the machine (rings of dots)
     for (let k = 0; k < 4; k++) {
-      const p = ((t * .9 + k / 4) % 1), r = 50 + p * 360, n = Math.floor(r / 12), dr = (1 - p) * 7 + 1.5, SP = [800, 760];
+      const p = ((t * .9 + k / 4) % 1), r = 60 + p * 460, n = Math.floor(r / 13), dr = (1 - p) * 8 + 1.8;
       ctx.beginPath();
-      for (let i = 0; i < n; i++) { const a = -Math.PI * .1 + (i / n) * Math.PI * 1.2; const px = SP[0] + Math.cos(a) * r, py = SP[1] - Math.sin(a) * r * .8; if (px > 470 && px < 890 && py > 560 && py < 820) continue; ctx.moveTo(px + dr, py); ctx.arc(px, py, dr, 0, TAU); }
+      for (let i = 0; i < n; i++) { const a = Math.PI * .45 + (i / n) * Math.PI * .75; const px = SPEAKER[0] + Math.cos(a) * r, py = SPEAKER[1] - Math.sin(a) * r * .8; if (px > 480 && py > 400 && py < 722) continue; ctx.moveTo(px + dr, py); ctx.arc(px, py, dr, 0, TAU); }
       fill(C.K);
     }
-    officer(t, 250, 820, .52);
-    ctx.restore();
+    ctx.fillStyle = C.K; ctx.fillRect(-50, 722, W + 100, 60); ctx.fillStyle = C.P; ctx.fillRect(-50, 722, W + 100, 7);
+    officer(t, 230, 950, .98, [-1.3, -.45]);
   });
-  // ── bottom panel: the vault at night, in cutaway ──
-  const BP = 966;
-  clipTo(() => { ctx.beginPath(); ctx.rect(-50, BP, W + 100, H + 100 - BP); }, () => {
-    ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, H + 100);
-    // ceiling slab
-    ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, 34);
-    ctx.beginPath(); for (let i = -5; i < 50; i++) { ctx.moveTo(i * 26, BP); ctx.lineTo(i * 26 - 34, BP + 34); } ink(2.5, C.K);
-    ctx.beginPath(); ctx.moveTo(-50, BP + 34); ctx.lineTo(W + 50, BP + 34); ink(6);
-    // back wall: cream, lightly dotted
-    ht(-50, BP + 34, W + 100, 1180 - BP - 34, 16, 15, ramp(BP + 34, 1180, .32, .18), C.T, .6);
-    // strong torch beams: flat mustard light with a dotted fringe, flickering
-    const fl = hash(Math.floor(t * 14)), fj = (fl - .5) * 10;
-    const tx = 640 - 92 * .9, ty = 1180 - 136 * .9;
+  // ── bottom panel: close on the vault, lit by torches ──
+  const BP = 862, FL = 1185;
+  clipTo(() => { ctx.beginPath(); ctx.rect(-50, BP, W + 100, 1536 - BP); }, () => {
+    ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, 1536 - BP);
+    ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, 30);
+    ctx.beginPath(); for (let i = -5; i < 50; i++) { ctx.moveTo(i * 26, BP); ctx.lineTo(i * 26 - 30, BP + 30); } ink(2.5, C.K);
+    ctx.beginPath(); ctx.moveTo(-50, BP + 30); ctx.lineTo(W + 50, BP + 30); ink(6);
+    ht(-50, BP + 30, W + 100, FL - BP - 30, 16, 15, ramp(BP + 30, FL, .32, .18), C.T, .6);
+    // torch beams: flat mustard light with a dotted fringe, flickering
+    const fl = hash(Math.floor(t * 14)), fj = (fl - .5) * 12;
     const beam = (x0, y0, pts, d) => {
       poly([[x0, y0], ...pts]); fill(C.M);
-      mul(() => clipTo(() => poly([[x0, y0], ...pts]), () => ht(-50, BP, W + 100, 1180 - BP, 14, 0, (x, y) => Math.min(1, Math.hypot(x - x0, y - y0) / d) * (.45 + .15 * fl), C.T, .55)));
+      mul(() => clipTo(() => poly([[x0, y0], ...pts]), () => ht(-50, BP, W + 100, FL - BP, 14, 0, (x, y) => Math.min(1, Math.hypot(x - x0, y - y0) / d) * (.45 + .15 * fl), C.T, .55)));
     };
-    beam(tx, ty, [[150, 1000 + fj], [60, 1180], [380, 1180]], 600);
-    beam(806, 1086, [[1130, 1000 - fj], [1130, 1180], [960, 1180]], 420);
-    // pool of light on the floor
-    ell(330, 1180, 300, 26); fill(C.M); ell(990, 1180, 150, 20); fill(C.M);
-    // a small cluster of deposit boxes, small
-    for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) {
-      const x = 60 + i * 56, y = 1018 + j * 42, open = (i === 1 && j === 1) || (i === 3 && j === 0) || (i === 4 && j === 2);
-      rr(x, y, 50, 36, 3); fill(C.P); ink(3, C.K);
-      if (open) { rr(x + 5, y + 5, 40, 26, 2); fill(C.K); poly([[x + 2, y + 2], [x - 12, y + 7], [x - 12, y + 30], [x + 2, y + 34]]); fill(C.P); ink(3, C.K); }
-      else { circ(x + 25, y + 18, 3.5); fill(C.K); }
+    beam(TORCH[0], TORCH[1], [[-20, 900 + fj], [-20, FL], [330, FL]], 760);
+    beam(985, FL - 20, [[860, BP + 30], [1110, BP + 30], [1110, FL - 60 + fj]], 380);
+    ell(300, FL, 330, 28); fill(C.M); ell(985, FL, 110, 18); fill(C.M);
+    // a few deposit boxes (small cluster, three open)
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 3; j++) {
+      const x = 30 + i * 90, y = 914 + j * 68, open = (i === 1 && j === 1) || (i === 3 && j === 0) || (i === 2 && j === 2);
+      rr(x, y, 82, 58, 4); fill(C.P); ink(4, C.K);
+      if (open) { rr(x + 8, y + 8, 66, 42, 3); fill(C.K); poly([[x + 3, y + 3], [x - 18, y + 10], [x - 18, y + 48], [x + 3, y + 55]]); fill(C.P); ink(4, C.K); }
+      else { circ(x + 41, y + 29, 5); fill(C.K); }
     }
-    // the robbers
-    robber(390, 1180, .82, -1, 'pry', t, 11);
-    robber(640, 1180, .9, -1, 'torch', t, 23);
-    robber(830, 1180, .86, 1, 'walkie', t, 37);
-    // crackle at the walkie
-    if (Math.floor(t * 12) % 3 !== 0) {
+    // work lamp on the floor + tool bag
+    rr(960, FL - 34, 50, 34, 6); fill(C.K); circ(985, FL - 40, 12); fill(C.M); ink(4);
+    poly([[860, FL], [870, FL - 46], [930, FL - 50], [944, FL]], 71, 1.2); fill(C.K); ctx.beginPath(); ctx.arc(904, FL - 50, 22, Math.PI, 0); ink(6, C.K);
+    // the two robbers
+    robber(500, FL, 1.2, -1, 'pry', t, 11);
+    robber(800, FL, 1.15, -1, 'walkie2', t, 37);
+    if (Math.floor(t * 12) % 3 !== 0) {   // crackle at the walkie
       const rnd = mulberry(Math.floor(t * 12)); ctx.beginPath();
-      for (let k = 0; k < 3; k++) { let x = WALKIE[0] + 14, y = WALKIE[1] - 30 + k * 18; ctx.moveTo(x, y); for (let q = 0; q < 4; q++) { x += 10; y += (rnd() - .5) * 16; ctx.lineTo(x, y); } }
-      ink(3, C.K);
+      for (let k = 0; k < 3; k++) { let x = WALKIE[0] - 30, y = WALKIE[1] - 26 + k * 20; ctx.moveTo(x, y); for (let q = 0; q < 4; q++) { x -= 12; y += (rnd() - .5) * 18; ctx.lineTo(x, y); } }
+      ink(3.5, C.K);
     }
-    // floor slab, earth below, the tunnel they came through
-    ctx.fillStyle = C.P; ctx.fillRect(-50, 1180, W + 100, 40); ctx.beginPath(); ctx.rect(-50, 1180, W + 100, 40); ink(6);
-    ctx.beginPath(); for (let i = -5; i < 50; i++) { ctx.moveTo(i * 26, 1180); ctx.lineTo(i * 26 - 40, 1220); } ink(2.5, C.K);
-ht(-50, 1220, W + 100, H - 1120, 22, 15, ramp(1220, 1920, .15, .4), C.K, .6);
-    mul(() => ht(-50, 1220, W + 100, H - 1120, 26, 50, (x, y) => .3 + .2 * Math.sin(x * .013 + y * .02), C.M, .62));
-    ctx.fillStyle = C.K; ctx.fillRect(930, 1220, 64, 340);
-    ctx.beginPath(); ctx.moveTo(962, 1220); ctx.lineTo(962, 1580); ctx.lineTo(-60, 1580); ink(70, C.K);
-    for (const lx of [80, 330, 580, 830]) { const fl2 = .55 + .35 * hash(lx + Math.floor(t * 10)); ht(lx - 120, 1460, 240, 240, 14, 0, radial(lx, 1580, 10, 120, fl2, 0), C.M, .7); circ(lx, 1566, 9); fill(C.M); ink(3); }
-    ctx.beginPath(); for (let y = 1240; y < 1560; y += 34) { ctx.moveTo(944, y); ctx.lineTo(980, y); } ctx.moveTo(944, 1230); ctx.lineTo(944, 1560); ctx.moveTo(980, 1230); ctx.lineTo(980, 1560); ink(4, C.M);
-    ctx.beginPath(); ctx.moveTo(962, 1240); ctx.lineTo(962, 1580); ctx.lineTo(-60, 1580); ctx.setLineDash([4, 30]); ctx.lineDashOffset = -t * 40; ink(9, C.M); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    // floor slab (behind the caption)
+    ctx.fillStyle = C.P; ctx.fillRect(-50, FL, W + 100, 1340 - FL);
+    ctx.beginPath(); for (let i = -10; i < 60; i++) { ctx.moveTo(i * 30, FL); ctx.lineTo(i * 30 - 155, 1340); } ink(2.5, C.K);
+    ctx.beginPath(); ctx.moveTo(-50, FL); ctx.lineTo(W + 50, FL); ctx.moveTo(-50, 1340); ctx.lineTo(W + 50, 1340); ink(6);
+    // the tunnel along the bottom edge, lamps flickering, shaft up into the vault
+    ctx.fillStyle = C.K; ctx.fillRect(-50, 1340, W + 100, 1536 - 1340); ctx.fillRect(1012, FL, 56, 160);
+    for (const lx of [120, 400, 680, 940]) { const f2 = .6 + .35 * hash(lx + Math.floor(t * 10)); ht(lx - 150, 1340, 300, 196, 14, 0, radial(lx, 1400, 10, 150, f2, 0), C.M, .72); }
+    ctx.beginPath(); for (let x = 260; x < 1100; x += 280) { ctx.moveTo(x, 1340); ctx.lineTo(x, 1536); ctx.moveTo(x - 40, 1352); ctx.lineTo(x + 40, 1352); } ink(10, C.P);
+    ctx.beginPath(); ctx.moveTo(-50, 1372); ctx.lineTo(W + 50, 1372); ctx.setLineDash([5, 34]); ctx.lineDashOffset = -t * 40; ink(9, C.M); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+    for (const lx of [120, 400, 680, 940]) { circ(lx, 1396, 11); fill(C.M); ink(3); }
+    ctx.beginPath(); for (let y = FL + 10; y < 1340; y += 30) { ctx.moveTo(1018, y); ctx.lineTo(1062, y); } ink(4, C.M);
   });
+  ctx.beginPath(); ctx.moveTo(-50, 1536); ctx.lineTo(W + 50, 1536); ink(7);
   // ── the gutter between, with the signals meeting ──
   ctx.fillStyle = C.P; ctx.fillRect(-50, TP[1], W + 100, BP - TP[1]);
   ht(-50, TP[1], W + 100, BP - TP[1], 14, 45, (x) => .25 + .25 * Math.abs(x - 540) / 540, C.T, .6);
   ctx.beginPath(); ctx.moveTo(-50, TP[0]); ctx.lineTo(W + 50, TP[0]); ctx.moveTo(-50, TP[1]); ctx.lineTo(W + 50, TP[1]); ctx.moveTo(-50, BP); ctx.lineTo(W + 50, BP); ink(7);
   const aw = Math.atan2(Q[1] - WALKIE[1], Q[0] - WALKIE[0]), dw = Math.hypot(Q[0] - WALKIE[0], Q[1] - WALKIE[1]);
-  for (let k = 0; k < 4; k++) { const q = (t * 1.3 + k / 4) % 1; ctx.beginPath(); ctx.arc(WALKIE[0] + 10, WALKIE[1] - 70, 20 + q * (dw - 20), aw - .32, aw + .32); ctx.lineWidth = 12 * (1 - q) + 4; ctx.strokeStyle = C.M; ctx.stroke(); }
+  for (let k = 0; k < 4; k++) { const q = (t * 1.3 + k / 4) % 1; ctx.beginPath(); ctx.arc(...WALKIE, 24 + q * (dw - 24), aw - .34, aw + .34); ctx.lineWidth = 13 * (1 - q) + 4; ctx.strokeStyle = C.M; ctx.stroke(); ctx.lineWidth = 2; ctx.strokeStyle = C.K; ctx.stroke(); }
   const as = Math.atan2(Q[1] - SPEAKER[1], Q[0] - SPEAKER[0]), ds = Math.hypot(Q[0] - SPEAKER[0], Q[1] - SPEAKER[1]);
-  for (let k = 0; k < 3; k++) { const q = (t * 1.3 + k / 3 + .15) % 1; ctx.beginPath(); ctx.arc(...SPEAKER, 44 + q * (ds - 44), as - .3, as + .3); ctx.lineWidth = 11 * (1 - q) + 4; ctx.strokeStyle = C.T; ctx.stroke(); }
-  const pu = 1 + .12 * Math.pow(Math.abs(Math.sin(t * 3.4)), 3);
-  for (let k = 0; k < 2; k++) { const q = (t * 1.1 + k / 2) % 1; circ(Q[0], Q[1], 46 + q * 50); ctx.lineWidth = 8 * (1 - q) + 1; ctx.strokeStyle = C.R; ctx.stroke(); }
-  ctx.save(); ctx.translate(...Q); ctx.scale(pu, pu); txt('?', 0, 50, '150px Fat', C.R, 'center', C.K, 7); ctx.restore();
+  for (let k = 0; k < 3; k++) { const q = (t * 1.3 + k / 3 + .15) % 1; ctx.beginPath(); ctx.arc(...SPEAKER, 40 + q * (ds - 40), as - .3, as + .3); ctx.lineWidth = 12 * (1 - q) + 4; ctx.strokeStyle = C.T; ctx.stroke(); }
+  const pu = 1 + .14 * Math.pow(Math.abs(Math.sin(t * 3.4)), 3);
+  for (let k = 0; k < 2; k++) { const q = (t * 1.1 + k / 2) % 1; circ(Q[0], Q[1], 72 + q * 70); ctx.lineWidth = 10 * (1 - q) + 1; ctx.strokeStyle = C.R; ctx.stroke(); }
+  ctx.save(); ctx.translate(...Q); ctx.scale(pu, pu); circ(0, 0, 70); fill(C.P); ink(6, C.K); txt('?', 0, 68, '200px Fat', C.R, 'center', C.K, 8); ctx.restore();
   ctx.restore();
   // hook headline (top): one block, readable from frame 0, held until 5.35
   const out = ei(seg(t, 5.35, 5.65)) * -700 - (1 - eo(seg(t, 0, .1))) * 24;
   ctx.save(); ctx.translate(0, out);
   const L = [['Police heard it live.', C.K, C.T], ['Couldn\'t find it.', C.R, C.K]];
-  ctx.font = '100px Slab'; const size = Math.min(112, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 250;
+  ctx.font = '100px Slab'; const size = Math.min(112, Math.floor(100 * 950 / Math.max(...L.map(l => ctx.measureText(l[0]).width)))); let y = 190;
   L.forEach(([s, col, sh]) => { txt(s, 64, y, `${size}px Slab`, col, 'left', sh, 8); y += size * 1.32; });
-  if (t < 5.36) reg('hook', 'Police heard it live. Couldn\'t find it.', 64, 250 - size, 1020, 250 + size * 1.32 + size * .3);
+  if (t < 5.36) reg('hook', 'Police heard it live. Couldn\'t find it.', 64, 190 - size, 1020, 190 + size * 1.32 + size * .3);
   ctx.restore();
 }
 // dossier card, enters over the listening room, then pinned above the street
