@@ -26,10 +26,10 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 ## 2. Materials & rendering
 
 - **Canvas 2D at 1080×1920.** Hi-res layer: anti-aliased vector shapes with soft gradients and real shadows (the booth's metal frame, glass, light strip, platform, side ticks).
-- **Pixel grid is sacred.** Figure, organs, props (sparkles, particles, Zs, hearts) and all type share one square-pixel size per shot (default 12 px for the figure on a 30×62 grid, 4–13 px for type). Pixel positions snap to the grid; scaling is nearest-neighbour; no anti-aliasing on pixel layers.
+- **Pixel grid is sacred.** Figure, organs, props (sparkles, particles, Zs, hearts) and all type share one square-pixel size per shot (default 16 px for the figure on a 30×62 grid, so the body fills about half the frame height and every organ reads on a phone; 4–14 px for type). Pixel positions snap to the grid; scaling is nearest-neighbour; no anti-aliasing on pixel layers.
 - **Ordered dither (4×4 Bayer)** for every gradient and glow in the room: the back wall, the floor, the halo around the booth, the glow around an organ. Dither cells are 6 px. The booth's own metal is the only smooth gradient.
 - **X-ray body**: Bit's silhouette is filled deep teal at ~90 % with a one-pixel cyan rim; organs inside are opaque pixel icons in fixed places: brain (head), windpipe and lungs, heart (in front of the lungs, the brightest red), liver and stomach (upper belly), and a muscle strip down each leg. Add another organ (kidneys, gut, skin, bones) only as a simple icon in its real place. Health changes fill each organ from the bottom up, grey to colour. A faint cyan grid sits on the glass behind it.
-- **The lab**: dithered teal back wall with faint panel seams, a dithered floor with tile lines, the booth centred, its base on the floor line at about 78 % of the frame height.
+- **The lab**: dithered teal back wall with faint panel seams, a dithered floor with tile lines, the booth centred and tall (glass about 1040 px, more than half the frame), its base on the floor line at about 87 % of the frame height; the floor below holds the caption box.
 - **Pre-render static layers** (wall, floor, booth) once to offscreen canvases; draw only what moves per frame.
 
 ## 3. Colour logic
@@ -54,7 +54,11 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 - **Title bar** at the top (centre ~14 % of height): the milestone label in white on a deep-cyan bar (`#0B8EA0`) with a 1-cell cyan underline, 2–4 words, cell 12–14 px. One title per milestone; it swaps on the scan sweep.
 - **Subline** under it, optional: one short fact (≤ 4 words) in a smaller bar, cell 6–7 px.
 - **HUD labels** inside readout panels: 4–6 px cells.
-- No captions or subtitles by default; titles carry the words. Every title stays at least 2 s (one bar) and passes readcheck.
+- **Hook** (the first 2 bars, before any milestone title): the film's promise as a stacked title, one line landing per beat: a white line on a dark bar, the key line larger on the deep-cyan bar with its underline, then a small cyan bar ("HERE'S WHAT HAPPENS"). At most ~12 characters per big line; split the sentence rather than shrink it.
+- **Captions**: every milestone after the hook has a one- or two-line caption in a box on the floor at the bottom of the frame (dark box, 4 px border in the beat's direction colour: lime / amber / cyan), white pixel text, cell 7, at most ~16 characters per line. It explains *why* the change happens in plain words; the title says *when*, the caption says *what and why*. It pops in with the title, never typed on.
+- **Callout labels**: when one organ is the subject, a small pixel label (cell 5) sits at the right edge of the frame with a leader line to that organ, in the direction colour. One callout at a time.
+- **Two layers**: the hook, titles, captions, callouts and readouts sit on a text layer the camera never moves; only the world (lab, booth, body) zooms and shakes. Callout lines follow the organ's on-screen position.
+- Every hook line, title and caption passes readcheck.
 
 ## 5. Motion quality
 
@@ -82,6 +86,7 @@ Framing: the title bar and the mascot never overlap; readout panels sit beside t
 
 - **Pure chiptune at 120 BPM**, synthesized in numpy: pulse lead (12.5/25/50 % duty), triangle bass, noise-channel drums, an optional second pulse for arpeggios. No sampled instruments.
 - **One loop, arranged by mood**: *groove* (full), *stripped* (held bass drone and one chord, no drums) for setbacks, *glitch* (vibrato, bit-crushed noise, detuned lead) for struggle, *triumph* (key up, fast arpeggios, crash) for the win.
+- **Text has sound**: a short rising blip as each hook line lands; a soft two-note chirp when a caption pops in.
 - **Sweeps carry direction**: a falling pitch sweep into a setback, a rising sweep into progress; a short blip on every scan sweep; a coin-like arpeggio when a readout hits its target.
 - **Silence**: one bar of drop-out before the final milestone.
 - No voice by default; if a voice is added, duck the music and keep blips off word onsets. Master at −14 LUFS.
@@ -105,7 +110,9 @@ The scan sweep is in every film; the others are a menu.
 - A change that fades in instead of sweeping → every state change rides the scanline.
 - Cuts drifting off the beat → milestones are whole bars from one timeline; the score is generated from it.
 - Unverified health claims → every milestone fact goes in `FACTS.md` with a source; prefer ranges ("2–12 weeks").
-- Titles too long for the bar → 2–4 words; move detail to the subline or a readout.
+- Titles too long for the bar → 2–4 words; move detail to the subline, the caption or a readout.
+- A body too small to read on a phone → keep the figure at 16 px cells (about half the frame height); punch in for detail rather than shrinking anything.
+- Captions that state health facts without a source → every caption claim goes in `FACTS.md` with its source before the film is posted.
 - A chart that cuts away to a flat infographic screen → charts live on the scanner glass, arriving with a sweep, with Bit faint behind.
 - Realistic anatomy creeping in → organs stay simple pixel icons.
 - The figure drifting back into a blob or mascot → always a full human silhouette with arms and legs; it is the viewer's body.

@@ -115,6 +115,10 @@ for e in ev['ev']:
     if e['type'] == 'sweep': sweep(t, 500, 1700, 0.45, 0.08)
     elif e['type'] == 'fall': sweep(t, 1500, 140, 1.0, 0.1, duty=0.5)
     elif e['type'] == 'tick': note(t, 84 + e['k'], 0.04, 0.05, duty=0.5, d=0.02, s=0.3, r=0.01)
+    elif e['type'] == 'blip':   # hook line lands: a short rising blip per line
+        note(t, 76 + 3 * e['k'], 0.07, 0.07, duty=0.25, d=0.04, s=0.5, r=0.02); note(t + 0.07, 81 + 3 * e['k'], 0.09, 0.06, duty=0.25, d=0.05, s=0.4)
+    elif e['type'] == 'cap':    # caption pops in: soft two-note chirp
+        note(t, 88, 0.035, 0.035, duty=0.125, d=0.02, s=0.4, r=0.01); note(t + 0.04, 93, 0.05, 0.03, duty=0.125, d=0.03, s=0.3)
     elif e['type'] == 'coin':
         note(t, 83, 0.08, 0.11, duty=0.5, s=0.9); note(t + 0.08, 88, 0.35, 0.11, duty=0.5, d=0.2, s=0.5)
     elif e['type'] == 'confetti':
