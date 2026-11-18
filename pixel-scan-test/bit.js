@@ -1,75 +1,94 @@
-// "Bit", the Pixel Scan mascot, seen in x-ray: 22×26 cell grid, organs inside.
+// "Bit", the Pixel Scan figure: a human body seen in a full-body x-ray scan.
+// 30×62 cell grid (head, neck, shoulders, arms, torso, legs, feet), organs inside.
 import { bayer } from './pix.js';
 
 export const C = {
   body: 'rgba(18,61,69,.9)', rim: '#39E0F0', eye: '#F2FBFC',
-  lung: '#FF7A6B', lungHi: '#FFB0A3', grey: '#6F8A8E', greyD: '#4E6569',
+  lung: '#F4A196', lungHi: '#FFD6CE', grey: '#6F8A8E', greyD: '#4E6569',
   heart: '#FF5A5F', heartD: '#C23A46', heartHi: '#FFD0D2',
-  brain: '#FF9BB0', brainD: '#D86A86', amber: '#FFB547', lime: '#A6F04A',
+  brain: '#FF9BB0', brainD: '#D86A86', liver: '#E0675E', liverD: '#A9434A',
+  stomach: '#FFB0A3', muscle: '#F07F74', amber: '#FFB547', lime: '#A6F04A',
 };
-export const W = 22, H = 26;
+export const W = 30, H = 62;
 
-function inBody(c, r) {
-  const x = c + .5, y = r + .5;
-  if (r >= 24) return (c >= 4 && c <= 7) || (c >= 14 && c <= 17);       // feet
-  if (r < 0 || r > 23 || c < 0 || c > 21) return false;
-  const rt = 8, rb = 4;
-  if (y < rt && (x < rt || x > W - rt)) return Math.hypot(x - (x < rt ? rt : W - rt), y - rt) <= rt;
-  if (y > 24 - rb && (x < rb || x > W - rb)) return Math.hypot(x - (x < rb ? rb : W - rb), y - (24 - rb)) <= rb;
-  return true;
+// body geometry in cell units; x measured from the centre line
+const armX = y => 11.4 + (y - 17.5) * 0.06;
+const legX = y => 3.7 - (y - 38) * 0.03, legW = y => 3.3 - (y - 38) * 0.05;
+function torsoHW(y) {
+  if (y < 18.5) return 6 + 2.6 * Math.sqrt(Math.max(0, 1 - ((18.5 - y) / 2.6) ** 2));
+  if (y < 30) return 8.6 - (y - 18.5) * 0.17;
+  return 6.6 + (y - 30) * 0.13;
+}
+export function inBody(c, r) {
+  const x = c + .5 - W / 2, y = r + .5, ax = Math.abs(x);
+  if ((x / 6.3) ** 2 + ((y - 7.6) / 7.2) ** 2 <= 1) return true;                    // head
+  if (ax <= 2.1 && y >= 14 && y <= 17) return true;                                // neck
+  if (y >= 15.9 && y <= 38.5 && ax <= torsoHW(y)) return true;                     // torso
+  if (y >= 17.5 && y <= 40.5) {                                                    // arms + hands
+    const hw = y > 37.5 ? 1.9 : 1.55;
+    if (Math.abs(ax - armX(y)) <= hw && !(y > 40 && Math.abs(ax - armX(y)) > 1.2)) return true;
+    if (y < 19.6 && ax <= armX(y) + 1.4 && Math.hypot(Math.max(0, ax - armX(y) + 0.2), 19.6 - y) <= 2.4) return true;  // shoulder cap
+  }
+  if (y >= 38 && y <= 59.5) {                                                      // legs
+    if (Math.abs(ax - legX(y)) <= legW(y)) return true;
+    if (y < 40.5 && ax <= legX(y) + legW(y)) return true;                          // pelvis
+  }
+  if (y > 59.5 && y <= 61.6 && ax >= 1.2 && ax <= legX(59) + 3.4) return true;      // feet
+  return false;
 }
 
-const BRAIN = ['..bbbbbb..', '.bbdbbdbb.', 'bbbbdbbbdb', 'bdbbbbdbbb', '.bbbdbbbb.'];
-const LUNG = ['..oooo', '.hoooo', 'oooooo', 'oooooo', 'oooooo', 'oooooo', 'oooooo', 'oooooo', '.oooo.'];
+const BRAIN = ['...bbbb...', '.bbdbbdbb.', 'bbbbdbbbdb', 'bdbbbbbdbb', '.bbbdbbbb.'];
+const LUNG = ['..ooo', '.hooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'oooo.', '.ooo.'];
 const HEART = ['.rr.rr.', 'rhrrrrr', 'rrrrrrd', '.rrrrd.', '..rrd..', '...d...'];
+const LIVER = ['llllll', 'llllll', '.llll.', '..ll..'];
+const STOMACH = ['.ss.', 'ssss', 'ssss', '.sss', '..ss'];
 const FACES = {
-  flat: { e: [[7, 8], [8, 8], [7, 9], [8, 9], [13, 8], [14, 8], [13, 9], [14, 9]], m: [[10, 10], [11, 10]] },
-  tired: { e: [[7, 9], [8, 9], [13, 9], [14, 9]], m: [[10, 10], [11, 10], [12, 11]] },
-  wide: { e: [[7, 7], [8, 7], [7, 8], [8, 8], [7, 9], [8, 9], [13, 7], [14, 7], [13, 8], [14, 8], [13, 9], [14, 9]], m: [[10, 10], [11, 10], [10, 11], [11, 11]] },
-  happy: { e: [[6, 9], [7, 8], [8, 9], [13, 9], [14, 8], [15, 9]], m: [[9, 10], [10, 11], [11, 11], [12, 10]] },
-  shut: { e: [[6, 9], [7, 9], [8, 9], [13, 9], [14, 9], [15, 9]], m: [[10, 10], [11, 10]] },
+  flat: { e: [[12, 9], [12, 10], [17, 9], [17, 10]], m: [[14, 12], [15, 12]] },
+  tired: { e: [[11, 10], [12, 10], [17, 10], [18, 10]], m: [[14, 12], [15, 12], [16, 13]] },
+  wide: { e: [[12, 8], [12, 9], [12, 10], [17, 8], [17, 9], [17, 10]], m: [[14, 12], [15, 12], [14, 13], [15, 13]] },
+  happy: { e: [[11, 10], [12, 9], [13, 10], [16, 10], [17, 9], [18, 10]], m: [[13, 12], [14, 13], [15, 13], [16, 12]] },
+  shut: { e: [[11, 10], [12, 10], [13, 10], [16, 10], [17, 10], [18, 10]], m: [[14, 12], [15, 12]] },
 };
 
-// state: { lung, heart, brain } health 0..1, face, toxins (count), seed
+// state: health 0..1 per organ { brain, lung, heart, liver, stomach, muscle }, face, toxins, seed
 // x,y = midpoint under the feet; px = cell size
-export function drawBit(ctx, { x, y, px = 16, state = {}, rim = C.rim }) {
-  const { lung = 1, heart = 1, brain = 1, face = 'flat', toxins = 0, seed = 1 } = state;
+export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
+  const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1 } = state;
   const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px);
   const cell = (c, r, col) => { ctx.fillStyle = col; ctx.fillRect(ox + c * px, oy + r * px, px, px); };
-  // silhouette + one-cell rim
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
     if (!inBody(c, r)) continue;
     const edge = !inBody(c - 1, r) || !inBody(c + 1, r) || !inBody(c, r - 1) || !inBody(c, r + 1);
     cell(c, r, edge ? rim : C.body);
   }
-  // toxins: seeded single cells drifting inside the silhouette
+  // toxins first, so organs stay readable on top
   let s = seed * 9301;
   const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < toxins; i++) {
-    const c = 2 + Math.floor(rnd() * 18), r = 6 + Math.floor(rnd() * 17);
-    if (inBody(c, r)) cell(c, r, C.amber);
+    const c = 8 + Math.floor(rnd() * 14), r = 17 + Math.floor(rnd() * 20);
+    if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, C.amber);
   }
-  // health mixes by ordered dither, cell by cell: the change itself looks like pixels
-  const mix = (k, c, r, good, bad, top = 0, h = 1) => (k > (1 - (r - top + .5) / h) * .92 + bayer(c, r) * .08 ? good : bad);
-  BRAIN.forEach((row, r) => [...row].forEach((ch, c) => {
+  // healing fills each organ from the bottom up
+  const mix = (k, c, r, good, bad, top, h) => (k > (1 - (r - top + .5) / h) * .92 + bayer(c, r) * .08 ? good : bad);
+  const organ = (rows, c0, r0, k, pal) => rows.forEach((row, r) => [...row].forEach((ch, c) => {
     if (ch === '.') return;
-    const cc = c + 6, rr = r + 1;
-    cell(cc, rr, ch === 'd' ? mix(brain, cc, rr, C.brainD, C.greyD, 1, 5) : mix(brain, cc, rr, C.brain, C.grey, 1, 5));
+    const [good, bad] = pal[ch]; const cc = c0 + c, rr = r0 + r;
+    cell(cc, rr, bad == null ? good : mix(k, cc, rr, good, bad, r0, rows.length));
   }));
-  for (let r = 13; r <= 15; r++) { cell(10, r, mix(lung, 10, r, '#E8A39A', C.grey, 13, 10)); cell(11, r, mix(lung, 11, r, '#E8A39A', C.grey, 13, 10)); }
-  for (const side of [0, 1]) LUNG.forEach((row, r) => [...row].forEach((ch, c) => {
-    if (ch === '.') return;
-    const cc = side ? 18 - c : c + 3, rr = r + 14;
-    cell(cc, rr, ch === 'h' ? mix(lung, cc, rr, C.lungHi, '#8FA7AB', 14, 9) : mix(lung, cc, rr, C.lung, C.grey, 14, 9));
-  }));
-  HEART.forEach((row, r) => [...row].forEach((ch, c) => {
-    if (ch === '.') return;
-    const cc = c + 7, rr = r + 16;
-    cell(cc, rr, ch === 'h' ? C.heartHi : ch === 'd' ? C.heartD : mix(heart, cc, rr, C.heart, C.heartD, 16, 6));
-  }));
+  organ(BRAIN, 10, 2, brain, { b: [C.brain, C.grey], d: [C.brainD, C.greyD] });
+  for (let r = 15; r <= 19; r++) for (const c of [14, 15]) cell(c, r, mix(lung, c, r, '#E8A39A', C.grey, 14, 6));
+  organ(LUNG, 9, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
+  organ(LUNG.map(row => [...row].reverse().join('')), 16, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
+  organ(HEART, 12, 22, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
+  organ(LIVER, 9, 31, liver, { l: [C.liver, C.greyD] });
+  organ(STOMACH, 16, 31, stomach, { s: [C.stomach, C.grey] });
+  // leg muscles: a two-cell strip down each thigh and calf
+  for (let r = 41; r <= 56; r++) for (const side of [-1, 1]) {
+    const cx = W / 2 + side * legX(r + .5);
+    for (const c of [Math.floor(cx - 1), Math.floor(cx)]) if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, mix(muscle, c, r, C.muscle, C.greyD, 41, 16));
+  }
   const f = FACES[face] || FACES.flat;
-  for (const [c, r] of f.e) cell(c, r, C.eye);
-  for (const [c, r] of f.m) cell(c, r, C.eye);
+  for (const [c, r] of [...f.e, ...f.m]) cell(c, r, C.eye);
   return { ox, oy, w: W * px, h: H * px };
 }
 

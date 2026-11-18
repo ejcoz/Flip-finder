@@ -6,9 +6,9 @@ import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 
 const BAR = 2;
 const MS = [ // milestones: bars, title, subline, body state, readout
-  { bars: 2, title: 'DAY 1', sub: '10K STEPS A DAY', s: { lung: .15, heart: .3, brain: .35, face: 'tired', toxins: 22 }, hr: 84, dir: 0 },
-  { bars: 2, title: 'WEEK 2', sub: 'MORE ENERGY', s: { lung: .5, heart: .6, brain: .6, face: 'flat', toxins: 9 }, hr: 78, dir: 1 },
-  { bars: 2, title: 'MONTH 3', sub: 'HEART STRONGER', s: { lung: 1, heart: 1, brain: 1, face: 'happy', toxins: 0 }, hr: 68, dir: 1 },
+  { bars: 2, title: 'DAY 1', sub: '10K STEPS A DAY', s: { lung: .2, heart: .3, brain: .35, liver: .4, stomach: .5, muscle: .1, face: 'tired', toxins: 16 }, hr: 84, dir: 0 },
+  { bars: 2, title: 'WEEK 2', sub: 'MORE ENERGY', s: { lung: .5, heart: .6, brain: .6, liver: .7, stomach: .8, muscle: .5, face: 'flat', toxins: 7 }, hr: 78, dir: 1 },
+  { bars: 2, title: 'MONTH 3', sub: 'HEART STRONGER', s: { lung: 1, heart: 1, brain: 1, liver: 1, stomach: 1, muscle: 1, face: 'happy', toxins: 0 }, hr: 68, dir: 1 },
 ];
 let acc = 0; for (const m of MS) { m.t0 = acc; acc += m.bars * BAR; }
 window.DUR = acc;
@@ -49,7 +49,7 @@ window.render = (t) => {
   ctx.drawImage(LAB, 0, 0);
   // beat idle: one-cell squash on every beat (pixel layers step on twos)
   const tq = Math.floor(t * 15) / 15, beat = (tq % 0.5) / 0.5;
-  const px = 22, bob = beat < 0.2 ? px : 0, footY = B.glassY1 - 10;
+  const px = 12, bob = beat < 0.2 ? px : 0, footY = B.glassY1 - 4;
   const bit = st => drawBit(ctx, { x: (B.gx0 + B.gx1) / 2, y: footY + bob * 0, px, state: { ...st, seed: 3 } });
   ctx.save(); ctx.beginPath(); ctx.rect(B.gx0, B.glassY0, B.gx1 - B.gx0, gh); ctx.clip();
   if (p < 1) {
@@ -73,8 +73,8 @@ window.render = (t) => {
   glassSheen(ctx);
   // sparkles on healed parts once revealed
   if (m.dir > 0) {
-    const sx = (B.gx0 + B.gx1) / 2, by = footY - 26 * px;
-    for (const [dx, dy] of [[-9.5, 14], [10.5, 16], [-4, 6]]) {
+    const sx = (B.gx0 + B.gx1) / 2, by = footY - 62 * px;
+    for (const [dx, dy] of [[-9, 25], [9, 47], [-8, 52], [7, 3]]) {
       const y = by + dy * px; if (y < ys) sparkle(ctx, sx + dx * px, y, 6);
     }
   }
