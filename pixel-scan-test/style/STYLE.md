@@ -59,7 +59,7 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 ## 5. Motion quality
 
 - 30 fps. Pixel layers step on twos (15 fps) and snap to the grid; the camera, glows and scanline move smoothly every frame.
-- **Figure idle**: a one-pixel breath on every beat, irregular blinks. The face carries the acting: `flat`, `tired`, `wide`, `happy`, `shut`.
+- **Figure idle**: the cyan rim brightens for a moment on every beat (it breathes with the music; still during a drop-out bar). The face carries the acting: `flat`, `tired`, `wide`, `happy`, `shut`.
 - Organ changes happen behind the scanline, never as fades.
 - Particles (toxins, plaque, sugar) are single pixels or 2×2 blocks drifting on a seeded path; they clear in bursts on beats.
 - Readouts count and fill in steps on beats (one step per beat or half-beat).
@@ -113,7 +113,7 @@ The scan sweep is in every film; the others are a menu.
 
 ## 10. Engine
 
-In `demo/`: `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `main.js` (page contract, timeline of milestones in bars, scan sweep, monitor-mode charts, title bar, readouts, camera). Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
+In [`demo/`](demo/) (how it was made: [DEMO.md](DEMO.md)): `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `main.js` (page contract, timeline of milestones in bars, scan sweep, monitor-mode charts, title bar, readouts, camera). Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
 
 ## 11. Variation space
 

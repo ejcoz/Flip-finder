@@ -53,7 +53,7 @@ const FACES = {
 // state: health 0..1 per organ { brain, lung, heart, liver, stomach, muscle }, face, toxins, seed
 // x,y = midpoint under the feet; px = cell size
 export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
-  const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1 } = state;
+  const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1, sore = false } = state;
   const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px);
   const cell = (c, r, col) => { ctx.fillStyle = col; ctx.fillRect(ox + c * px, oy + r * px, px, px); };
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
@@ -85,7 +85,7 @@ export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
   // leg muscles: a two-cell strip down each thigh and calf
   for (let r = 41; r <= 56; r++) for (const side of [-1, 1]) {
     const cx = W / 2 + side * legX(r + .5);
-    for (const c of [Math.floor(cx - 1), Math.floor(cx)]) if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, mix(muscle, c, r, C.muscle, C.greyD, 41, 16));
+    for (const c of [Math.floor(cx - 1), Math.floor(cx)]) if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, sore ? C.amber : mix(muscle, c, r, C.muscle, C.greyD, 41, 16));
   }
   const f = FACES[face] || FACES.flat;
   for (const [c, r] of [...f.e, ...f.m]) cell(c, r, C.eye);
