@@ -1,5 +1,5 @@
 // The lab and the scanner booth, pre-rendered once. Room = dithered; booth = smooth hi-res vector.
-import { ditherField } from './pix.js';
+import { ditherField, bayer, CELL } from './pix.js';
 
 export const FW = 1080, FH = 1920;
 // Booth sits inside the Reels/Shorts safe area; only the base and feet reach the bottom UI band (nothing there needs reading)
@@ -12,7 +12,7 @@ function band(v) { // v 0..3 → [colA, colB, k] across the room ramp
   return [ROOM[i], ROOM[i + 1], v - i];
 }
 
-export function buildLab() {
+export function buildLab(o = {}) {
   const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH;
   const g = cv.getContext('2d');
   const B = BOOTH, cx = (B.x0 + B.x1) / 2, cy = (B.glassY0 + B.glassY1) / 2;
@@ -34,10 +34,21 @@ export function buildLab() {
   for (let k = -8; k <= 8; k++) { g.beginPath(); g.moveTo(cx + k * 60, B.floorY); g.lineTo(cx + k * 260, FH); g.stroke(); }
   g.fillStyle = 'rgba(57,224,240,.25)'; g.fillRect(0, B.floorY - 2, FW, 3);
 
+  if (o.spot) {   // a dithered spotlight cone from the ceiling onto the booth, and a dark vignette at the frame edges
+    for (let y = 0; y < FH; y += CELL) for (let x = 0; x < FW; x += CELL) {
+      const hw = 150 + (y / B.floorY) * 330, dx = Math.abs(x + CELL / 2 - cx);
+      let k = y < B.floorY + 60 && dx < hw ? 0.5 * Math.pow(1 - dx / hw, 1.4) * (0.55 + 0.45 * y / B.floorY) : 0;
+      const pool = Math.max(0, 1 - Math.hypot((x - cx) / 430, (y - B.floorY - 30) / 70)); k = Math.max(k, pool * 0.6);
+      if (k > bayer(x / CELL, y / CELL)) { g.fillStyle = '#1D6E78'; g.fillRect(x, y, CELL, CELL); continue; }
+      const d = Math.hypot((x - cx) / (FW * 0.62), (y - 1000) / (FH * 0.6)), v = Math.min(1, Math.max(0, (d - 0.55) / 0.45));
+      if (v * 0.9 > bayer(x / CELL + 2, y / CELL + 1)) { g.fillStyle = '#01080A'; g.fillRect(x, y, CELL, CELL); }
+    }
+  }
   // ---- booth (smooth) ----
   const metal = (x0, y0, x1, y1, horiz) => {
     const gr = horiz ? g.createLinearGradient(x0, 0, x1, 0) : g.createLinearGradient(0, y0, 0, y1);
-    gr.addColorStop(0, '#D5E7EA'); gr.addColorStop(.45, '#9DB9BE'); gr.addColorStop(1, '#5D7C82'); return gr;
+    const M = o.dark ? ['#8FA4A8', '#4C6166', '#25363A'] : ['#D5E7EA', '#9DB9BE', '#5D7C82'];
+    gr.addColorStop(0, M[0]); gr.addColorStop(.45, M[1]); gr.addColorStop(1, M[2]); return gr;
   };
   const rr = (x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
   // floor shadow

@@ -40,6 +40,7 @@ export function inBody(c, r) {
 const BRAIN = ['...bbbb...', '.bbdbbdbb.', 'bbbbdbbbdb', 'bdbbbbbdbb', '.bbbdbbbb.'];
 const LUNG = ['..ooo', '.hooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'ooooo', 'oooo.', '.ooo.'];
 const HEART = ['.rr.rr.', 'rhrrrrr', 'rrrrrrd', '.rrrrd.', '..rrd..', '...d...'];
+const HEART_BIG = ['.rrr.rrr.', 'rhhrrrrrr', 'rhrrrrrrd', 'rrrrrrrrd', '.rrrrrrd.', '..rrrrd..', '...rrd...', '....d....'];
 const LIVER = ['llllll', 'llllll', '.llll.', '..ll..'];
 const STOMACH = ['.ss.', 'ssss', 'ssss', '.sss', '..ss'];
 const FACES = {
@@ -53,7 +54,7 @@ const FACES = {
 // state: health 0..1 per organ { brain, lung, heart, liver, stomach, muscle }, face, toxins, seed
 // x,y = midpoint under the feet; px = cell size
 export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
-  const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1, sore = false } = state;
+  const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1, sore = false, glow = false, bigHeart = false } = state;
   const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px);
   const cell = (c, r, col) => { ctx.fillStyle = col; ctx.fillRect(ox + c * px, oy + r * px, px, px); };
   for (let r = 0; r < H; r++) for (let c = 0; c < W; c++) {
@@ -66,7 +67,9 @@ export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
   const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < toxins; i++) {
     const c = 8 + Math.floor(rnd() * 14), r = 17 + Math.floor(rnd() * 20);
-    if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, C.amber);
+    if (!(inBody(c - 1, r) && inBody(c + 1, r))) continue;
+    if (glow) { ctx.fillStyle = 'rgba(255,181,71,.28)'; ctx.fillRect(ox + (c - 1) * px, oy + (r - 1) * px, 3 * px, 3 * px); }
+    cell(c, r, glow ? '#FFD27A' : C.amber);
   }
   // healing fills each organ from the bottom up
   const mix = (k, c, r, good, bad, top, h) => (k > (1 - (r - top + .5) / h) * .92 + bayer(c, r) * .08 ? good : bad);
@@ -79,7 +82,8 @@ export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
   for (let r = 15; r <= 19; r++) for (const c of [14, 15]) cell(c, r, mix(lung, c, r, '#E8A39A', C.grey, 14, 6));
   organ(LUNG, 9, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
   organ(LUNG.map(row => [...row].reverse().join('')), 16, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
-  organ(HEART, 12, 22, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
+  if (bigHeart) organ(HEART_BIG, 11, 21, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
+  else organ(HEART, 12, 22, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
   organ(LIVER, 9, 31, liver, { l: [C.liver, C.greyD] });
   organ(STOMACH, 16, 31, stomach, { s: [C.stomach, C.grey] });
   // leg muscles: a two-cell strip down each thigh and calf

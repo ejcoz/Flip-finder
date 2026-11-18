@@ -36,7 +36,11 @@ export function film({ MS, READ }) {
   const cv = document.getElementById('c'), out = cv.getContext('2d');
   const F = document.createElement('canvas'); F.width = FW; F.height = FH;
   const ctx = F.getContext('2d');
-  const LAB = buildLab();
+  // look variant: A = original; B = red hook word, gunmetal booth, spotlight + vignette, loud habit on frame 0; C = B + big bright heart
+  // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
+  const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
+  const LOUD = V !== 'A', BIG = 'CDE'.includes(V), DIM = 'DE'.includes(V), VAPE_AT_MOUTH = V === 'D';
+  const LAB = buildLab({ dark: LOUD, spot: LOUD });
   const B = BOOTH, GH = B.glassY1 - B.glassY0, PX = 15, FOOT = B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
   const at = (cx, cy) => [CX + cx * PX, TOP + cy * PX];
   const TY = SAFE.y0;
@@ -55,7 +59,7 @@ export function film({ MS, READ }) {
   function hook(m, n) {         // lines 1–2 from the first frame; line 3 lands on beat 2
     const [[a, ca], [b, cb], [c3, cc]] = m.hook;
     let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
-    y = bar(b, y, cb, '#F2FBFC', '#0B8EA0', '#39E0F0') + 14;
+    y = (LOUD ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#F2FBFC', '#0B8EA0', '#39E0F0')) + 14;
     if (n >= 3) bar(c3, y, cc, '#03262C', '#39E0F0', null);
   }
   function titleBar(m, k = 1) {   // title only when there is a caption; the subline shows only without one
@@ -149,7 +153,7 @@ export function film({ MS, READ }) {
     const step = Math.floor(lt * 15) / 15;
     for (const p of list || []) {
       if (p === 'vapeX' || p === 'vape') {   // a pixel vape beside Bit's hand; 'vapeX' crosses it out on beat 2
-        const [x, y] = at(11, 30), c = 10;
+        const [x, y] = VAPE_AT_MOUTH ? at(1.5, 9.5) : at(11, 30), c = VAPE_AT_MOUTH ? 12 : 10;
         const V = ['.kk.', '.kk.', 'wwww', 'wccw', 'wccw', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wllw', 'wwww'];
         const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber };
         V.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x + cc * c, y + r * c, c, c); } }));
@@ -157,6 +161,13 @@ export function film({ MS, READ }) {
           ctx.fillStyle = '#FF5A5F';
           for (let i = 0; i < 13; i++) { ctx.fillRect(x - 40 + i * 9.2, y - 10 + i * 11, 14, 14); ctx.fillRect(x + 70 - i * 9.2, y - 10 + i * 11, 14, 14); }
         }
+      } else if (p === 'vapor') {   // pixel vapor puffs drifting up from the mouth
+        const puffs = [[2.5, 11, 2], [4.5, 9.5, 3], [7, 7.5, 4], [9.5, 5, 5]];
+        puffs.forEach(([cx, cy, rad], k) => {
+          const dr = ((lt * 0.6 + k * 0.25) % 1), [x, y] = at(cx + dr * 1.5, cy - dr * 2), c = 8, R = rad * (0.8 + 0.4 * dr);
+          ctx.fillStyle = `rgba(222,242,245,${0.85 - 0.5 * dr})`;
+          for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) if (i * i + j * j <= R * R) ctx.fillRect(Math.round(x / c) * c + i * c, Math.round(y / c) * c + j * c, c, c);
+        });
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
@@ -204,8 +215,9 @@ export function film({ MS, READ }) {
     const rew = m.final && t >= REWIND ? Math.min(1, (t - REWIND) / (BAR / 2)) : 0;   // upward rewind sweep
     ctx.drawImage(LAB, 0, 0);
     const dropNow = m.drop && lt >= 2 * BAR;
-    const rim = (t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0';
-    const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, state: { ...st, seed: 5, sore: st.sore && Math.floor(t / BEAT) % 2 === 0 }, rim });
+    const rim = DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
+    const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
+      ...(LOUD ? { toxins: Math.round((st.toxins || 0) * 1.7), glow: true } : {}), ...(BIG ? { bigHeart: true, heart: Math.max(st.heart ?? 1, .85) } : {}) } });
     const scene = (mm, rv) => {
       if (!mm.chart) return bit0(mm.s);
       ctx.save(); ctx.globalAlpha = .3; bit0(mm.s); ctx.restore(); chart(mm.chart, rv);
