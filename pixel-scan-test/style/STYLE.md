@@ -16,7 +16,7 @@ A 30–60 s vertical film about what changes in the body over time after one hab
 ## 1. Essence, and what it is not
 
 - **Two resolutions.** The world is smooth and hi-res: the scanner booth, its glass, its glow, the lab. The figure, its organs, its props and all type are **big square pixels** on one grid. The clash is the look.
-- **One set, one body.** The camera never leaves the lab. **Bit is a human figure** (head, neck, shoulders, arms, torso, legs, feet), standing front-on in the scanner like a full-body scan. The glass shows Bit in x-ray: a dark silhouette with a cyan rim and its organs inside. It is the viewer's own body: generic, no gender, age or skin markers.
+- **One set, one body.** The camera never leaves the lab; graphs and diagrams appear *on the scanner glass*, never as a cut to a separate screen. **Bit is a human figure** (head, neck, shoulders, arms, torso, legs, feet), standing front-on in the scanner like a full-body scan. The glass shows Bit in x-ray: a dark silhouette with a cyan rim and its organs inside. It is the viewer's own body: generic, no gender, age or skin markers.
 - **A milestone = a time label + one visible change.** Each beat titles a moment in time and changes one thing inside the body (an organ's colour, a particle cloud clearing, a meter filling, the mascot's face).
 - **The scan sweep is the cut.** A new milestone never just appears: a cyan scanline sweeps down the glass on the downbeat, and the new state is behind it.
 - **The picture and the score are one timeline.** 120 BPM, one bar = 2 s; every milestone lasts a whole number of bars and starts on a bar line.
@@ -66,7 +66,7 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 
 ## 6. Camera grammar
 
-One continuous camera inside the lab. Cuts only as scan sweeps.
+One continuous camera inside the lab. Cuts only as scan sweeps. A chart or diagram is never a cut away: the glass switches into monitor mode (§8).
 
 | Move | What it expresses | Can serve |
 |---|---|---|
@@ -91,9 +91,11 @@ Framing: the title bar and the mascot never overlap; readout panels sit beside t
 The scan sweep is in every film; the others are a menu.
 
 - **Scan sweep reveal (signature).** On the downbeat, a cyan scanline with a dithered trail runs down the glass in half a bar; above it, the new state; below it, the old one. The title swaps as it passes the head. *Fits content like:* every milestone change.
+- **Monitor mode (charts on the glass).** The scan sweep turns the glass into a monitor: Bit drops to ~30 % behind it, and a pixel chart draws itself in steps on the beat (one step per half-beat): cyan axes and dotted grid, a 12 px stepped line with a white leading pixel, a dithered fill under it. The line is lime when the trend is good, amber when it's bad. The chart's label names what is measured (URGE, ENERGY, SLEEP); the title bar keeps the time ("WEEKS 2-8"), never the same word twice. The next sweep brings the body back. Kinds: a line over time, a bar meter, a before/after pair of bars, a one-number counter. *Fits content like:* cravings peaking then fading; energy building; resting heart rate dropping; sleep hours rising.
 - **HUD readout.** A pixel panel beside the booth (heart rate, O₂, mood bar, a cravings graph) counting or filling on the beat. *Fits content like:* a number that changes; a feeling that rises or falls.
 - **Zoom lens.** A round lens grows from one organ and explains the mechanism with tiny pixel diagrams inside it. *Fits content like:* receptors; insulin; blood vessels.
 - **Particle clear-out.** Pixel particles inside the body burst out of the silhouette in batches on beats. *Fits content like:* nicotine leaving; sugar dropping; inflammation easing.
+- **Status props.** Small pixel props next to Bit's head or body, on its grid: sleep Zs, sweat drops, a pixel X over a crossed-out habit (a cigarette, a soda, a phone), a "!" for a warning, lime sparkles on healed organs. One or two at a time. *Fits content like:* better sleep; withdrawal; quitting the habit; a recovered organ.
 - **Level-up finale.** Full-lab pull-back, a lime "HEALTH RESTORED" style title, pixel confetti, mascot arms up. *Fits content like:* the final milestone; a call to action.
 
 ## 9. Pitfalls of the medium
@@ -104,13 +106,14 @@ The scan sweep is in every film; the others are a menu.
 - Cuts drifting off the beat → milestones are whole bars from one timeline; the score is generated from it.
 - Unverified health claims → every milestone fact goes in `FACTS.md` with a source; prefer ranges ("2–12 weeks").
 - Titles too long for the bar → 2–4 words; move detail to the subline or a readout.
+- A chart that cuts away to a flat infographic screen → charts live on the scanner glass, arriving with a sweep, with Bit faint behind.
 - Realistic anatomy creeping in → organs stay simple pixel icons.
 - The figure drifting back into a blob or mascot → always a full human silhouette with arms and legs; it is the viewer's body.
 - Dither on the booth's metal makes it read as pixel art → only the room is dithered.
 
 ## 10. Engine
 
-In `demo/`: `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `main.js` (page contract, timeline of milestones in bars, scan sweep, title bar, readouts, camera). Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
+In `demo/`: `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `main.js` (page contract, timeline of milestones in bars, scan sweep, monitor-mode charts, title bar, readouts, camera). Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
 
 ## 11. Variation space
 

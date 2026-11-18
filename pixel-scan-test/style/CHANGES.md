@@ -12,4 +12,4 @@ Made from a blank page. Technique base: Mascot Screencast (`living-screencast`).
 | §5 Motion | UI on ones, mascot stepped | pixel layers on twos, camera smooth; idle squash on the beat | Pixel feel with smooth camera |
 | §6 Camera | recording-software camera, whips between panes | one lab, push-ins, punch-in to an organ, pull-back, shake on setback | One set; the body is the subject |
 | §7 Sound | hi-fi band + chiptune mascot voice, voiceover | pure chiptune at 120 BPM, score from the timeline, mood by arrangement, sweeps for direction, no voice | Cuts on bar lines (from game-show) |
-| §8 Native moves | match-cut origin, diegetic title, etc. | scan sweep reveal (signature); HUD readout, zoom lens, particle clear-out, level-up finale as a menu | The new recurring transition |
+| §8 Native moves | match-cut origin, diegetic title, etc. | scan sweep reveal (signature); monitor mode (charts on the scanner glass), HUD readout, zoom lens, status props, particle clear-out, level-up finale as a menu | The new recurring transition |
