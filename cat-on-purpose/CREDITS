@@ -1,0 +1,11 @@
+Your Cat Is Doing It On Purpose — credits
+
+Narration: the film owner's own recording (audio/narration_original.mp3), used as it is
+  (only the 0.17 s of silence at the start trimmed).
+Picture: made in code with three.js r170 (MIT licence, https://threejs.org), rendered headless.
+Music and sound effect: synthesized in mix.py with numpy/scipy (no samples, no third-party audio).
+Font: Quicksand by Andrew Paglinawan, SIL Open Font License 1.1
+  (https://github.com/google/fonts/tree/main/ofl/quicksand; licence text in fonts/OFL.txt).
+Word timings for captions: faster-whisper "small.en" (MIT licence), run locally; captions use the
+  supplied script word for word.
+Tools: Lemo-Opuscar production tools (render, mux) — see the library's LICENSE.
