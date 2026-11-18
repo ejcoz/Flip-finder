@@ -11,10 +11,10 @@ A body starts walking 10,000 steps a day. Day 1 is grey and toxic; Week 1 is a s
 | Bars | Time | Milestone | On screen | Sound |
 |---|---|---|---|---|
 | 0–2 | 0–4 s | hook: YOU WALK 10K / STEPS A DAY. / HERE'S WHAT HAPPENS | one hook line per beat; grey organs, amber toxins, tired face, amber "!"; slow push-in begins | groove, Am–F–C–G; a blip per hook line |
-| 2–4 | 4–8 s | WEEK 1 · SORE LEGS | caption "MUSCLES ADAPT TO THE NEW LOAD", LEGS callout; amber sweep and underline, legs flash amber on beats, sweat drops, 2-beat shake | falling sweep; stripped: drone, held chord, detuned lead, no drums |
+| 2–4 | 4–8 s | WEEK 1 · SORE LEGS | caption "MUSCLES ADAPT TO THE NEW LOAD", callout LEG MUSCLES "MICRO-TEARS / REBUILDING"; amber sweep and underline, legs flash amber on beats, sweat drops, 2-beat shake | falling sweep; stripped: drone, held chord, detuned lead, no drums |
 | 4–6 | 8–12 s | WEEKS 2-8 · ENERGY BUILDS | caption "MORE ENERGY, LESS FATIGUE"; monitor mode: lime line draws in half-beat steps, Bit faint behind | groove + arpeggio voice; a tick per chart step |
-| 6–8 | 12–16 s | MONTH 2 · SLEEP DEEPER | caption "ACTIVE DAYS, DEEPER SLEEP", BRAIN callout; brain fills, Zs drift up, legs heal, lime sparkles | groove |
-| 8–11 | 16–22 s | MONTH 3 · HEART STRONGER | caption "RESTING HEART RATE DROPS", HEART callout that tracks the punch-in; to the chest on bar 2; HR counts 84→68 on beats; bar 3 is held still | coin arpeggio as HR lands; bar 3 = near-silence (faint chord) |
+| 6–8 | 12–16 s | MONTH 2 · SLEEP DEEPER | caption "ACTIVE DAYS, DEEPER SLEEP", callout BRAIN "RECOVERS / OVERNIGHT"; brain fills, Zs drift up, legs heal, lime sparkles | groove |
+| 8–11 | 16–22 s | MONTH 3 · HEART STRONGER | caption "RESTING HEART RATE DROPS", callout HEART "PUMPS MORE / PER BEAT" that tracks the punch-in; to the chest on bar 2; HR counts 84→68 on beats; bar 3 is held still | coin arpeggio as HR lands; bar 3 = near-silence (faint chord) |
 | 11–14 | 22–28 s | LEVEL UP! · KEEP WALKING | caption "SAVE THIS FOR YOUR DAY 1"; pull back to the full lab, lime title types on, pixel confetti | key up to C major, fast arps, double hats, crash; confetti sparkle |
 
 Every cut is a scan sweep on a bar line.

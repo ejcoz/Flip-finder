@@ -8,18 +8,18 @@ import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 const BAR = 2, BEAT = 0.5;
 const HEALTHY = { lung: 1, heart: 1, brain: 1, liver: 1, stomach: 1, muscle: 1, toxins: 0 };
 // mood drives the score: groove | stripped | triumph ; dir: 1 better, -1 setback, 0 neutral
-// label: [text, figure cell x, figure cell y] = the organ the callout points at
+// label: { organ, say: [two short lines: what is happening to it], at: [figure cell x, y] } — the line names the organ, the text names the change
 const MS = [
   { bars: 2, hook: ['YOU WALK 10K', 'STEPS A DAY.', "HERE'S WHAT HAPPENS"], mood: 'groove', dir: 0, hr: 84, props: ['bang'],
     s: { lung: .25, heart: .3, brain: .3, liver: .45, stomach: .5, muscle: .1, face: 'tired', toxins: 16 } },
-  { bars: 2, title: 'WEEK 1', sub: 'SORE LEGS', cap: ['MUSCLES ADAPT TO', 'THE NEW LOAD'], label: ['LEGS', 18.5, 47], mood: 'stripped', dir: -1, hr: 84, props: ['sweat'], shake: true,
+  { bars: 2, title: 'WEEK 1', sub: 'SORE LEGS', cap: ['MUSCLES ADAPT TO', 'THE NEW LOAD'], label: { organ: 'LEG MUSCLES', say: ['MICRO-TEARS', 'REBUILDING'], at: [18.5, 47] }, mood: 'stripped', dir: -1, hr: 84, props: ['sweat'], shake: true,
     s: { lung: .3, heart: .35, brain: .35, liver: .5, stomach: .55, muscle: .1, face: 'wide', toxins: 13, sore: true } },
   { bars: 2, title: 'WEEKS 2-8', sub: 'ENERGY BUILDS', cap: ['MORE ENERGY,', 'LESS FATIGUE'], mood: 'groove', dir: 1, hr: 80,
     chart: { label: 'ENERGY', x: 'WEEKS', pts: [.1, .16, .13, .28, .36, .31, .5, .6, .56, .76, .9] },
     s: { lung: .5, heart: .55, brain: .5, liver: .7, stomach: .75, muscle: .5, face: 'flat', toxins: 7 } },
-  { bars: 2, title: 'MONTH 2', sub: 'SLEEP DEEPER', cap: ['ACTIVE DAYS,', 'DEEPER SLEEP'], label: ['BRAIN', 18, 4], mood: 'groove', dir: 1, hr: 76, props: ['zzz'],
+  { bars: 2, title: 'MONTH 2', sub: 'SLEEP DEEPER', cap: ['ACTIVE DAYS,', 'DEEPER SLEEP'], label: { organ: 'BRAIN', say: ['RECOVERS', 'OVERNIGHT'], at: [18, 4] }, mood: 'groove', dir: 1, hr: 76, props: ['zzz'],
     s: { lung: .7, heart: .7, brain: 1, liver: .85, stomach: .9, muscle: .8, face: 'shut', toxins: 3 } },
-  { bars: 3, title: 'MONTH 3', sub: 'HEART STRONGER', cap: ['RESTING HEART', 'RATE DROPS'], label: ['HEART', 17.5, 24.5], mood: 'groove', drop: true, dir: 1, hr: 68, count: true,
+  { bars: 3, title: 'MONTH 3', sub: 'HEART STRONGER', cap: ['RESTING HEART', 'RATE DROPS'], label: { organ: 'HEART', say: ['PUMPS MORE', 'PER BEAT'], at: [17.5, 24.5] }, mood: 'groove', drop: true, dir: 1, hr: 68, count: true,
     s: { ...HEALTHY, face: 'happy' } },
   { bars: 3, title: 'LEVEL UP!', sub: 'KEEP WALKING', cap: ['SAVE THIS FOR', 'YOUR DAY 1'], mood: 'triumph', dir: 1, hr: 68, final: true,
     s: { ...HEALTHY, face: 'happy' } },
@@ -88,16 +88,17 @@ function readout(hr, m) {
 }
 
 // ---------- world layer ----------
-function callout(lb, dir, cam) {   // text layer: label beside the booth, leader line to the organ wherever the camera puts it
-  const g = out, [text, cx, cy] = lb, [wx, wy] = at(cx - 15, cy), ox = wx * cam[0] + cam[1], oy = wy * cam[0] + cam[2];
-  const lx = 1080 - textW(text, 5) - 42, ly = Math.max(470, Math.min(1560, oy - 60));
+function callout(lb, dir, cam) {   // text layer: what is happening to one organ, with a leader line to it wherever the camera puts it
+  const g = out, [cx, cy] = lb.at, [wx, wy] = at(cx - 15, cy), ox = wx * cam[0] + cam[1], oy = wy * cam[0] + cam[2];
   const col = dir < 0 ? C.amber : dir > 0 ? C.lime : '#39E0F0';
-  g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.moveTo(ox, oy); g.lineTo(lx - 20, ly + 18); g.lineTo(lx - 6, ly + 18); g.stroke();
+  const w = Math.max(textW(lb.organ, 3), ...lb.say.map(l => textW(l, 4))) + 28, h = 14 + 21 + 12 + lb.say.length * 38 - 10 + 14;
+  const x = FW - w - 12, y = Math.round(Math.max(470, Math.min(1560 - h, oy - h / 2)));
+  g.strokeStyle = col; g.lineWidth = 3; g.beginPath(); g.moveTo(ox, oy); g.lineTo(x - 18, y + h / 2); g.lineTo(x, y + h / 2); g.stroke();
   g.fillStyle = col; g.fillRect(ox - 6, oy - 6, 12, 12);
-  const w = textW(text, 5) + 24;
-  g.fillStyle = 'rgba(3,24,28,.94)'; g.fillRect(lx - 6, ly - 4, w, 7 * 5 + 16);
-  g.strokeStyle = col; g.lineWidth = 2; g.strokeRect(lx - 6, ly - 4, w, 7 * 5 + 16);
-  drawText(g, text, lx + 6, ly + 4, 5, col);
+  g.fillStyle = 'rgba(3,24,28,.95)'; g.fillRect(x, y, w, h);
+  g.strokeStyle = col; g.lineWidth = 3; g.strokeRect(x, y, w, h);
+  drawText(g, lb.organ, x + 14, y + 14, 3, 'rgba(57,224,240,.75)');
+  lb.say.forEach((l, k) => drawText(g, l, x + 14, y + 14 + 21 + 12 + k * 38, 4, col));
 }
 
 // monitor mode: the scanner glass turns into a pixel chart; Bit stays faint behind it
@@ -231,6 +232,7 @@ window.TEXTS = (t) => {
     T.push({ id: 'title', text: tm.title, x0: 200, y0: TY, x1: 880, y1: TY + 150 });
     T.push({ id: 'sub', text: tm.sub, x0: 200, y0: TY + 170, x1: 880, y1: TY + 240 });
   }
+  if (m.label && t - m.t0 >= BAR / 2) T.push({ id: 'callout', text: m.label.say.join(' '), x0: 740, y0: 470, x1: 1080, y1: 1560 });
   if (tm.cap) T.push({ id: 'cap', text: tm.cap.join(' '), x0: 40, y0: 1650, x1: 1040, y1: 1860 });
   return T;
 };
