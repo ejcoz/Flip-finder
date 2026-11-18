@@ -217,6 +217,7 @@ function robber(x, y, s, dir, pose, t, seed) {   // masked silhouette, feet at y
   rr(-24, -92, 20, 92, 8); ctx.fill(); rr(4, -92, 20, 92, 8); ctx.fill();
   poly([[-30, -168 + br], [30, -168 + br], [38, -84], [-38, -84]], seed, 1.5); ctx.fill();
   circ(4, -190 + br, 24); ctx.fill(); ell(4, -208 + br, 22, 12); ctx.fill(); circ(4, -222 + br, 7); ctx.fill();
+  rr(4, -198 + br, 26, 7, 3); fill(C.P); ctx.fillStyle = C.K;
   if (pose === 'pry') {
     const o = Math.sin(t * 7 + seed) * 8 + (Math.sin(t * 3.1) > .6 ? -10 : 0);
     ctx.beginPath(); ctx.moveTo(12, -155 + br); ctx.lineTo(62, -122 + o); ink(18, C.K); ctx.beginPath(); ctx.moveTo(-10, -150 + br); ctx.lineTo(56, -112 + o); ink(16, C.K);
@@ -227,6 +228,7 @@ function robber(x, y, s, dir, pose, t, seed) {   // masked silhouette, feet at y
     ctx.beginPath(); ctx.moveTo(14, -158 + br); ctx.lineTo(34, -196 + br); ink(18, C.K);
     rr(26, -238 + br, 22, 46, 5); fill(C.K); ink(2.5, C.M); ctx.beginPath(); ctx.moveTo(42, -238 + br); ctx.lineTo(44, -280 + br); ink(4, C.K); ink(1.5, C.M);
     if (Math.floor(t * 5) % 2 === 0) { circ(37, -228 + br, 4); fill(C.R); }
+    ctx.beginPath(); ctx.moveTo(-6, -150 + br); ctx.lineTo(-30, -112); ink(16, C.K); rr(-40, -118, 16, 26, 4); fill(C.K); ink(2, C.M);
   }
   ctx.restore();
 }
@@ -237,9 +239,10 @@ function sListen() {
   // ── top panel: the listening room ──
   const TP = [440, 838];
   clipTo(() => { ctx.beginPath(); ctx.rect(-50, TP[0], W + 100, TP[1] - TP[0]); }, () => {
-    ht(-50, TP[0], W + 100, TP[1] - TP[0], 20, 15, (x, y) => radial(620, 700, 40, 640, 1, .2)(x, y) * clamp((y - TP[0] + 10) / 60), C.M, .7);
-    mul(() => ht(-50, TP[0], W + 100, TP[1] - TP[0], 20, 45, radial(620, 700, 200, 700, .5, .15), C.T, .62));
-    ctx.fillStyle = C.K; ctx.fillRect(-50, 788, W + 100, 60); ctx.fillStyle = C.M; ctx.fillRect(-50, 788, W + 100, 7);
+    ctx.fillStyle = C.M; ctx.fillRect(-50, TP[0], W + 100, TP[1] - TP[0]);
+    ht(-50, TP[0], W + 100, TP[1] - TP[0], 18, 15, radial(640, 650, 120, 640, .05, .38), C.P, .6);
+    mul(() => ht(-50, TP[0], W + 100, TP[1] - TP[0], 20, 45, (x, y) => clamp(Math.max(Math.abs(x - 540) - 380, 0) / 200) * .5, C.T, .6));
+    ctx.fillStyle = C.K; ctx.fillRect(-50, 800, W + 100, 50); ctx.fillStyle = C.P; ctx.fillRect(-50, 800, W + 100, 7);
     ctx.save(); ctx.translate(0, -30);
     // the tape machine
     rr(470, 560, 420, 260, 18); fill(C.P); ink(7);
@@ -256,7 +259,7 @@ function sListen() {
       const p = ((t * .9 + k / 4) % 1), r = 50 + p * 360, n = Math.floor(r / 12), dr = (1 - p) * 7 + 1.5, SP = [800, 760];
       ctx.beginPath();
       for (let i = 0; i < n; i++) { const a = -Math.PI * .1 + (i / n) * Math.PI * 1.2; const px = SP[0] + Math.cos(a) * r, py = SP[1] - Math.sin(a) * r * .8; if (px > 470 && px < 890 && py > 560 && py < 820) continue; ctx.moveTo(px + dr, py); ctx.arc(px, py, dr, 0, TAU); }
-      fill(C.T);
+      fill(C.K);
     }
     officer(t, 250, 820, .52);
     ctx.restore();
@@ -264,28 +267,31 @@ function sListen() {
   // ── bottom panel: the vault at night, in cutaway ──
   const BP = 966;
   clipTo(() => { ctx.beginPath(); ctx.rect(-50, BP, W + 100, H + 100 - BP); }, () => {
-    ctx.fillStyle = C.K; ctx.fillRect(-50, BP, W + 100, H + 100);
+    ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, H + 100);
     // ceiling slab
     ctx.fillStyle = C.P; ctx.fillRect(-50, BP, W + 100, 34);
     ctx.beginPath(); for (let i = -5; i < 50; i++) { ctx.moveTo(i * 26, BP); ctx.lineTo(i * 26 - 34, BP + 34); } ink(2.5, C.K);
     ctx.beginPath(); ctx.moveTo(-50, BP + 34); ctx.lineTo(W + 50, BP + 34); ink(6);
-    // back wall: dim teal, so the silhouettes read
-    ht(-50, BP + 34, W + 100, 1180 - BP - 34, 14, 15, ramp(BP + 34, 1180, .55, .38), C.T, .64);
-    // a small cluster of deposit boxes, in shadow
+    // back wall: cream, lightly dotted
+    ht(-50, BP + 34, W + 100, 1180 - BP - 34, 16, 15, ramp(BP + 34, 1180, .32, .18), C.T, .6);
+    // strong torch beams: flat mustard light with a dotted fringe, flickering
+    const fl = hash(Math.floor(t * 14)), fj = (fl - .5) * 10;
+    const tx = 640 - 92 * .9, ty = 1180 - 136 * .9;
+    const beam = (x0, y0, pts, d) => {
+      poly([[x0, y0], ...pts]); fill(C.M);
+      mul(() => clipTo(() => poly([[x0, y0], ...pts]), () => ht(-50, BP, W + 100, 1180 - BP, 14, 0, (x, y) => Math.min(1, Math.hypot(x - x0, y - y0) / d) * (.45 + .15 * fl), C.T, .55)));
+    };
+    beam(tx, ty, [[150, 1000 + fj], [60, 1180], [380, 1180]], 600);
+    beam(806, 1086, [[1130, 1000 - fj], [1130, 1180], [960, 1180]], 420);
+    // pool of light on the floor
+    ell(330, 1180, 300, 26); fill(C.M); ell(990, 1180, 150, 20); fill(C.M);
+    // a small cluster of deposit boxes, small
     for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) {
       const x = 60 + i * 56, y = 1018 + j * 42, open = (i === 1 && j === 1) || (i === 3 && j === 0) || (i === 4 && j === 2);
-      rr(x, y, 50, 36, 3); fill(C.K); ink(2.5, C.T);
-      if (open) { poly([[x + 2, y + 2], [x - 12, y + 7], [x - 12, y + 30], [x + 2, y + 34]]); fill(C.K); ink(2.5, C.M); }
-      else { circ(x + 25, y + 18, 3); fill(C.T); }
+      rr(x, y, 50, 36, 3); fill(C.P); ink(3, C.K);
+      if (open) { rr(x + 5, y + 5, 40, 26, 2); fill(C.K); poly([[x + 2, y + 2], [x - 12, y + 7], [x - 12, y + 30], [x + 2, y + 34]]); fill(C.P); ink(3, C.K); }
+      else { circ(x + 25, y + 18, 3.5); fill(C.K); }
     }
-    // torch beam, flickering
-    const fl = .5 + .25 * hash(Math.floor(t * 14)) + .1 * Math.sin(t * 31);
-    const tx = 640 - 92 * .9, ty = 1180 - 136 * .9;
-    const cone = [[tx, ty], [180, 1000], [120, 1180]];
-    ht(40, BP + 34, 620, 1180 - BP - 34, 14, 0, (x, y) => {
-      const d1 = (cone[1][0] - tx) * (y - ty) - (cone[1][1] - ty) * (x - tx), d2 = (cone[2][0] - tx) * (y - ty) - (cone[2][1] - ty) * (x - tx);
-      return d1 < 0 && d2 > 0 && x < tx ? fl * (1 - Math.hypot(x - tx, y - ty) / 520) + .15 : 0;
-    }, C.M, .7);
     // the robbers
     robber(390, 1180, .82, -1, 'pry', t, 11);
     robber(640, 1180, .9, -1, 'torch', t, 23);
@@ -294,13 +300,13 @@ function sListen() {
     if (Math.floor(t * 12) % 3 !== 0) {
       const rnd = mulberry(Math.floor(t * 12)); ctx.beginPath();
       for (let k = 0; k < 3; k++) { let x = WALKIE[0] + 14, y = WALKIE[1] - 30 + k * 18; ctx.moveTo(x, y); for (let q = 0; q < 4; q++) { x += 10; y += (rnd() - .5) * 16; ctx.lineTo(x, y); } }
-      ink(3, C.P);
+      ink(3, C.K);
     }
     // floor slab, earth below, the tunnel they came through
     ctx.fillStyle = C.P; ctx.fillRect(-50, 1180, W + 100, 40); ctx.beginPath(); ctx.rect(-50, 1180, W + 100, 40); ink(6);
     ctx.beginPath(); for (let i = -5; i < 50; i++) { ctx.moveTo(i * 26, 1180); ctx.lineTo(i * 26 - 40, 1220); } ink(2.5, C.K);
-    ht(-50, 1220, W + 100, H - 1120, 22, 15, ramp(1220, 1920, .12, .42), C.M, .64);
-    mul(() => ht(-50, 1220, W + 100, H - 1120, 24, 50, (x, y) => .25 + .2 * Math.sin(x * .013 + y * .02), C.T, .6));
+ht(-50, 1220, W + 100, H - 1120, 22, 15, ramp(1220, 1920, .15, .4), C.K, .6);
+    mul(() => ht(-50, 1220, W + 100, H - 1120, 26, 50, (x, y) => .3 + .2 * Math.sin(x * .013 + y * .02), C.M, .62));
     ctx.fillStyle = C.K; ctx.fillRect(930, 1220, 64, 340);
     ctx.beginPath(); ctx.moveTo(962, 1220); ctx.lineTo(962, 1580); ctx.lineTo(-60, 1580); ink(70, C.K);
     for (const lx of [80, 330, 580, 830]) { const fl2 = .55 + .35 * hash(lx + Math.floor(t * 10)); ht(lx - 120, 1460, 240, 240, 14, 0, radial(lx, 1580, 10, 120, fl2, 0), C.M, .7); circ(lx, 1566, 9); fill(C.M); ink(3); }
