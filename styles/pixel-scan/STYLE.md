@@ -26,10 +26,10 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 ## 2. Materials & rendering
 
 - **Canvas 2D at 1080×1920.** Hi-res layer: anti-aliased vector shapes with soft gradients and real shadows (the booth's metal frame, glass, light strip, platform, side ticks).
-- **Pixel grid is sacred.** Figure, organs, props (sparkles, particles, Zs, hearts) and all type share one square-pixel size per shot (default 16 px for the figure on a 30×62 grid, so the body fills about half the frame height and every organ reads on a phone; 4–14 px for type). Pixel positions snap to the grid; scaling is nearest-neighbour; no anti-aliasing on pixel layers.
+- **Pixel grid is sacred.** Figure, organs, props (sparkles, particles, Zs, hearts) and all type share one square-pixel size per shot (default 15 px for the figure on a 30×62 grid, so the body fills about half the frame height and every organ reads on a phone, while the head stays clear of the title block; 3–14 px for type). Pixel positions snap to the grid; scaling is nearest-neighbour; no anti-aliasing on pixel layers.
 - **Ordered dither (4×4 Bayer)** for every gradient and glow in the room: the back wall, the floor, the halo around the booth, the glow around an organ. Dither cells are 6 px. The booth's own metal is the only smooth gradient.
 - **X-ray body**: Bit's silhouette is filled deep teal at ~90 % with a one-pixel cyan rim; organs inside are opaque pixel icons in fixed places: brain (head), windpipe and lungs, heart (in front of the lungs, the brightest red), liver and stomach (upper belly), and a muscle strip down each leg. Add another organ (kidneys, gut, skin, bones) only as a simple icon in its real place. Health changes fill each organ from the bottom up, grey to colour. A faint cyan grid sits on the glass behind it.
-- **The lab**: dithered teal back wall with faint panel seams, a dithered floor with tile lines, the booth centred and tall (glass about 1040 px, more than half the frame), its base on the floor line at about 87 % of the frame height; the floor below holds the caption box.
+- **The lab**: dithered teal back wall with faint panel seams, a dithered floor with tile lines, the booth centred and tall (glass y 590–1560, about half the frame), its base on the floor line at about 86 % of the frame height. Only the booth's base and Bit's feet reach the bottom platform-UI band, where nothing needs reading.
 - **Pre-render static layers** (wall, floor, booth) once to offscreen canvases; draw only what moves per frame.
 
 ## 3. Colour logic
@@ -51,12 +51,14 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 ## 4. Type & subtitles
 
 - **One pixel font, drawn in code** (5×7 cells, uppercase, digits, `. , - ! ? ' % + / :`). No external font file.
-- **Title bar** at the top (centre ~14 % of height): the milestone label in white on a deep-cyan bar (`#0B8EA0`) with a 1-cell cyan underline, 2–4 words, cell 12–14 px. One title per milestone; it swaps on the scan sweep.
-- **Subline** under it, optional: one short fact (≤ 4 words) in a smaller bar, cell 6–7 px.
+- **Safe area (Reels, Shorts, TikTok).** Everything that must be read (hook, titles, captions, callouts, lens, readout, chart labels) stays inside x 60–920, y 250–1480 of the 1080×1920 frame: clear of the top header, the right-hand like/comment/share buttons and the bottom caption/username band. Centred text keeps its right edge inside x 920, so it is at most 760 px wide; the engine shrinks the cell size to fit. Callouts, the lens and the readout live on the **left** edge, which no app covers.
+- **Title bar** at the top of the safe area (y 250): the milestone label in white on a deep-cyan bar (`#0B8EA0`) with a 1-cell underline in the direction colour, 2–4 words, cell up to 13 px. One title per milestone; it swaps on the scan sweep.
+- **Text budget: title + caption, nothing more.** A beat shows its title and its caption (plus at most one callout or lens label). The subline is used only when a beat has no caption. Scrollers read about one line a second.
+- **Subline**, only without a caption: one short fact (≤ 4 words) in a smaller bar, cell 6 px.
 - **HUD labels** inside readout panels: 4–6 px cells.
-- **Hook** (the first 2 bars, before any milestone title): the film's promise as a stacked title, one line landing per beat: a white line on a dark bar, the key line larger on the deep-cyan bar with its underline, then a small cyan bar ("HERE'S WHAT HAPPENS"). At most ~12 characters per big line; split the sentence rather than shrink it.
-- **Captions**: every milestone after the hook has a one- or two-line caption in a box on the floor at the bottom of the frame (dark box, 4 px border in the beat's direction colour: lime / amber / cyan), white pixel text, cell 7, at most ~16 characters per line. It explains *why* the change happens in plain words; the title says *when*, the caption says *what and why*. It pops in with the title, never typed on.
-- **Callout labels**: when one organ is the subject, a box at the right edge with a leader line to that organ says **what is happening to it**, never just its name (the line already names it): the organ's name tiny on top (cell 3, dim cyan), then two short lines of change (cell 4, ≤ 11 characters each) in the direction colour, e.g. HEART · "PUMPS MORE / PER BEAT", LEG MUSCLES · "MICRO-TEARS / REBUILDING". The callout gives the organ-level *how*; the caption gives the outcome; they never repeat each other. One callout at a time, never covering the body.
+- **Hook** (the first 2 bars, before any milestone title): the film's promise as a stacked title. **Lines 1–2 are on screen from the very first frame** (the scroll decision happens in under a second): a white line on a dark bar, then the key line larger on the deep-cyan bar with its underline. Line 3, a small cyan bar ("HERE'S WHAT HAPPENS"), lands on beat 2; the habit's prop gets crossed out on beat 3. At most ~12 characters per big line; split the sentence rather than shrink it.
+- **Captions**: every milestone after the hook has a one- or two-line caption in a box **directly under the title** (dark box, 4 px border in the beat's direction colour: lime / amber / cyan), white pixel text, cell 6, at most ~18 characters per line. Never on the floor: the bottom of the frame belongs to the platform's UI. It explains *why* the change happens in plain words; the title says *when*, the caption says *what and why*. It pops in with the title, never typed on.
+- **Callout labels**: when one organ is the subject, a box at the left edge with a leader line to that organ says **what is happening to it**, never just its name (the line already names it): the organ's name tiny on top (cell 3, dim cyan), then two short lines of change (cell 4, ≤ 11 characters each) in the direction colour, e.g. HEART · "PUMPS MORE / PER BEAT", LEG MUSCLES · "MICRO-TEARS / REBUILDING". The callout gives the organ-level *how*; the caption gives the outcome; they never repeat each other. One callout at a time, never covering the body.
 - **Two layers**: the hook, titles, captions, callouts and readouts sit on a text layer the camera never moves; only the world (lab, booth, body) zooms and shakes. Callout lines follow the organ's on-screen position.
 - Every hook line, title and caption passes readcheck.
 
@@ -80,7 +82,7 @@ One continuous camera inside the lab. Cuts only as scan sweeps. A chart or diagr
 | Hold, no move | let a number land | a readout; a striking fact |
 | Small shake (2–4 px, 2 beats) | a setback hits | withdrawal; a craving spike |
 
-Framing: the title bar and the mascot never overlap; readout panels sit beside the booth, never on the glass.
+Framing: the title block and the figure never overlap; the readout panel sits bottom-left beside the booth (y ≤ 1480), never on the glass. The camera moves the world only; text never leaves the safe area.
 
 ## 7. Sound palette
 
@@ -89,6 +91,7 @@ Framing: the title bar and the mascot never overlap; readout panels sit beside t
 - **Text has sound**: a short rising blip as each hook line lands; a soft two-note chirp when a caption pops in.
 - **Sweeps carry direction**: a falling pitch sweep into a setback, a rising sweep into progress; a short blip on every scan sweep; a coin-like arpeggio when a readout hits its target.
 - **Silence**: one bar of drop-out before the final milestone.
+- **The loop**: the last bar turns back (a groove bar on the chord that leads into bar 1), with no ring-out and no fade, so the track loops cleanly with the picture.
 - No voice by default; if a voice is added, duck the music and keep blips off word onsets. Master at −14 LUFS.
 
 ## 8. Native moves
@@ -98,10 +101,11 @@ The scan sweep is in every film; the others are a menu.
 - **Scan sweep reveal (signature).** On the downbeat, a cyan scanline with a dithered trail runs down the glass in half a bar; above it, the new state; below it, the old one. The title swaps as it passes the head. *Fits content like:* every milestone change.
 - **Monitor mode (charts on the glass).** The scan sweep turns the glass into a monitor: Bit drops to ~30 % behind it, and a pixel chart draws itself in steps on the beat (one step per half-beat): cyan axes and dotted grid, a 12 px stepped line with a white leading pixel, a dithered fill under it. The line is lime when the trend is good, amber when it's bad. The chart's label names what is measured (URGE, ENERGY, SLEEP); the title bar keeps the time ("WEEKS 2-8"), never the same word twice. The next sweep brings the body back. Kinds: a line over time, a bar meter, a before/after pair of bars, a one-number counter. *Fits content like:* cravings peaking then fading; energy building; resting heart rate dropping; sleep hours rising.
 - **HUD readout.** A pixel panel beside the booth (heart rate, O₂, mood bar, a cravings graph) counting or filling on the beat. *Fits content like:* a number that changes; a feeling that rises or falls.
-- **Zoom lens.** A round lens grows from one organ and explains the mechanism with tiny pixel diagrams inside it. *Fits content like:* receptors; insulin; blood vessels.
+- **Zoom lens.** A round lens (r ≈ 168, at the left edge) grows from one organ on the text layer and explains the mechanism with pixel icons inside it; the count or state of the icons is the story ("TOO MANY" → "NORMAL"), so it works best used twice as a before/after rhyme. *Fits content like:* receptors; insulin; blood vessels.
 - **Particle clear-out.** Pixel particles inside the body burst out of the silhouette in batches on beats. *Fits content like:* nicotine leaving; sugar dropping; inflammation easing.
 - **Status props.** Small pixel props next to Bit's head or body, on its grid: sleep Zs, sweat drops, a pixel X over a crossed-out habit (a cigarette, a soda, a phone), a "!" for a warning, lime sparkles on healed organs. One or two at a time. *Fits content like:* better sleep; withdrawal; quitting the habit; a recovered organ.
-- **Level-up finale.** Full-lab pull-back, a lime "HEALTH RESTORED" style title, pixel confetti, mascot arms up. *Fits content like:* the final milestone; a call to action.
+- **Level-up finale.** Full-lab pull-back, a lime title, pixel confetti and a share/save call to action in the caption. *Fits content like:* the final milestone.
+- **Loop rewind (every film's last bar).** The scanline runs back *up* the glass, restoring the opening body, readout, prop and hook lines 1–2, so the last frame matches frame 1 and the film replays seamlessly (rewatches count on every platform).
 
 ## 9. Pitfalls of the medium
 
@@ -117,10 +121,14 @@ The scan sweep is in every film; the others are a menu.
 - Realistic anatomy creeping in → organs stay simple pixel icons.
 - The figure drifting back into a blob or mascot → always a full human silhouette with arms and legs; it is the viewer's body.
 - Dither on the booth's metal makes it read as pixel art → only the room is dithered.
+- Text under the platform UI (top header, right-hand buttons, bottom caption band) → keep to the safe area (§4); check with a UI-zone overlay before delivery.
+- A first frame without the promise → hook lines 1–2 are on frame 1.
+- Too much to read per beat → title + caption only; drop the subline.
+- An ending that fades out → loop rewind, so the film replays cleanly.
 
 ## 10. Engine
 
-In [`demo/`](demo/) (how it was made: [DEMO.md](DEMO.md)): `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `main.js` (page contract, timeline of milestones in bars, scan sweep, monitor-mode charts, title bar, readouts, camera). Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
+In [`demo/`](demo/) (how it was made: [DEMO.md](DEMO.md)): `font.js` (5×7 pixel font: `drawText`), `pix.js` (Bayer dither fills, pixel-grid drawing), `bit.js` (the human figure "Bit": 30×62 body grid, faces, organ icons and their health states), `lab.js` (the room and the scanner booth, pre-rendered), `engine.js` (the shared Pixel Scan engine: page contract, timeline in bars, scan sweep and loop rewind, monitor-mode charts, hook, title, caption, callout, lens, readout, props, camera, safe area, `EV` and `TEXTS`), `main.js` (the film as data: beats, readout, callouts). A new film copies `demo/` and rewrites only `main.js` and `music.py`'s cues. Techniques from `$LIB/styles/living-screencast/demo/` (pixel sprite grid) and `$LIB/styles/game-show/demo/` (score generated from the picture's timeline).
 
 ## 11. Variation space
 
@@ -128,4 +136,4 @@ You decide the habit, the milestones and their order, which organ or meter chang
 
 - Structures: **stop a habit** (quit vaping, sugar, alcohol: harm reverses over time); **start a habit** (walking, sleep, water: gains build); **a single day** (hour by hour: caffeine, a fast); **a versus** (two scanners side by side, with and without the habit).
 - Openings: **the before scan** (the body at its worst, amber warnings); **the decision** (the habit's prop shown and crossed out with a pixel X); **an empty booth** (Bit steps in, the scanner powers up).
-- Endings: **level-up finale**; **Bit steps out** of the booth healthy, the scanner powers down; **the loop** (the last scan matches the first frame, for a seamless replay).
+- Endings: **level-up finale** or **Bit steps out** of the booth healthy, always closed by the loop rewind.

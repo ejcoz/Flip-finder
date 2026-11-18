@@ -23,6 +23,10 @@ Every cut is a scan sweep on a bar line.
 
 Room `#041417` `#0A2A30` `#0F3A41` `#14505A` (dithered) · cyan `#39E0F0` / `#0B8EA0` · organs coral/pink · heart `#FF5A5F` · lime `#A6F04A` only for improvement · amber `#FFB547` only for the setback and toxins.
 
+## Platform layout (since the safe-area revision)
+
+The demo now uses the shared `engine.js`: hook lines 1–2 on frame 1, title + caption only, callouts/lens/readout on the left edge, everything read inside x 60–920, y 250–1480, and a loop rewind in the last bar (the final bar of LEVEL UP!). The beat table above still describes the content; sublines are no longer shown because every beat has a caption.
+
 ## Build notes
 
 - `main.js` holds the one timeline (`MS`, in bars). It also exports `window.EV`: section starts with mood, sweeps, the falling sweep, chart ticks, the coin and confetti. `music.py` reads those events (via `events.json`) and writes the score, so picture and music can't drift.

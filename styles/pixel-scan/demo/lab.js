@@ -2,7 +2,8 @@
 import { ditherField } from './pix.js';
 
 export const FW = 1080, FH = 1920;
-export const BOOTH = { x0: 200, x1: 880, capY: 470, glassY0: 550, glassY1: 1590, floorY: 1680, gx0: 250, gx1: 830 };
+// Booth sits inside the Reels/Shorts safe area; only the base and feet reach the bottom UI band (nothing there needs reading)
+export const BOOTH = { x0: 200, x1: 880, capY: 510, glassY0: 590, glassY1: 1560, floorY: 1650, gx0: 250, gx1: 830 };
 const ROOM = ['#041417', '#0A2A30', '#0F3A41', '#14505A'];
 
 function band(v) { // v 0..3 → [colA, colB, k] across the room ramp

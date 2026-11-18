@@ -1,4 +1,4 @@
-"""Pixel Scan demo score: pure chiptune at 120 BPM, generated from the picture's own timeline (events.json).
+"""Pixel Scan score: pure chiptune at 120 BPM, generated from the picture's own timeline (events.json).
 Pulse lead + pulse arpeggio, triangle bass, noise drums; sweeps, ticks and a coin cue sit on the picture's events.
 Usage: python music.py <events.json> <out.wav>"""
 import json, sys
@@ -79,12 +79,14 @@ for si, s in enumerate(secs):
     for b in range(bars):
         tb = t0 + b * BAR
         gbar = int(round(tb / BAR))
-        root, q = (MAJOR if mood == 'triumph' else MINOR)[gbar % 4]
+        turn = s.get('final') and b == bars - 1     # loop turnaround: the last bar is a groove bar on G, leading back into bar 1 (Am)
+        md = 'groove' if turn else mood
+        root, q = MINOR[3] if turn else (MAJOR if md == 'triumph' else MINOR)[gbar % 4]
         last_drop = s['drop'] and b == bars - 1
         if last_drop:   # one bar of near-silence before the finale: a faint held chord only
             for k in range(3): note(tb, tones(root + 12, q, k), BAR, 0.035, duty=0.5, a=0.3, d=0.1, s=1, r=0.5)
             continue
-        if mood == 'stripped':  # setback: drone bass, held chord, slow detuned lead, no drums
+        if md == 'stripped':  # setback: drone bass, held chord, slow detuned lead, no drums
             add(tri(mtof(root - 12), BAR) * env(int(BAR * SR), a=0.02, d=0.1, s=0.9, r=0.1), tb, 0.13)
             for k in range(3): note(tb, tones(root + 12, q, k), BAR, 0.05, duty=0.5, a=0.05, s=0.9, r=0.2)
             for j, k in enumerate([2, 1]): note(tb + j * 2 * BEAT, tones(root + 12, q, k) - 1 + j, 2 * BEAT * 0.9, 0.11, duty=0.125, vib=0.012, s=0.8)
@@ -95,19 +97,19 @@ for si, s in enumerate(secs):
             bn = root - 12 + (12 if e8 % 2 else 0)
             add(tri(mtof(bn), BEAT / 2 * 0.9) * env(int(BEAT / 2 * 0.9 * SR), s=0.8), te, 0.21)
             hat(te, 0.5 if e8 % 2 == 0 else 0.3, seed=e8 + gbar * 8)
-            if mood == 'triumph': hat(te + BEAT / 4, 0.2, seed=99 + e8)
+            if md == 'triumph': hat(te + BEAT / 4, 0.2, seed=99 + e8)
         for bt in range(4):
-            if bt in (0, 2) or (mood == 'triumph' and bt == 3): kick(tb + bt * BEAT)
+            if bt in (0, 2) or (md == 'triumph' and bt == 3): kick(tb + bt * BEAT)
             if bt in (1, 3): snare(tb + bt * BEAT, seed=gbar * 4 + bt)
         mot = MOTIF[gbar % 2]
-        up = 12 if mood == 'triumph' else 0
+        up = 12 if md == 'triumph' else 0
         for e8, k in enumerate(mot):
             if k is None: continue
             note(tb + e8 * BEAT / 2, tones(root + 12 + up, q, k), BEAT / 2 * 0.85, 0.13, duty=0.25, pan=0.0)
-        if si >= 2 or mood == 'triumph':   # arpeggio voice once things improve
+        if si >= 2 or md == 'triumph':   # arpeggio voice once things improve
             for e16 in range(16):
-                note(tb + e16 * BEAT / 4, tones(root + 24, q, [0, 1, 2, 3][e16 % 4]), BEAT / 4 * 0.7, 0.045 if mood != 'triumph' else 0.06, duty=0.125, pan=-0.3, d=0.03, s=0.4)
-        if b == 0 and mood == 'triumph': hat(tb, 0.9, seed=7, long=True)   # crash
+                note(tb + e16 * BEAT / 4, tones(root + 24, q, [0, 1, 2, 3][e16 % 4]), BEAT / 4 * 0.7, 0.045 if md != 'triumph' else 0.06, duty=0.125, pan=-0.3, d=0.03, s=0.4)
+        if b == 0 and md == 'triumph': hat(tb, 0.9, seed=7, long=True)   # crash
 
 # effects on the picture's events
 for e in ev['ev']:
@@ -119,16 +121,18 @@ for e in ev['ev']:
         note(t, 76 + 3 * e['k'], 0.07, 0.07, duty=0.25, d=0.04, s=0.5, r=0.02); note(t + 0.07, 81 + 3 * e['k'], 0.09, 0.06, duty=0.25, d=0.05, s=0.4)
     elif e['type'] == 'cap':    # caption pops in: soft two-note chirp
         note(t, 88, 0.035, 0.035, duty=0.125, d=0.02, s=0.4, r=0.01); note(t + 0.04, 93, 0.05, 0.03, duty=0.125, d=0.03, s=0.3)
+    elif e['type'] == 'lens':   # the lens opens: a quick upward glide and a soft pop
+        sweep(t, 300, 1200, 0.22, 0.06, duty=0.125); note(t + 0.22, 91, 0.06, 0.05, duty=0.5, d=0.03, s=0.4)
     elif e['type'] == 'coin':
         note(t, 83, 0.08, 0.11, duty=0.5, s=0.9); note(t + 0.08, 88, 0.35, 0.11, duty=0.5, d=0.2, s=0.5)
+    elif e['type'] == 'rewind':   # the scan runs back up: a falling-then-rising glide into the loop
+        sweep(t, 1600, 600, 0.5, 0.06, duty=0.25); sweep(t + BAR - 0.35, 400, 1300, 0.33, 0.05, duty=0.125)
     elif e['type'] == 'confetti':
         for j in range(12): note(t + 0.4 + j * 0.06, 84 + [0, 4, 7, 12][j % 4] + 12 * (j // 8), 0.08, 0.05, duty=0.125, pan=(-0.4 if j % 2 else 0.4))
 
-# end: final chord ring-out, then fade
-tend = DUR - BAR / 2
-for k in range(4): note(tend, tones(60, [0, 4, 7], k), BAR / 2, 0.06, duty=0.25, d=0.3, s=0.5, r=0.4)
+# end: no ring-out or fade (the film loops); a 15 ms declick only
 out = np.stack([L, R], 1)[:int(DUR * SR)]
-fade = int(0.4 * SR); out[-fade:] *= np.linspace(1, 0, fade)[:, None]
+dc = int(0.015 * SR); out[-dc:] *= np.linspace(1, 0, dc)[:, None]; out[:dc] *= np.linspace(0, 1, dc)[:, None]
 out /= max(1e-9, np.abs(out).max()) / 0.89
 sf.write(sys.argv[2], out, SR)
 print('score', sys.argv[2], f'{DUR:.1f}s')
