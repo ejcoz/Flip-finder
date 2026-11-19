@@ -86,8 +86,8 @@ const BALLBUB = () => [L10.wt[6] - .1, L10.t1 + .9];
 function home(g, t, close) {
   A.livingRoom();
   const tilt = homeTilt(t);
-  const hookBubble = t < L1.t1 + .3 || t > END - .4;
-  A.owner(230, 1650, { talk: hookBubble ? talkAt(t, 0.05, L1.t1) : talkAt(t, L10.wt[6] - .1, L10.wt[6] + .5), reach: ease((t - (L10.wt[6] - .3)) / .4) * (t < END - .5 ? 1 : 0), blink: blinkAt(t, 1.4) });
+  const hookBubble = t > .8 && t < L1.t1 + .3;   // frame 1 carries one message: the question
+  A.owner(230, 1650, { talk: hookBubble ? talkAt(t, .8, L1.t1) : talkAt(t, L10.wt[6] - .1, L10.wt[6] + .5), reach: ease((t - (L10.wt[6] - .3)) / .4) * (t < END - .5 ? 1 : 0), blink: blinkAt(t, 1.4) });
   const wag = t > L10.wt[6] && t < END - .3 ? Math.sin(t * 14) * .35 : Math.sin(t * 5) * .08;
   A.dog(720, 1660, dogOpts(t, tilt, { wag }));
   // '?' on the tilts
@@ -105,7 +105,7 @@ function home(g, t, close) {
     const k = clamp((t - (L10.wt[6] - .2)) / .7), x = 1150 - 260 * (1 - Math.pow(1 - k, 3)), fade = 1 - ease((t - (END - .7)) / .4);
     g.globalAlpha = fade; g.save(); g.translate(x, 1740); g.rotate(-k * 6); g.translate(-x, -1740); A.ball(x, 1740, 44); g.restore(); g.globalAlpha = 1;
   }
-  if (hookBubble) A.bubble("Who's a good dog?", 360, 860, 300, 1040, t > END - .4 ? 1 : ease(t / .2 + 1));
+  if (hookBubble) A.bubble("Who's a good dog?", 360, 860, 300, 1040, ease((t - .8) / .2));
   const [b0, b1] = BALLBUB(); if (t > b0 && t < b1) A.bubble('Where’s your ball?', 380, 860, 300, 1040, ease((t - b0) / .2));
 }
 function pov(g, t, lt) {     // the dog's-eye view: the owner's face, the muzzle hiding the mouth
@@ -128,7 +128,7 @@ function park(g, t) {        // a long-muzzled dog and a flat-faced dog side by 
     g.save(); g.translate(x, 1700); g.scale(.78, .78);
     A.dog(0, 0, { ...dogOpts(t + ph, tilt), breed, wag: Math.sin(t * 5 + ph) * .1 });
     g.restore();
-    A.pill(label, x, 1180, ACC.fact, 24);
+    if (t < CARDS[0].t0) A.pill(label, x, 1180, ACC.fact, 24);   // the card carries the labels once it is up
   }
 }
 function toys(g, t) {        // the toy pile: the owner names a toy, the dog tilts
@@ -143,6 +143,8 @@ function split(g, t) {       // three dogs, each tilting to its own side, every 
   g.fillStyle = '#0B1224'; g.fillRect(0, 0, W, H);
   const P = [[580, 'cream', -1, '#24304F'], [880, 'black', 1, '#2B2448'], [1180, 'hound', -1, '#1F3A3A']];
   const ticks = [3, 5, 8].map(k => L7.wt[k]);
+  const n = ticks.filter(w => t >= w).length;   // one tag for all three panels
+  if (n) A.pill(n === 1 ? 'SAME SIDE' : 'SAME SIDE ×' + n, 540, 535, ACC.fact, 22);
   P.forEach(([y0, breed, side, bg], i) => {
     g.save(); g.beginPath(); g.roundRect(60, y0, 860, 280, 24); g.clip();
     g.fillStyle = bg; g.fillRect(60, y0, 860, 280);
@@ -154,8 +156,6 @@ function split(g, t) {       // three dogs, each tilting to its own side, every 
     g.restore();
     g.strokeStyle = 'rgba(120,150,210,.28)'; g.lineWidth = 2; g.beginPath(); g.roundRect(60, y0, 860, 280, 24); g.stroke();
     g.fillStyle = '#9AA6C2'; g.font = '500 24px JetBrains Mono'; g.textBaseline = 'top'; g.fillText('CAM 0' + (6 + i), 90, y0 + 22);
-    const n = ticks.filter(w => t >= w).length;
-    if (n) A.pill((side < 0 ? '↺' : '↻') + ' ×' + n, 820, y0 + 50, ACC.fact, 22);
   });
 }
 function drawScene(name, g, t, lt) {
@@ -217,7 +217,8 @@ function captionLayer(t) {
   const full = L === L1;   // the opening question is whole from frame 1 and returns for the loop
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
-  A.caption(lead, key, follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
+  const onCard = CARDS.some(c => t >= c.t0 && t < c.t1);   // the card shows it and the voice says it: drop the third line
+  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
 }
 function watermark() {
   A.setCtx(out);

@@ -9,12 +9,12 @@ A new scene for each idea, whip-panned with motion blur; cards cut in on the wor
 
 | Line | Narration | Scene |
 |---|---|---|
-| l01 | Why does your dog tilt its head when you talk? | **Living room**: the owner kneels and says "Who's a good dog?" (speech bubble, mouth moving); the dog tilts on "tilt", a "?" pops. The question is whole from frame 1. |
+| l01 | Why does your dog tilt its head when you talk? | **Living room**: the owner kneels and, 0.8 s in, says "Who's a good dog?" (speech bubble, mouth moving); the dog tilts on "tilt", a "?" pops. The question is whole from frame 1. |
 | l02 | One idea: its muzzle blocks part of your face. | **Dog's-eye view**: the owner's face full-frame, the dog's own blurred muzzle rising into the bottom of the frame; THEORY tag |
 | l03 | In one owner survey, long-muzzled dogs tilted more often than flat-faced ones. | **Day park**: a long-muzzled hound and a flat-faced pug side by side; the hound tilts on "long-muzzled", the pug barely; the survey card (71% vs 52%) cuts in on "tilted" |
 | l04 | But a 2021 study found something stranger. | **Living room**: tilt + "?" |
 | l05–l06 | Dogs that had learned their toys' names tilted their heads very often… Most other dogs rarely did. | **Toy pile** on the rug: "Get the duck!", the dog tilts on "names"; the x-ray card cuts in on "tilted", then the study card (7 word learners vs 33 typical dogs) |
-| l07 | And each dog tended to tilt to the same side. | **Three-dog split screen** (CAM 06–08): cream, black and hound, each tilting its own way on "tilt", "the", "side", with ↺/↻ ×n counters |
+| l07 | And each dog tended to tilt to the same side. | **Three-dog split screen** (CAM 06–08): cream, black and hound, each tilting its own way on "tilt", "the", "side", with one "SAME SIDE ×n" tag |
 | l08–l09 | So that little tilt may mean one thing. Your dog is listening hard. | **Living room close-up**: slow push-in, sound arcs at the perked ear, chime |
 | l10 | Say the name of their favorite ball, and watch. | **Living room**: "Where's your ball?", the owner reaches, the ball rolls in, tail wags, tilt; returns to the opening frame for the loop |
 
