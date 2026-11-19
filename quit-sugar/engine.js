@@ -5,6 +5,7 @@ import { drawText, textW } from './font.js';
 import { bayer } from './pix.js';
 import { drawBit, sparkle, C } from './bit.js';
 import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
+import { drawAway } from './scenes.js';
 
 export const BAR = 2, BEAT = 0.5;
 // Reels / Shorts safe area for text and anything that must be read: clear of the top header, the right-hand buttons
@@ -23,7 +24,8 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   const EV = [];
   MS.forEach((m, i) => {
     EV.push({ t: m.t0, type: 'section', i, bars: m.bars, mood: m.mood, drop: !!m.drop, dir: m.dir, final: !!m.final });
-    if (i > 0) EV.push({ t: m.t0, type: m.dir < 0 && MS[i - 1].dir >= 0 ? 'fall' : 'sweep' });
+    const whole = m.away && !m.away.at;   // a whole-beat away shot: its own zip replaces the sweep sound
+    if (i > 0 && !whole) EV.push({ t: m.t0, type: m.dir < 0 && MS[i - 1].dir >= 0 ? 'fall' : 'sweep' });
     if (m.coin) EV.push({ t: m.t0 + BAR + BEAT, type: 'coin' });
     if (m.final) { EV.push({ t: m.t0, type: 'confetti' }); EV.push({ t: REWIND, type: 'rewind' }); }
     if (m.chart) for (let k = 0; k < 10; k++) EV.push({ t: m.t0 + BAR / 2 + k * 0.25, type: 'tick', k: m.chart.down ? 9 - k : k });
@@ -31,12 +33,14 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'blip', k: 0 });
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
+    if (m.away) { EV.push({ t: m.t0 + (m.away.at || 0), type: 'away' }); if (m.away.at && MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
   });
   window.EV = EV;
 
   const cv = document.getElementById('c'), out = cv.getContext('2d');
   const F = document.createElement('canvas'); F.width = FW; F.height = FH;
   const ctx = F.getContext('2d');
+  const AW = document.createElement('canvas'); AW.width = FW; AW.height = FH; const aw = AW.getContext('2d');
   // look variant: A = original; B = red hook word, gunmetal booth, spotlight + vignette, loud habit on frame 0; C = B + big bright heart
   // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
   const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
@@ -67,19 +71,32 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (!BRAND) return;
     out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' }); out.restore();   // on the booth's base plate
   }
-  function titleBar(m, k = 1) {   // title only when there is a caption; the subline shows only without one
+  function titleBar(m, k = 1, lt = 9) {   // title only when there is a caption; the subline shows only without one
     const c = fit(m.title, 13), w = textW(m.title, c) + 2 * Math.max(28, c * 4), x = Math.round((FW - w) / 2), h = 7 * c + 44;
+    const sl = 1 + .24 * Math.exp(-lt * 20) * Math.cos(lt * 28);   // the slam (reference: the title snaps in on the cut)
+    out.save(); out.translate(FW / 2, TY + h / 2); out.scale(sl, sl); out.translate(-FW / 2, -(TY + h / 2));
     out.fillStyle = m.final ? C.lime : '#39E0F0'; out.fillRect(x, TY, Math.round(w), h);
     out.fillStyle = m.final ? '#03262C' : dirCol(m.dir); out.fillRect(x, TY + h, Math.round(w), c);
     drawText(out, m.title, FW / 2, TY + 22, c, '#03262C', { align: 'center', bold: true, count: Math.ceil(m.title.length * k) });
+    out.restore();
     if (m.sub && !m.cap) bar(m.sub, TY + h + c + 16, 6, '#F2FBFC', '#03262C', null);
     return TY + h + c;
   }
-  function caption(lines, dir, y) {   // directly under the title, inside the safe area
+  function caption(lines, dir, y, lt = 9) {   // directly under the title; types on letter by letter (reference: typewriter subline)
     const c = 6, lh = 7 * c + 16, h = lines.length * lh + 26 - 16 + 16, w = Math.max(...lines.map(l => textW(l, c))) + 64, x = Math.round((FW - w) / 2);
+    const total = lines.reduce((a, l) => a + l.length, 0), n = Math.floor(Math.max(0, lt - .18) * 34);
+    if (lt < .18) return;
     out.fillStyle = '#F2FBFC'; out.beginPath(); out.roundRect(x, y, w, h, 12); out.fill();
     out.strokeStyle = dirCol(dir); out.lineWidth = 7; out.stroke();
-    lines.forEach((l, i) => drawText(out, l, FW / 2, y + 13 + i * lh, c, '#06222A', { align: 'center', bold: true }));
+    let left = n, cur = null;
+    lines.forEach((l, i) => {
+      const shown = l.slice(0, Math.max(0, Math.min(l.length, left))); left -= l.length;
+      const lx = FW / 2 - textW(l, c) / 2;   // keep each line where it will end up (no re-centring while typing)
+      drawText(out, shown, lx, y + 13 + i * lh, c, '#06222A', { bold: true });
+      if (shown.length < l.length && !cur) cur = [lx + textW(shown, c) + (shown ? c : 0), y + 13 + i * lh];
+    });
+    if (!cur && n < total + 20) { const l = lines[lines.length - 1]; cur = [FW / 2 + textW(l, c) / 2 + c, y + 13 + (lines.length - 1) * lh]; }
+    if (cur && Math.floor(lt * 4) % 2 === 0) { out.fillStyle = '#06222A'; out.fillRect(cur[0], cur[1], c * 4, c * 7); }
   }
   const RD = { x: 40, y: 1276, w: 176, h: 200 };
   function readout(v) {
@@ -280,6 +297,32 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     out.drawImage(F, 0, 0);
     out.setTransform(1, 0, 0, 1, 0, 0);
 
+    // away shots: the beat leaves the booth at m.away.at for the rest of the beat; full-screen scanline wipes in and out
+    const WIPE = .35;
+    const drawWipe = (ys, below) => {   // composite AW above (below=false) or below (below=true) the line at ys
+      out.save(); out.beginPath(); below ? out.rect(0, ys, FW, FH - ys) : out.rect(0, 0, FW, ys); out.clip(); out.drawImage(AW, 0, 0); out.restore();
+      out.fillStyle = 'rgba(57,224,240,.45)'; out.fillRect(0, ys - 22, FW, 44); out.fillStyle = '#E9FDFF'; out.fillRect(0, ys - 3, FW, 6);
+    };
+    let awayCover = 0;
+    if (m.away && lt >= m.away.at && !rew) {
+      const al = lt - m.away.at, dur = m.bars * BAR - m.away.at;
+      drawAway(aw, m.away, al, dur, t);
+      const k = Math.min(1, al / .3); awayCover = k;
+      const SRC = { liver: [-3.5, 32], heart: [-.5, 24.5], brain: [0, 4], lungs: [0, 22] }[m.away.organ] || [0, 8];
+      const [wx, wy] = at(...SRC), sxp = wx * cam[0] + cam[1], syp = wy * cam[0] + cam[2];
+      if (k < 1) {
+        const e = 1 - Math.pow(1 - k, 3), r = 40 + e * 2300, sc = 1.6 - .6 * e;   // zoom out of the organ inside an opening circle
+        out.save(); out.beginPath(); out.arc(sxp, syp, r, 0, Math.PI * 2); out.clip();
+        out.translate(sxp, syp); out.scale(sc, sc); out.translate(-sxp, -syp); out.drawImage(AW, 0, 0); out.restore();
+        out.strokeStyle = '#E9FDFF'; out.lineWidth = 8; out.beginPath(); out.arc(sxp, syp, r, 0, Math.PI * 2); out.stroke();
+      } else out.drawImage(AW, 0, 0);
+    } else if (false && prev && prev.away && lt < WIPE) {   // (back to the booth is now a hard flash-cut, like the reference)
+      const dur = prev.bars * BAR - prev.away.at;
+      drawAway(aw, prev.away, dur + lt, dur, t);
+      const k = lt / WIPE; awayCover = 1 - k;
+      drawWipe(k * FH, true);
+    }
+
     // text layer (never moved by the camera, always inside SAFE)
     if (rew >= .6) {                     // back to the opening frame: hook lines 1–2, opening readout
       readout(FIRST.read[0]);
@@ -287,17 +330,22 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       watermark();
       return;
     }
-    readout(readValue(m, lt, p));
-    if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
-    if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
-    const tm = p >= 0.3 || !prev ? m : prev;
+    if (awayCover < .5) {   // booth-only overlays
+      readout(readValue(m, lt, p));
+      if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
+      if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
+    }
+    const tm = m;   // the new title lands on the cut (flash frame), as in the reference
     if (tm.hook) hook(tm, tm === m ? Math.floor(lt / BEAT) + 2 : 3);
     else {
-      const yb = titleBar(tm, m.final ? Math.min(1, lt / 0.6) : 1);
-      if (tm.cap) caption(tm.cap, tm.dir, yb + 16);
+      const tl = tm === m ? lt : 9;
+      const yb = titleBar(tm, m.final ? Math.min(1, lt / 0.6) : 1, tl);
+      if (tm.cap) caption(tm.cap, tm.dir, yb + 16, tl);
     }
     if (m.final && !rew) confetti(out, lt);
     watermark();
+    const cuts = [i > 0 ? m.t0 : -9, m.away ? m.t0 + m.away.at : -9];
+    if (cuts.some(tc => t >= tc && t < tc + 1 / 30 + 1e-4)) { out.fillStyle = 'rgba(255,255,255,.78)'; out.fillRect(0, 0, FW, FH); }
   };
 
   window.TEXTS = (t) => {
@@ -307,7 +355,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       FIRST.hook.slice(0, 2).forEach(([h], k) => box('endhook' + k, h, TY + k * 110, TY + k * 110 + 160, { pass: true }));
       return T;
     }
-    const tm = prev && t - m.t0 < 0.3 * BAR / 2 ? prev : m;
+    const tm = m;
     if (tm.hook) {
       const n = tm === m ? Math.floor((t - m.t0) / BEAT) + 2 : 3;
       tm.hook.slice(0, Math.min(3, n)).forEach(([h], k) => box('hook' + k, h, TY + k * 110, TY + k * 110 + 160));

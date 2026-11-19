@@ -59,31 +59,43 @@ export function dive(g, o, lt, dur) {
       const ang = Math.PI + s / 11 * Math.PI, col = s < 4 ? C.lime : s < 8 ? '#FFB547' : '#FF5A5F', on = s / 11 <= v + .001;
       g.fillStyle = on ? col : 'rgba(57,224,240,.15)'; g.fillRect(Math.round(cx + Math.cos(ang) * gr - 16), Math.round(cy + Math.sin(ang) * gr - 16), 32, 32);
     }
-    drawText(g, 'PRESSURE', cx, cy - 60, 5, v < .4 ? C.lime : '#FFB547', { align: 'center', bold: true });
+    drawText(g, o.gaugeLabel || 'PRESSURE', cx, cy - 60, 5, v < .4 ? C.lime : '#FFB547', { align: 'center', bold: true });
   } else drawText(g, o.organ.toUpperCase(), 540, box.bot + 40, 6, '#39E0F0', { align: 'center', bold: true });
 }
 
-// ---------- bed: 3 a.m., wide awake ----------
+// ---------- bed: a tight shot of Bit's face on the pillow and the clock (3 a.m. awake, or asleep with Zs) ----------
 export function bed(g, lt, state) {
   room(g, '#070C1C', '#12204A');
-  g.fillStyle = '#0B1530'; g.fillRect(120, 620, 360, 420); g.fillStyle = '#1A2B5C'; g.fillRect(132, 632, 336, 396);
-  g.fillStyle = 'rgba(220,230,255,.85)'; for (const [x, y] of [[210, 700], [380, 760], [300, 900], [420, 680]]) g.fillRect(x, y, 10, 10);
-  g.fillStyle = '#F2F5FF'; for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++) if (i * i + j * j <= 17 && !((i - 2) ** 2 + (j + 1) ** 2 <= 10)) g.fillRect(380 + i * 10, 730 + j * 10, 10, 10);
-  g.fillStyle = '#2A3A6E'; g.fillRect(292, 632, 16, 396); g.fillRect(132, 822, 336, 16);
-  // bed
-  g.fillStyle = '#3A2A24'; g.fillRect(90, 1300, 840, 60); g.fillRect(90, 1150, 48, 330); g.fillRect(882, 1240, 48, 240);
-  g.fillStyle = '#D5E7EA'; g.fillRect(138, 1240, 744, 70);
-  g.fillStyle = '#F2FBFC'; g.fillRect(150, 1170, 200, 80);
-  // Bit lying on its back, head on the pillow (rotated: feet to the right)
-  g.save(); g.translate(170, 1225); g.rotate(-Math.PI / 2);
-  drawBit(g, { x: 0, y: 62 * 13, px: 13, state });
+  g.save(); g.translate(540, 1050); g.scale(1.7, 1.7); g.translate(-330, -1120);   // the crop: head, pillow, clock
+  g.fillStyle = '#0B1530'; g.fillRect(520, 640, 300, 300); g.fillStyle = '#1A2B5C'; g.fillRect(532, 652, 276, 276);
+  g.fillStyle = '#F2F5FF'; for (let j = -4; j <= 4; j++) for (let i = -4; i <= 4; i++) if (i * i + j * j <= 17 && !((i - 2) ** 2 + (j + 1) ** 2 <= 10)) g.fillRect(700 + i * 8, 730 + j * 8, 8, 8);
+  g.fillStyle = 'rgba(220,230,255,.85)'; for (const [x, y] of [[580, 700], [620, 860], [760, 880]]) g.fillRect(x, y, 8, 8);
+  g.fillStyle = '#3A2A24'; g.fillRect(40, 1300, 900, 60); g.fillRect(40, 1100, 48, 380);
+  g.fillStyle = '#D5E7EA'; g.fillRect(88, 1240, 860, 70);
+  g.fillStyle = '#F2FBFC'; g.fillRect(100, 1150, 230, 90); g.fillStyle = '#DCE8EC'; g.fillRect(100, 1220, 230, 20);
+  g.save(); g.translate(150, 1225); g.rotate(-Math.PI / 2);
+  drawBit(g, { x: 0, y: 62 * 12, px: 12, state });
   g.restore();
-  g.fillStyle = '#3B5BA8'; g.fillRect(420, 1110, 480, 230); g.fillStyle = '#4C6EC0';
-  for (let x = 420; x < 900; x += 48) g.fillRect(x, 1110, 24, 230);
-  g.fillStyle = '#2E4A8E'; g.fillRect(420, 1110, 480, 18);
-  // nightstand + clock
-  g.fillStyle = '#4A3A30'; g.fillRect(700, 880, 280, 24); g.fillStyle = '#1B2238'; g.fillRect(740, 780, 200, 100);
-  drawText(g, (Math.floor(lt * 2) % 2 ? '3:07' : '3 07'), 840, 806, 8, '#FF5A5F', { align: 'center', bold: true });
+  g.fillStyle = '#3B5BA8'; g.fillRect(360, 1100, 600, 240); g.fillStyle = '#4C6EC0';
+  for (let x = 360; x < 960; x += 44) g.fillRect(x, 1100, 22, 240);
+  g.fillStyle = '#2E4A8E'; g.fillRect(360, 1100, 600, 16);
+  // clock on a shelf above the headboard
+  g.fillStyle = '#4A3A30'; g.fillRect(170, 1010, 250, 18); g.fillStyle = '#1B2238'; g.fillRect(200, 920, 190, 90);
+  drawText(g, state.face === 'shut' ? '7:00' : (Math.floor(lt * 2) % 2 ? '3:07' : '3 07'), 295, 944, 7, state.face === 'shut' ? C.lime : '#FF5A5F', { align: 'center', bold: true });
+  if (state.face === 'shut') for (let k = 0; k < 3; k++) { const p = (lt * .7 + k / 3) % 1; drawText(g, 'Z', 330 + p * 90, 1120 - p * 160, 5 + k * 2, `rgba(191,244,255,${1 - p})`, { bold: true }); }
+  g.restore();
+}
+
+// ---------- kitchen: Bit at the counter with the WHO's ~6 teaspoons of sugar ----------
+export function kitchen(g, lt, state) {
+  room(g, '#0B2228', '#123A40');
+  g.fillStyle = '#183F47'; for (let x = 0; x < FW; x += 120) for (let y = 300; y < 1280; y += 120) g.fillRect(x + 6, y + 6, 108, 108);   // tiles
+  g.fillStyle = '#D5E7EA'; g.fillRect(760, 620, 260, 700); g.fillStyle = '#BFD3D6'; g.fillRect(760, 900, 260, 10); g.fillStyle = '#8FA7AB'; g.fillRect(990, 700, 14, 120); g.fillRect(990, 960, 14, 160);   // fridge
+  drawBit(g, { x: 330, y: 1700, px: 16, state });
+  g.fillStyle = '#6B4A36'; g.fillRect(0, 1320, FW, 40); g.fillStyle = '#4E3628'; g.fillRect(0, 1360, FW, 560);   // counter in front
+  const n = Math.min(6, Math.floor(lt / .3) + 1);
+  for (let k = 0; k < n; k++) { const x = 640 + (k % 3) * 92, y = 1236 - Math.floor(k / 3) * 88; g.fillStyle = '#F2FBFC'; g.fillRect(x, y, 80, 80); g.fillStyle = '#C9D6DA'; g.fillRect(x, y + 62, 80, 18); }
+  if (n >= 6) drawText(g, '~6 TSP', 772, 1040, 8, C.lime, { align: 'center', bold: true });
 }
 
 // ---------- phone: calling the doctor ----------
@@ -135,6 +147,7 @@ export function drawAway(g, a, lt, dur, t) {
   if (a.kind === 'dive') dive(g, a, lt, dur);
   else if (a.kind === 'bed') bed(g, lt, a.state || { face: 'wide' });
   else if (a.kind === 'phone') phone(g, lt);
+  else if (a.kind === 'kitchen') kitchen(g, lt, a.state || { face: 'flat' });
   else if (a.kind === 'chart') fullChart(g, a.chart, Math.min(1, Math.floor(Math.max(0, lt - .2) / .25) * .25 / Math.max(.5, dur - .6)));
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
