@@ -70,8 +70,8 @@ function silhouette(px, rim, f) {   // cached: the body on a fine grid (f px cel
   for (let fy = 0; fy < H * px; fy += f) for (let fx = 0; fx < W * px; fx += f) {
     const x = (fx + f / 2) / px - W / 2, y = (fy + f / 2) / px;
     if (!inn(x, y)) continue;
-    const e = 2 * d, edge = !inn(x - e, y) || !inn(x + e, y) || !inn(x, y - e) || !inn(x, y + e);
-    g.fillStyle = edge ? rim : '#0E2E36'; g.fillRect(fx, fy, f, f);
+    const e = 2.6 * d, edge = !inn(x - e, y) || !inn(x + e, y) || !inn(x, y - e) || !inn(x, y + e);
+    g.fillStyle = edge ? rim : '#061419'; g.fillRect(fx, fy, f, f);
   }
   SIL.set(key, cv); return cv;
 }
@@ -80,7 +80,7 @@ const heartIn = (x, y, cx, cy, s) => { const u = (x - cx) / s, v = (y - cy) / s;
 // organs in body-cell units (x from the centre line, y from the top); pal = [highlight, base, shadow], grey when unhealthy
 const ORG = {
   brain: { box: [-5.6, 5.6, 1.2, 8.2], test: (x, y) => ell(x, y, 0, 4.9, 5.4, 3.4) && y < 8, pal: ['#FFD3DD', '#FF9BB0', '#C95C7A'],
-    detail: (x, y) => Math.abs(x) < .16 || Math.abs(Math.sin(x * 2.6 + Math.sin(y * 3.1) * 1.4 + y * .8)) < .16 },
+    detail: (x, y) => Math.abs(x) < .22 || Math.abs(Math.sin(x * 2.2 + Math.sin(y * 2.6) * 1.6 + y * .9)) < .24 },
   lung: { box: [-8, 8, 17.2, 31.5], test: (x, y) => (ell(Math.abs(x), y, 4.4, 24.6, 3.3, 6.6) && y > 18) , pal: ['#FFD6CE', '#F4A196', '#B9675E'],
     detail: (x, y) => { const ax = Math.abs(x); return (ax > .9 && Math.abs(y - (19.5 + (ax - .9) * 1.15)) < .2 && ax < 4.4) || (ax > 3 && ax < 5.8 && Math.abs(ax - 3 - (y - 21.9) * .45) < .17 && y > 21.9 && y < 27) || (ax > 2.4 && ax < 3.8 && Math.abs(ax - 3.4 + (y - 22.4) * .5) < .17 && y > 22.4 && y < 26); } },
   trachea: { box: [-1, 1, 13.6, 20], test: (x, y) => Math.abs(x) < .85 && y > 13.8 && y < 19.8, pal: ['#F7C1B8', '#E8A39A', '#B9675E'], detail: (x, y) => (y * 1.4) % 1 < .22, k: 'lung' },
@@ -114,9 +114,14 @@ function drawClear(ctx, { x, y, px, state, rim }) {
       ctx.fillRect(ox + Math.round((xx + W / 2) * px), oy + Math.round(yy * px), Math.ceil(d * px), Math.ceil(d * px));
     }
   }
-  const fc = FACES[face] || FACES.flat;
+  const fc = FACES[face] || FACES.flat;   // HD face: one dash per eye, a thin mouth
   ctx.fillStyle = C.eye;
-  for (const [c, r] of [...fc.e, ...fc.m]) ctx.fillRect(ox + c * px + px * .1, oy + r * px + px * .3, px * .8, px * .45);
+  for (const side of [fc.e.filter(([c]) => c < 15), fc.e.filter(([c]) => c >= 15)]) {
+    if (!side.length) continue;
+    const cs = side.map(q => q[0]), rs = side.map(q => q[1]), c0 = Math.min(...cs), c1 = Math.max(...cs) + 1, r = rs.reduce((a, b) => a + b, 0) / rs.length;
+    const w = Math.max(1.3, c1 - c0) * px; ctx.fillRect(Math.round(ox + (c0 + c1) / 2 * px - w / 2), Math.round(oy + (r + .3) * px), Math.round(w), Math.round(px * .42));
+  }
+  for (const [c, r] of fc.m) ctx.fillRect(ox + c * px, Math.round(oy + (r + .35) * px), px, Math.round(px * .3));
   return { ox, oy, w: W * px, h: H * px };
 }
 

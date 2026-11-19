@@ -45,10 +45,11 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
   const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
   const LOUD = V !== 'A', BIG = 'CDEF'.includes(V), DIM = 'DEF'.includes(V), VAPE_AT_MOUTH = V === 'D';
-  const LAB = buildLab({ dark: LOUD, spot: LOUD });
-  const CLEAR = V === 'F';   // F: the clear look — head and torso fill the glass, smooth solid body, detailed organs
+  const OPEN = V === 'G', CLEAR = V === 'F' || OPEN;   // G: F without the booth — the body is the frame   // F: the clear look — head and torso fill the glass, smooth solid body, detailed organs
   if (CLEAR) setLook('clear');
-  const B = BOOTH, GH = B.glassY1 - B.glassY0, PX = CLEAR ? 21 : 15, FOOT = CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
+  const OPENB = { x0: 0, x1: 1080, gx0: 0, gx1: 1080, capY: 560, glassY0: 600, glassY1: 1700, floorY: 1700 };
+  const LAB = buildLab({ dark: LOUD, spot: LOUD && !OPEN, open: OPEN, B: OPEN ? OPENB : null });
+  const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = OPEN ? 25 : CLEAR ? 21 : 15, FOOT = OPEN ? B.glassY1 + 18 * PX : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
   const at = (cx, cy) => [CX + cx * PX, TOP + cy * PX];
   const TY = SAFE.y0;
   const dirCol = d => d > 0 ? C.lime : d < 0 ? C.amber : '#39E0F0';
@@ -71,7 +72,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   }
   function watermark() {   // fixed on the text layer: the camera, the scan sweeps and the loop never move it
     if (!BRAND) return;
-    out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' }); out.restore();   // on the booth's base plate
+    out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, OPEN ? 1730 : 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' }); out.restore();   // on the booth's base plate
   }
   function titleBar(m, k = 1, lt = 9) {   // title only when there is a caption; the subline shows only without one
     const c = fit(m.title, 13), w = textW(m.title, c) + 2 * Math.max(28, c * 4), x = Math.round((FW - w) / 2), h = 7 * c + 44;
@@ -245,7 +246,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const rew = m.final && t >= REWIND ? Math.min(1, (t - REWIND) / (BAR / 2)) : 0;   // upward rewind sweep
     ctx.drawImage(LAB, 0, 0);
     const dropNow = m.drop && lt >= 2 * BAR;
-    const rim = DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
+    const rim = OPEN ? ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#5FE3EF') : DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
     const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
       ...(LOUD ? { toxins: Math.round((st.toxins || 0) * 1.7), glow: true } : {}), ...(BIG ? { bigHeart: true, heart: Math.max(st.heart ?? 1, .85) } : {}) } });
     const scene = (mm, rv) => {
@@ -281,7 +282,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       const ys = rew > 0 ? B.glassY1 - rew * GH : B.glassY0 + p * GH;
       ctx.fillStyle = '#39E0F0'; ctx.fillRect(B.x0 - 14, ys - 5, 34, 10); ctx.fillRect(B.x1 - 20, ys - 5, 34, 10);
     }
-    glassSheen(ctx);
+    if (!OPEN) glassSheen(ctx);
     if (rew >= 1) props(FIRST.props.map(q => q.endsWith('X') ? q.slice(0, -1) : q), 0);
     else if (p >= 1 && !m.chart && !rew) props(m.props, lt);
     if (m.dir > 0 && !m.chart && p >= 1 && !rew && m.sparkle) {
