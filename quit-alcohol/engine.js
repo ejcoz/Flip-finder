@@ -3,7 +3,7 @@
 // the text layer (hook, title, caption, callout, lens, readout) never moves and stays inside the platform safe area.
 import { drawText, textW } from './font.js';
 import { bayer } from './pix.js';
-import { drawBit, sparkle, C } from './bit.js';
+import { drawBit, sparkle, C, setLook } from './bit.js';
 import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 import { drawAway } from './scenes.js';
 
@@ -44,9 +44,11 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   // look variant: A = original; B = red hook word, gunmetal booth, spotlight + vignette, loud habit on frame 0; C = B + big bright heart
   // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
   const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
-  const LOUD = V !== 'A', BIG = 'CDE'.includes(V), DIM = 'DE'.includes(V), VAPE_AT_MOUTH = V === 'D';
+  const LOUD = V !== 'A', BIG = 'CDEF'.includes(V), DIM = 'DEF'.includes(V), VAPE_AT_MOUTH = V === 'D';
   const LAB = buildLab({ dark: LOUD, spot: LOUD });
-  const B = BOOTH, GH = B.glassY1 - B.glassY0, PX = 15, FOOT = B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
+  const CLEAR = V === 'F';   // F: the clear look — head and torso fill the glass, smooth solid body, detailed organs
+  if (CLEAR) setLook('clear');
+  const B = BOOTH, GH = B.glassY1 - B.glassY0, PX = CLEAR ? 21 : 15, FOOT = CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
   const at = (cx, cy) => [CX + cx * PX, TOP + cy * PX];
   const TY = SAFE.y0;
   const dirCol = d => d > 0 ? C.lime : d < 0 ? C.amber : '#39E0F0';

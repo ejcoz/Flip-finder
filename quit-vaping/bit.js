@@ -19,8 +19,10 @@ function torsoHW(y) {
   if (y < 30) return 8.6 - (y - 18.5) * 0.17;
   return 6.6 + (y - 30) * 0.13;
 }
-export function inBody(c, r) {
-  const x = c + .5 - W / 2, y = r + .5, ax = Math.abs(x);
+export function inBody(c, r) { return inBodyXY(c + .5 - W / 2, r + .5); }
+// continuous version: x from the centre line, y from the top, in cell units
+export function inBodyXY(x, y) {
+  const ax = Math.abs(x);
   if ((x / 6.3) ** 2 + ((y - 7.6) / 7.2) ** 2 <= 1) return true;                    // head
   if (ax <= 2.1 && y >= 14 && y <= 17) return true;                                // neck
   if (y >= 15.9 && y <= 38.5 && ax <= torsoHW(y)) return true;                     // torso
@@ -57,9 +59,71 @@ let SHOWN = null;
 export function showOnly(list) { SHOWN = list ? new Set(list) : null; }
 const shown = k => !SHOWN || SHOWN.has(k);
 
+// ---------- the "clear" look: the same body, drawn smooth and solid, organs on a finer grid with real detail ----------
+let LOOK = 'pixel';
+export function setLook(l) { LOOK = l; }
+const SIL = new Map();
+function silhouette(px, rim, f) {   // cached: the body on a fine grid (f px cells), a solid fill and a 2-cell rim
+  const key = px + rim + f; if (SIL.has(key)) return SIL.get(key);
+  const cv = document.createElement('canvas'); cv.width = W * px; cv.height = H * px; const g = cv.getContext('2d');
+  const d = f / px, inn = (x, y) => inBodyXY(x, y);
+  for (let fy = 0; fy < H * px; fy += f) for (let fx = 0; fx < W * px; fx += f) {
+    const x = (fx + f / 2) / px - W / 2, y = (fy + f / 2) / px;
+    if (!inn(x, y)) continue;
+    const e = 2 * d, edge = !inn(x - e, y) || !inn(x + e, y) || !inn(x, y - e) || !inn(x, y + e);
+    g.fillStyle = edge ? rim : '#0E2E36'; g.fillRect(fx, fy, f, f);
+  }
+  SIL.set(key, cv); return cv;
+}
+const ell = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+const heartIn = (x, y, cx, cy, s) => { const u = (x - cx) / s, v = (y - cy) / s; return ell(u, v, -1, -.9, 1.15, 1.15) || ell(u, v, 1, -.9, 1.15, 1.15) || (v > -.9 && v < 2.1 && Math.abs(u) < 2.1 - (v + .9) * .7); };
+// organs in body-cell units (x from the centre line, y from the top); pal = [highlight, base, shadow], grey when unhealthy
+const ORG = {
+  brain: { box: [-5.6, 5.6, 1.2, 8.2], test: (x, y) => ell(x, y, 0, 4.9, 5.4, 3.4) && y < 8, pal: ['#FFD3DD', '#FF9BB0', '#C95C7A'],
+    detail: (x, y) => Math.abs(x) < .16 || Math.abs(Math.sin(x * 2.6 + Math.sin(y * 3.1) * 1.4 + y * .8)) < .16 },
+  lung: { box: [-8, 8, 17.2, 31.5], test: (x, y) => (ell(Math.abs(x), y, 4.4, 24.6, 3.3, 6.6) && y > 18) , pal: ['#FFD6CE', '#F4A196', '#B9675E'],
+    detail: (x, y) => { const ax = Math.abs(x); return (ax > .9 && Math.abs(y - (19.5 + (ax - .9) * 1.15)) < .2 && ax < 4.4) || (ax > 3 && ax < 5.8 && Math.abs(ax - 3 - (y - 21.9) * .45) < .17 && y > 21.9 && y < 27) || (ax > 2.4 && ax < 3.8 && Math.abs(ax - 3.4 + (y - 22.4) * .5) < .17 && y > 22.4 && y < 26); } },
+  trachea: { box: [-1, 1, 13.6, 20], test: (x, y) => Math.abs(x) < .85 && y > 13.8 && y < 19.8, pal: ['#F7C1B8', '#E8A39A', '#B9675E'], detail: (x, y) => (y * 1.4) % 1 < .22, k: 'lung' },
+  heart: { box: [-5, 6, 20.5, 31.5], test: (x, y) => heartIn(x, y, .5, 25.2, 2.0), pal: ['#FFD0D2', '#FF4F58', '#B32C3B'], detail: () => false },
+  liver: { box: [-7, 1.5, 30, 35.5], test: (x, y) => ell(x, y, -3, 32.2, 4, 2.2) || ell(x, y, .2, 31.6, 1.8, 1.5), pal: ['#F29A8E', '#E0675E', '#9E3D44'], detail: () => false },
+  stomach: { box: [1.5, 7, 30.2, 36], test: (x, y) => ell(x, y, 4.1, 32.8, 2.3, 2.3), pal: ['#FFD2C8', '#FFB0A3', '#D27C70'], detail: () => false },
+};
+const GREYP = ['#A9BBBE', '#6F8A8E', '#4E6569'];
+function drawClear(ctx, { x, y, px, state, rim }) {
+  const { face = 'flat', toxins = 0, seed = 1, glow = false } = state;
+  const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px), f = Math.max(3, Math.round(px / 3.5)), d = f / px;
+  ctx.drawImage(silhouette(px, rim, f), ox, oy);
+  let s = seed * 9301; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < toxins; i++) {   // particles: small and round-ish, inside the torso
+    const tx = (rnd() - .5) * 14, ty = 18 + rnd() * 18;
+    if (!inBodyXY(tx - 1, ty) || !inBodyXY(tx + 1, ty)) continue;
+    const X = ox + (tx + W / 2) * px, Y = oy + ty * px;
+    if (glow) { ctx.fillStyle = 'rgba(255,181,71,.3)'; ctx.fillRect(X - 2 * f, Y - 2 * f, 4 * f, 4 * f); }
+    ctx.fillStyle = glow ? '#FFD27A' : C.amber; ctx.fillRect(X - f, Y - f, 2 * f, 2 * f);
+  }
+  for (const name of ['lung', 'trachea', 'liver', 'stomach', 'heart', 'brain']) {
+    const o = ORG[name], key = o.k || name; if (!shown(key)) continue;
+    const k = state[key] ?? 1, [x0, x1, y0, y1] = o.box;
+    for (let yy = Math.floor(y0 / d) * d; yy < y1; yy += d) for (let xx = Math.floor(x0 / d) * d; xx < x1; xx += d) {
+      const cx = xx + d / 2, cy = yy + d / 2;
+      if (!o.test(cx, cy)) continue;
+      const good = k > (1 - (cy - y0) / (y1 - y0)) * .92 + bayer(Math.round(xx / d), Math.round(yy / d)) * .08, pal = good ? o.pal : GREYP;
+      const edge = !o.test(cx - 1.5 * d, cy) || !o.test(cx + 1.5 * d, cy) || !o.test(cx, cy - 1.5 * d) || !o.test(cx, cy + 1.5 * d);
+      const lit = !o.test(cx - 2.5 * d, cy - 2.5 * d) && !edge;   // top-left light
+      ctx.fillStyle = edge || o.detail(cx, cy) ? pal[2] : lit ? pal[0] : pal[1];
+      ctx.fillRect(ox + Math.round((xx + W / 2) * px), oy + Math.round(yy * px), Math.ceil(d * px), Math.ceil(d * px));
+    }
+  }
+  const fc = FACES[face] || FACES.flat;
+  ctx.fillStyle = C.eye;
+  for (const [c, r] of [...fc.e, ...fc.m]) ctx.fillRect(ox + c * px + px * .1, oy + r * px + px * .3, px * .8, px * .45);
+  return { ox, oy, w: W * px, h: H * px };
+}
+
 // state: health 0..1 per organ { brain, lung, heart, liver, stomach, muscle }, face, toxins, seed
 // x,y = midpoint under the feet; px = cell size
 export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
+  if (LOOK === 'clear') return drawClear(ctx, { x, y, px, state, rim });
   const { lung = 1, heart = 1, brain = 1, liver = 1, stomach = 1, muscle = 1, face = 'flat', toxins = 0, seed = 1, sore = false, glow = false, bigHeart = false } = state;
   const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px);
   const cell = (c, r, col) => { ctx.fillStyle = col; ctx.fillRect(ox + c * px, oy + r * px, px, px); };
