@@ -3,8 +3,7 @@ const W = 1080, H = 1920;
 const cv = document.getElementById('c'), g = cv.getContext('2d');
 const SAFE = { x0: 60, x1: 920, y0: 250, y1: 1480 };
 const ACC = { good: '#3DDC97', bad: '#FF5C6C', ask: '#FFC94D', fact: '#5AB4FF' };
-// the user's dog: black coat with a cool sheen, white blaze, muzzle, chin, chest bib and front toes; brown eyes; semi-floppy ears
-const DOG = { coat: ['#545A70', '#24252E', '#111117'], white: ['#FFFFFF', '#EEF0F4', '#C3C9D4'], eye: '#3B2418', nose: '#0C0C10', inner: ['#C9989C', '#9C6E74', '#6E4A50'] };
+const DOG = { coat: ['#FFF8EC', '#F1E4CF', '#CDB898'], patch: ['#A9714A', '#8A5A3B', '#61391F'], dark: '#2A2230' };
 
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 // soft flat shading: highlight at the top, base in the middle, shadow at the bottom of each form
@@ -38,72 +37,56 @@ function grass(y0, y1, n, col, seed) {
   }
 }
 
-// ---------- the dog (based on the user's dog) ----------
+// ---------- the dog (original design: cream coat, brown ears, brown saddle and one brown eye patch, teal collar) ----------
 // sitting, three-quarter front view, so a head tilt reads at a glance
 function dog(x, y, tilt) {     // x,y = centre of the front paws on the ground
   g.save(); g.translate(x, y);
-  // a soft pool of light behind and under the dog so the black coat separates from the night
-  const pool = g.createRadialGradient(10, -420, 40, 10, -420, 420);
-  pool.addColorStop(0, 'rgba(120,150,220,.22)'); pool.addColorStop(1, 'rgba(120,150,220,0)');
-  g.fillStyle = pool; ell(10, -420, 420, 460); g.fill();
-  g.fillStyle = 'rgba(0,0,0,.35)'; ell(30, 4, 220, 24); g.fill();
-  // thin tail, out to the side on the floor
-  g.fillStyle = shade(-90, 0, DOG.coat);
-  g.beginPath(); g.moveTo(130, -40); g.bezierCurveTo(200, -40, 260, -70, 300, -120); g.bezierCurveTo(270, -60, 220, -25, 135, -20); g.closePath(); g.fill();
-  // haunch
-  g.fillStyle = shade(-260, 0, DOG.coat); ell(90, -105, 120, 108, -0.2); g.fill();
-  g.fillStyle = shade(-30, 0, DOG.coat); ell(140, -10, 50, 15); g.fill();
-  g.fillStyle = shade(-26, 0, DOG.white); ell(165, -8, 18, 9); g.fill();          // white toe on the rear paw
-  // chest / body: slim and tall
-  const chest = () => { g.beginPath(); g.moveTo(-85, -40); g.bezierCurveTo(-112, -190, -100, -310, -58, -372); g.lineTo(60, -372); g.bezierCurveTo(102, -310, 110, -180, 85, -40); g.closePath(); };
-  g.fillStyle = shade(-390, 0, DOG.coat); chest(); g.fill();
-  // white chest bib: a narrow stripe down the throat opening into a wide bib
-  g.save(); chest(); g.clip();
-  g.fillStyle = shade(-380, -100, DOG.white);
-  g.beginPath(); g.moveTo(-22, -380); g.lineTo(22, -380); g.bezierCurveTo(18, -300, 22, -250, 40, -215); g.bezierCurveTo(80, -200, 95, -160, 70, -120); g.bezierCurveTo(40, -110, 20, -125, 0, -100); g.bezierCurveTo(-25, -125, -55, -110, -80, -125); g.bezierCurveTo(-95, -165, -75, -200, -42, -215); g.bezierCurveTo(-24, -250, -20, -300, -22, -380); g.fill();
-  g.restore();
-  // neck: rounds the shoulders into the head; the white throat stripe runs up it
-  g.fillStyle = shade(-450, -330, DOG.coat); ell(0, -392, 66, 52); g.fill();
-  g.save(); ell(0, -392, 66, 52); g.clip(); g.fillStyle = shade(-440, -340, DOG.white);
-  g.beginPath(); g.moveTo(-26, -440); g.lineTo(26, -440); g.lineTo(22, -340); g.lineTo(-22, -340); g.fill(); g.restore();
-  // front legs: long and slim, white toes
-  for (const lx of [-50, 42]) {
-    g.fillStyle = shade(-210, 0, DOG.coat); g.beginPath(); g.roundRect(lx - 24, -205, 48, 202, 22); g.fill();
-    g.fillStyle = shade(-30, 0, DOG.white); ell(lx, -9, 32, 14); g.fill();
-    g.fillStyle = 'rgba(17,17,23,.5)'; for (const d of [-9, 9]) { g.beginPath(); g.roundRect(lx + d - 2, -20, 4, 14, 2); g.fill(); }
+  g.fillStyle = 'rgba(0,0,0,.3)'; ell(30, 4, 220, 24); g.fill();
+  // tail curled on the ground
+  g.fillStyle = shade(-60, 0, DOG.patch);
+  g.beginPath(); g.moveTo(150, -30); g.bezierCurveTo(240, -20, 270, -60, 250, -110); g.bezierCurveTo(235, -70, 210, -45, 150, -55); g.closePath(); g.fill();
+  // haunch (sitting rear leg), behind the chest
+  g.fillStyle = shade(-260, 0, DOG.coat); ell(95, -110, 135, 115, -0.2); g.fill();
+  g.save(); ell(95, -110, 135, 115, -0.2); g.clip(); g.fillStyle = shade(-240, -140, DOG.patch); ell(120, -230, 120, 70, -0.3); g.fill(); g.restore();
+  g.fillStyle = shade(-30, 0, ['#F7EEDD', '#E8D9BF', '#CDB898']); ell(150, -10, 55, 16); g.fill();
+  // chest / body
+  g.fillStyle = shade(-380, 0, DOG.coat);
+  g.beginPath(); g.moveTo(-95, -40); g.bezierCurveTo(-125, -180, -110, -300, -60, -350); g.lineTo(70, -350); g.bezierCurveTo(115, -290, 120, -170, 95, -40); g.closePath(); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.16)'; ell(-15, -270, 55, 60); g.fill();
+  // front legs
+  for (const lx of [-55, 45]) {
+    g.fillStyle = shade(-200, 0, DOG.coat); g.beginPath(); g.roundRect(lx - 28, -190, 56, 188, 26); g.fill();
+    g.fillStyle = '#FBF4E6'; ell(lx, -8, 36, 15); g.fill();
+    g.strokeStyle = 'rgba(160,130,90,.45)'; g.lineWidth = 3; g.lineCap = 'round';
+    for (const d of [-10, 10]) { g.beginPath(); g.moveTo(lx + d, -14); g.lineTo(lx + d, -4); g.stroke(); }
   }
+  // collar
+  g.fillStyle = '#21B3A6'; g.beginPath(); g.roundRect(-78, -372, 156, 30, 14); g.fill();
+  g.fillStyle = '#FFC94D'; ell(0, -330, 15, 15); g.fill(); g.fillStyle = 'rgba(0,0,0,.2)'; ell(0, -326, 6, 6); g.fill();
   // head
-  g.save(); g.translate(0, -480); g.rotate(tilt);
-  const ear = (sx, flipped) => {   // semi-floppy: folds down; 'flipped' = turned out, showing the pink inside
+  g.save(); g.translate(0, -470); g.rotate(tilt);
+  const ear = (sx, up) => {     // floppy ear; 'up' = perked by the tilt
     g.save(); g.scale(sx, 1);
-    g.fillStyle = shade(-110, 60, DOG.coat);
+    g.fillStyle = shade(-90, 110, DOG.patch);
     g.beginPath();
-    if (flipped) { g.moveTo(-60, -88); g.bezierCurveTo(-110, -120, -175, -95, -185, -40); g.bezierCurveTo(-150, -50, -120, -40, -95, -20); g.bezierCurveTo(-82, -45, -72, -68, -60, -88); g.fill();
-      g.fillStyle = shade(-100, -20, DOG.inner); g.beginPath(); g.moveTo(-72, -78); g.bezierCurveTo(-110, -100, -155, -85, -165, -50); g.bezierCurveTo(-140, -55, -115, -45, -98, -32); g.closePath(); g.fill(); }
-    else { g.moveTo(-62, -86); g.bezierCurveTo(-120, -110, -160, -60, -150, 10); g.bezierCurveTo(-142, 60, -112, 70, -100, 30); g.bezierCurveTo(-92, -10, -80, -50, -62, -86); g.fill(); }
-    g.restore();
+    if (up) { g.moveTo(-70, -80); g.bezierCurveTo(-120, -150, -190, -120, -175, -50); g.bezierCurveTo(-165, -10, -130, 10, -100, -10); g.bezierCurveTo(-90, -40, -80, -60, -70, -80); }
+    else { g.moveTo(-80, -75); g.bezierCurveTo(-140, -95, -165, -20, -150, 50); g.bezierCurveTo(-140, 100, -110, 110, -95, 70); g.bezierCurveTo(-90, 20, -85, -30, -80, -75); }
+    g.fill(); g.restore();
   };
-  ear(1, true); ear(-1, false);
-  const skull = () => ell(0, -6, 92, 102);
-  g.fillStyle = shade(-100, 100, DOG.coat); skull(); g.fill();
-  // white blaze from the forehead down between the eyes, widening over the muzzle
-  g.save(); skull(); g.clip();
-  g.fillStyle = shade(-100, 40, DOG.white);
-  g.beginPath(); g.moveTo(-8, -100); g.lineTo(10, -100); g.bezierCurveTo(14, -60, 16, -30, 30, 0); g.lineTo(-28, 0); g.bezierCurveTo(-14, -30, -12, -60, -8, -100); g.fill();
+  ear(1, false); ear(-1, true);
+  g.fillStyle = shade(-110, 100, DOG.coat); ell(0, 0, 112, 104); g.fill();
+  g.save(); ell(0, 0, 112, 104); g.clip();
+  g.fillStyle = shade(-80, 20, DOG.patch); ell(48, -22, 50, 44, 0.2); g.fill();     // eye patch
   g.restore();
-  // muzzle (white) and chin
-  g.fillStyle = shade(-10, 120, DOG.white); ell(0, 58, 58, 60); g.fill();
-  g.fillStyle = shade(90, 130, ['#C9CED8', '#9EA5B3', '#6E7482']); ell(0, 110, 34, 16); g.fill();
-  // nose + mouth
-  g.fillStyle = DOG.nose; g.beginPath(); g.moveTo(-28, 30); g.quadraticCurveTo(0, 18, 28, 30); g.quadraticCurveTo(22, 56, 0, 60); g.quadraticCurveTo(-22, 56, -28, 30); g.fill();
-  g.fillStyle = 'rgba(255,255,255,.3)'; ell(-10, 32, 8, 4); g.fill();
-  g.strokeStyle = '#5A5F70'; g.lineWidth = 4; g.lineCap = 'round';
-  g.beginPath(); g.moveTo(0, 60); g.lineTo(0, 76); g.quadraticCurveTo(-14, 90, -28, 80); g.moveTo(0, 76); g.quadraticCurveTo(14, 90, 28, 80); g.stroke();
-  // warm brown eyes with a highlight, and a soft lighter brow mark (black dogs emote with brows too)
-  for (const ex of [-44, 44]) { g.fillStyle = DOG.eye; ell(ex, -22, 15, 17); g.fill(); g.fillStyle = '#0E0806'; ell(ex, -21, 8, 9); g.fill(); g.fillStyle = '#FFFFFF'; ell(ex + 5, -28, 5, 5); g.fill(); }
-  g.strokeStyle = 'rgba(150,160,190,.55)'; g.lineWidth = 5;
-  g.beginPath(); g.moveTo(-62, -52); g.quadraticCurveTo(-44, -66, -26, -56); g.stroke();
-  g.beginPath(); g.moveTo(26, -48); g.quadraticCurveTo(44, -56, 62, -46); g.stroke();
+  g.fillStyle = shade(10, 110, ['#FFFDF6', '#F6ECDA', '#DCCAAA']); ell(0, 52, 70, 50); g.fill();   // muzzle
+  g.fillStyle = DOG.dark; g.beginPath(); g.moveTo(-26, 18); g.quadraticCurveTo(0, 8, 26, 18); g.quadraticCurveTo(20, 40, 0, 44); g.quadraticCurveTo(-20, 40, -26, 18); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; ell(-9, 20, 7, 4); g.fill();
+  g.strokeStyle = '#6E5444'; g.lineWidth = 4; g.lineCap = 'round';
+  g.beginPath(); g.moveTo(0, 44); g.lineTo(0, 60); g.quadraticCurveTo(-14, 74, -28, 64); g.moveTo(0, 60); g.quadraticCurveTo(14, 74, 28, 64); g.stroke();
+  for (const ex of [-46, 46]) { g.fillStyle = DOG.dark; ell(ex, -18, 15, 18); g.fill(); g.fillStyle = '#FFFFFF'; ell(ex + 5, -25, 5.5, 5.5); g.fill(); }
+  g.strokeStyle = '#4A3226'; g.lineWidth = 5;
+  g.beginPath(); g.moveTo(-64, -50); g.quadraticCurveTo(-46, -64, -28, -54); g.stroke();      // one brow higher = curious
+  g.beginPath(); g.moveTo(28, -46); g.quadraticCurveTo(46, -54, 64, -44); g.stroke();
   g.restore();
   g.restore();
 }
