@@ -173,6 +173,12 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
         D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 18, hy - 16, 3, 30);
         if (p === 'drinkX' && lt >= 2 * BEAT) cross(x0 - 20, y0 - 10, 120, 110);
+      } else if (p === 'sodaX' || p === 'soda') {   // a pixel soda can gripped in the fist
+        const S2 = ['.kkkk.', 'kssssk', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'kssssk'];
+        const pal = { k: '#8FA7AB', s: '#D5E7EA', r: '#E5484D', w: '#F2FBFC' }, x0 = hx - 30, y0 = hy - 70;
+        S2.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
+        fingers(hx - 34, hy - 14, 3, 68);
+        if (p === 'sodaX' && lt >= 2 * BEAT) cross(x0 - 30, y0 - 10, 120, 120);
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
