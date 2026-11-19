@@ -73,16 +73,17 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   }
   const rew0 = t => t >= REWIND + BAR / 4;
   // palette options (?pal=S|D|M): S a strong spotlight behind the body; D teal + magenta duotone; M mood-tinted (red on setbacks, green on recovery)
-  const PAL = QS.get('pal') || READ.palette || '';
+  const PAL = QS.has('pal') ? QS.get('pal') : (READ.palette || 'M');   // M is the house palette
   const GLOWS = { neutral: ['#2AB3BF', '#167A84', '#0E4E57'], duo: ['#E0408A', '#9A2468', '#4E1846'], bad: ['#E0405A', '#9A2236', '#4E1424'], good: ['#3BD486', '#1F8A58', '#11503A'] };
   const GCACHE = {};
   function glowLayer(kind) {
     if (!GCACHE[kind]) {
       const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH; const g = cv.getContext('2d'), [c0, c1, c2] = GLOWS[kind], cell = 8, gcx = CX, gcy = 1080;
-      for (let y = 0; y < FH; y += cell) for (let x = 0; x < FW; x += cell) {
-        const d = Math.hypot((x - gcx) / 600, (y - gcy) / 780);
-        if (d < 1) { const k = 1 - d; g.fillStyle = k > .62 && k * .9 > bayer(x / cell, y / cell) ? c0 : k > .3 && (k + .25) > bayer(x / cell + 1, y / cell) ? c1 : k * 1.6 > bayer(x / cell + 2, y / cell + 1) ? c2 : null; if (g.fillStyle && (k > .62 || k > .3 || k * 1.6 > bayer(x / cell + 2, y / cell + 1))) g.fillRect(x, y, cell, cell); }
-        else if ((d - 1) * 1.4 > bayer(x / cell + 3, y / cell + 2)) { g.fillStyle = '#010607'; g.fillRect(x, y, cell, cell); }   // vignette
+      const lv = [null, c2, c1, c0];
+      for (let y = 0; y < FH; y += cell) for (let x = 0; x < FW; x += cell) {   // soft: four levels, ordered-dithered into each other
+        const d = Math.hypot((x - gcx) / 640, (y - gcy) / 820), bz = bayer(x / cell, y / cell);
+        if (d < 1) { const v = Math.pow(1 - d, 1.25) * 3.2, i = Math.min(3, Math.floor(v) + (v % 1 > bz ? 1 : 0)); if (lv[i]) { g.fillStyle = lv[i]; g.fillRect(x, y, cell, cell); } }
+        if (d > .82 && (d - .82) * 1.2 > bayer(x / cell + 3, y / cell + 2)) { g.fillStyle = '#010607'; g.fillRect(x, y, cell, cell); }   // vignette toward the edges
       }
       GCACHE[kind] = cv;
     }
@@ -409,7 +410,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const p = prev ? Math.min(1, lt / (BAR / 2)) : 1;
     const rew = m.final && t >= REWIND ? Math.min(1, (t - REWIND) / (BAR / 2)) : 0;   // upward rewind sweep
     ctx.drawImage(LAB, 0, 0);
-    if (PAL) glowLayer(PAL === 'M' ? (m.dir < 0 ? 'bad' : m.dir > 0 && !m.hook ? 'good' : 'neutral') : PAL === 'D' ? 'duo' : 'neutral');
+    if (PAL) glowLayer(PAL === 'M' ? (m.hook || rew >= .6 ? 'duo' : m.dir < 0 ? 'bad' : m.dir > 0 ? 'good' : 'neutral') : PAL === 'D' ? 'duo' : 'neutral');   // M: magenta hook, red setbacks, green recovery
     if (HV === 'C' && (m.hook || (m.final && rew0(t)))) {   // hook frame only: a warm dithered glow behind the body
       const gcx = CX, gcy = TOP + 22 * PX, cell = 8;
       for (let y = gcy - 560; y < gcy + 560; y += cell) for (let x = 0; x < FW; x += cell) {
