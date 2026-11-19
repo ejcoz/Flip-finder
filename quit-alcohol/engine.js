@@ -8,6 +8,7 @@ import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 import { drawAway } from './scenes.js';
 
 export const BAR = 2, BEAT = 0.5;
+const TAG0 = BAR / 2 + .1, TAGDT = .42;   // symptom tags: first pop, then one every TAGDT s
 // Reels / Shorts safe area for text and anything that must be read: clear of the top header, the right-hand buttons
 // and the bottom caption/username band.
 export const SAFE = { x0: 60, x1: 920, y0: 250, y1: 1480 };
@@ -32,7 +33,9 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.hook) EV.push({ t: m.t0 + BEAT, type: 'blip', k: 2 });
     if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'blip', k: 0 });
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
-    if (m.lens) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
+    if (m.lens || m.mech) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
+    if (m.mech) (m.mech.extra || []).forEach((_, j) => EV.push({ t: m.t0 + BAR / 2 + .5 + j * BEAT, type: 'tick', k: 6 + j }));
+    if (m.tags) m.tags.forEach((_, j) => EV.push({ t: m.t0 + TAG0 + j * TAGDT, type: 'blip', k: j % 3 }));
     if (m.away) { EV.push({ t: m.t0 + (m.away.at || 0), type: 'away' }); if (m.away.at && MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
   });
   window.EV = EV;
@@ -129,6 +132,74 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     lb.say.forEach((l, k) => drawText(out, l, x + 14, y + 47 + k * 38, 4, col, { bold: true }));
   }
   const LENS = { cx: 222, cy: 760, r: 168 };
+  // ---------- infographics ----------
+  // mech: one big circle takes the frame and shows HOW it works (a membrane of receptor "locks", nicotine "keys", reward sparks)
+  const MECH = { cx: 540, cy: 1110, r: 410 };
+  function pxPlus(x, y, s, col) { out.fillStyle = col; out.fillRect(x - s / 2, y - 1.5 * s, s, 3 * s); out.fillRect(x - 1.5 * s, y - s / 2, 3 * s, s); }
+  function mech(M, k, cam, t, lt) {
+    const [wx, wy] = at(0, 4), ox = wx * cam[0] + cam[1], oy = wy * cam[0] + cam[2];
+    const e = 1 - Math.pow(1 - Math.min(1, k), 3), cx = ox + (MECH.cx - ox) * e, cy = oy + (MECH.cy - oy) * e, r = Math.max(4, MECH.r * e);
+    out.fillStyle = `rgba(1,8,10,${.55 * e})`; out.fillRect(0, 0, FW, FH);
+    out.save(); out.beginPath(); out.arc(cx, cy, r, 0, Math.PI * 2); out.fillStyle = 'rgba(4,26,31,.98)'; out.fill(); out.clip();
+    if (k >= 1) {
+      const u = lt - BAR / 2 - .25, step = Math.floor(t / BEAT);
+      (M.legend || []).forEach(([s, col], j) => { if (u > j * .25) drawText(out, s, cx, cy - 300 + j * 62, 5, col, { align: 'center', shadow: '#011012' }); });
+      // membrane: two rows of dots with little tails between, like a cell wall
+      const my = cy + 46, x0 = cx - 340, x1 = cx + 340;
+      out.fillStyle = 'rgba(57,224,240,.5)';
+      for (let x = x0; x <= x1; x += 18) { out.fillRect(x, my, 10, 10); out.fillRect(x, my + 70, 10, 10); if ((x / 18) % 1 === 0) out.fillRect(x + 3, my + 16, 4, 48); }
+      const n = M.slots || 8, gap = (x1 - x0 - 40) / (n - 1), extra = new Set(M.extra || []);
+      for (let i = 0; i < n; i++) {
+        const isX = extra.has(i), j = [...extra].indexOf(i), rx = x0 + 20 + i * gap;
+        let a = 1, col = '#39E0F0';
+        if (isX) { col = M.extraCol || C.amber; const tx = .5 + j * BEAT; a = M.fade ? 1 - Math.min(1, Math.max(0, (u - tx) / .4)) : Math.min(1, Math.max(0, (u - tx) / .15)); }
+        if (a <= 0) continue;
+        out.save(); out.globalAlpha = a;
+        const s = isX && !M.fade ? .6 + .4 * Math.min(1, a * 1.4) : 1, w = 60 * s, h = 88 * s, wl = 13 * s;
+        out.fillStyle = col; out.fillRect(rx - w / 2, my - h, wl, h); out.fillRect(rx + w / 2 - wl, my - h, wl, h); out.fillRect(rx - w / 2, my - wl, w, wl);
+        // the key: a nicotine dot drops in, then reward sparks rise
+        const kt = u - (.15 + (i % 4) * .18);
+        if (kt > 0 && (M.keys !== false)) {
+          const ky = Math.min(my - 34, my - 200 + kt * 600);
+          out.fillStyle = '#FFE066'; out.beginPath(); out.arc(rx, ky, 16, 0, Math.PI * 2); out.fill();
+          if (ky >= my - 34) { const ph = ((t * 1.2 + i * .37) % 1); out.globalAlpha = a * (1 - ph); pxPlus(rx, my - 130 - ph * 90, 8, M.sparkCol || '#FF9BB0'); }
+        }
+        out.restore();
+      }
+      (M.foot || []).forEach(([s, col], j) => { if (u > .6) drawText(out, s, cx, cy + 170 + j * 62, 5, col, { align: 'center', shadow: '#011012' }); });
+    }
+    out.restore();
+    out.strokeStyle = '#5FE3EF'; out.lineWidth = 8; out.beginPath(); out.arc(cx, cy, r, 0, Math.PI * 2); out.stroke();
+    if (r > 30) { out.strokeStyle = 'rgba(255,255,255,.22)'; out.lineWidth = 4; out.beginPath(); out.arc(cx, cy, r - 14, Math.PI * 1.1, Math.PI * 1.45); out.stroke(); }
+  }
+  // tags: symptom pills pop around the head one per beat-and-a-bit; meter: a segmented gauge beside the body
+  function tagPill(s, x, y, col, k) {
+    const c = 5, w = textW(s, c) + 48, h = 7 * c + 30;
+    out.save(); out.translate(x, y); out.scale(k, k);
+    out.fillStyle = '#011012'; out.fillRect(-w / 2 - 4, -h / 2 + 2, w + 8, h + 6);
+    out.fillStyle = col; out.fillRect(-w / 2, -h / 2 - 2, w, h);
+    out.fillStyle = 'rgba(255,255,255,.35)'; out.fillRect(-w / 2 + 6, -h / 2 + 2, 10, 4);
+    drawText(out, s, 0, -h / 2 + 13, c, '#03262C', { align: 'center' });
+    out.restore();
+  }
+  function tags(m, lt) {
+    m.tags.forEach(([s, col], j) => {
+      const tt = lt - TAG0 - j * TAGDT; if (tt < 0) return;
+      const k = tt < .12 ? .6 + .5 * tt / .12 : tt < .2 ? 1.1 - .1 * (tt - .12) / .08 : 1;
+      tagPill(s, j % 2 ? 880 : 200, 690 + Math.floor(j / 2) * 118, col, k);
+    });
+  }
+  function meter(M, lt, t) {
+    const x = 880, y0 = 1050, h = 400, n = 14, sh = h / n, lvl = M.from + (M.to - M.from) * Math.min(1, Math.max(0, (lt - BAR / 2) / 1.4));
+    drawText(out, M.label, x + 36, y0 - 46, 4, '#39E0F0', { align: 'center' });
+    out.fillStyle = '#011012'; out.fillRect(x - 8, y0 - 8, 88, h + 16);
+    out.strokeStyle = '#5FE3EF'; out.lineWidth = 4; out.strokeRect(x - 8, y0 - 8, 88, h + 16);
+    const on = Math.round(lvl * n) - (Math.floor(t / BEAT) % 2 && lvl > .8 ? 1 : 0);
+    for (let i = 0; i < n; i++) {
+      const f = i / (n - 1), col = f < .45 ? C.lime : f < .72 ? C.amber : '#FF5A5F';
+      out.fillStyle = i < on ? col : 'rgba(57,224,240,.12)'; out.fillRect(x, y0 + h - (i + 1) * sh + 3, 72, sh - 6);
+    }
+  }
   function lens(L, k, cam, t) {   // left edge: grows out of the brain; receptor (or any) icons, the count is the story
     const [wx, wy] = at(-3, 4), ox = wx * cam[0] + cam[1], oy = wy * cam[0] + cam[2];
     const r = Math.round(LENS.r * k), { cx, cy } = LENS;
@@ -337,7 +408,10 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       return;
     }
     if (awayCover < .5) {   // booth-only overlays
-      readout(readValue(m, lt, p));
+      if (!m.mech || p < 1) readout(readValue(m, lt, p));
+      if (m.tags && p >= 1 && !rew) tags(m, lt);
+      if (m.meter && p >= 1 && !rew) meter(m.meter, lt, t);
+      if (m.mech && p >= 1 && !rew) mech(m.mech, Math.min(1, (lt - BAR / 2) / 0.3), cam, t, lt);
       if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
       if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
     }
@@ -372,6 +446,8 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     }
     if (m.label && t - m.t0 >= BAR / 2 && !(m.final && t >= REWIND)) T.push({ id: 'callout', text: m.label.say.join(' '), x0: 40, y0: 600, x1: 330, y1: 1260 });
     if (m.lens && t - m.t0 >= BAR / 2 + 0.25) T.push({ id: 'lens', text: m.lens.foot, x0: LENS.cx - LENS.r, y0: LENS.cy - LENS.r, x1: LENS.cx + LENS.r, y1: LENS.cy + LENS.r });
+    if (m.mech && t - m.t0 >= BAR / 2 + .3) T.push({ id: 'mech', text: [...(m.mech.legend || []), ...(m.mech.foot || [])].map(q => q[0]).join(' '), x0: MECH.cx - MECH.r, y0: MECH.cy - MECH.r, x1: MECH.cx + MECH.r, y1: MECH.cy + MECH.r });
+    if (m.tags) m.tags.forEach(([s], j) => { if (t - m.t0 >= TAG0 + j * TAGDT) T.push({ id: 'tag' + j, text: s, x0: 40, y0: 620, x1: 1040, y1: 980 }); });
     return T;
   };
 

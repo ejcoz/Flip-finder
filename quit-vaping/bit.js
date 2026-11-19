@@ -139,10 +139,16 @@ function drawClear(ctx, { x, y, px, state, rim }) {
   ctx.fillStyle = C.eye;
   for (const side of [fc.e.filter(([c]) => c < 15), fc.e.filter(([c]) => c >= 15)]) {
     if (!side.length) continue;
+    if (face === 'wide') {   // worried: round eyes with a dark pupil
+      const cs = side.map(q => q[0]), rs = side.map(q => q[1]), ex = ox + (Math.min(...cs) + .5) * px, ey = oy + (rs.reduce((p, q) => p + q, 0) / rs.length + .5) * px, R = px * .75;
+      ctx.fillStyle = C.eye; ctx.fillRect(Math.round(ex - R), Math.round(ey - R), Math.round(2 * R), Math.round(2 * R));
+      ctx.fillStyle = '#061419'; ctx.fillRect(Math.round(ex - R * .45), Math.round(ey - R * .45), Math.round(R * .9), Math.round(R * .9)); ctx.fillStyle = C.eye; continue;
+    }
     const cs = side.map(q => q[0]), rs = side.map(q => q[1]), c0 = Math.min(...cs), c1 = Math.max(...cs) + 1, r = rs.reduce((a, b) => a + b, 0) / rs.length;
     const w = Math.max(1.3, c1 - c0) * px; ctx.fillRect(Math.round(ox + (c0 + c1) / 2 * px - w / 2), Math.round(oy + (r + .3) * px), Math.round(w), Math.round(px * .42));
   }
-  for (const [c, r] of fc.m) ctx.fillRect(ox + c * px, Math.round(oy + (r + .35) * px), px, Math.round(px * .3));
+  if (face === 'wide') { const cs = fc.m.map(q => q[0]), rs = fc.m.map(q => q[1]); ctx.fillRect(ox + Math.min(...cs) * px + px * .3, oy + Math.min(...rs) * px + px * .2, (Math.max(...cs) - Math.min(...cs) + 1) * px - px * .6, px * 1.1); }   // worried: a small open mouth
+  else for (const [c, r] of fc.m) ctx.fillRect(ox + c * px, Math.round(oy + (r + .35) * px), px, Math.round(px * .3));
   return { ox, oy, w: W * px, h: H * px };
 }
 
