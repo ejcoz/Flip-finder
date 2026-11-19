@@ -115,6 +115,8 @@ for si, s in enumerate(secs):
 for e in ev['ev']:
     t = e['t']
     if e['type'] == 'sweep': sweep(t, 500, 1700, 0.45, 0.08)
+    elif e['type'] == 'away': sweep(t, 300, 2400, 0.32, 0.07, duty=0.125)   # dive / cut away: fast upward zip
+    elif e['type'] == 'back': sweep(t, 2000, 400, 0.28, 0.05, duty=0.125)   # back to the booth
     elif e['type'] == 'fall': sweep(t, 1500, 140, 1.0, 0.1, duty=0.5)
     elif e['type'] == 'tick': note(t, 84 + e['k'], 0.04, 0.05, duty=0.5, d=0.02, s=0.3, r=0.01)
     elif e['type'] == 'blip':   # hook line lands: a short rising blip per line

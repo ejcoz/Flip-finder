@@ -5,6 +5,7 @@ import { drawText, textW } from './font.js';
 import { bayer } from './pix.js';
 import { drawBit, sparkle, C } from './bit.js';
 import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
+import { drawAway } from './scenes.js';
 
 export const BAR = 2, BEAT = 0.5;
 // Reels / Shorts safe area for text and anything that must be read: clear of the top header, the right-hand buttons
@@ -31,12 +32,14 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'blip', k: 0 });
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
+    if (m.away) { EV.push({ t: m.t0 + m.away.at, type: 'away' }); if (MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
   });
   window.EV = EV;
 
   const cv = document.getElementById('c'), out = cv.getContext('2d');
   const F = document.createElement('canvas'); F.width = FW; F.height = FH;
   const ctx = F.getContext('2d');
+  const AW = document.createElement('canvas'); AW.width = FW; AW.height = FH; const aw = AW.getContext('2d');
   // look variant: A = original; B = red hook word, gunmetal booth, spotlight + vignette, loud habit on frame 0; C = B + big bright heart
   // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
   const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
@@ -280,6 +283,25 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     out.drawImage(F, 0, 0);
     out.setTransform(1, 0, 0, 1, 0, 0);
 
+    // away shots: the beat leaves the booth at m.away.at for the rest of the beat; full-screen scanline wipes in and out
+    const WIPE = .35;
+    const drawWipe = (ys, below) => {   // composite AW above (below=false) or below (below=true) the line at ys
+      out.save(); out.beginPath(); below ? out.rect(0, ys, FW, FH - ys) : out.rect(0, 0, FW, ys); out.clip(); out.drawImage(AW, 0, 0); out.restore();
+      out.fillStyle = 'rgba(57,224,240,.45)'; out.fillRect(0, ys - 22, FW, 44); out.fillStyle = '#E9FDFF'; out.fillRect(0, ys - 3, FW, 6);
+    };
+    let awayCover = 0;
+    if (m.away && lt >= m.away.at && !rew) {
+      const al = lt - m.away.at, dur = m.bars * BAR - m.away.at;
+      drawAway(aw, m.away, al, dur, t);
+      const k = Math.min(1, al / WIPE); awayCover = k;
+      if (k < 1) drawWipe(k * FH, false); else out.drawImage(AW, 0, 0);
+    } else if (prev && prev.away && lt < WIPE) {   // wipe back from the previous beat's away shot to the booth
+      const dur = prev.bars * BAR - prev.away.at;
+      drawAway(aw, prev.away, dur + lt, dur, t);
+      const k = lt / WIPE; awayCover = 1 - k;
+      drawWipe(k * FH, true);
+    }
+
     // text layer (never moved by the camera, always inside SAFE)
     if (rew >= .6) {                     // back to the opening frame: hook lines 1–2, opening readout
       readout(FIRST.read[0]);
@@ -287,9 +309,11 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       watermark();
       return;
     }
-    readout(readValue(m, lt, p));
-    if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
-    if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
+    if (awayCover < .5) {   // booth-only overlays
+      readout(readValue(m, lt, p));
+      if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
+      if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
+    }
     const tm = p >= 0.3 || !prev ? m : prev;
     if (tm.hook) hook(tm, tm === m ? Math.floor(lt / BEAT) + 2 : 3);
     else {

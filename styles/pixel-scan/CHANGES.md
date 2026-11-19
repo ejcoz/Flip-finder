@@ -16,3 +16,4 @@ Made from a blank page. Technique base: Mascot Screencast (`living-screencast`).
 | Ending | — | every film ends with a loop rewind (scan runs back up to the opening frame; music turns back to bar 1, no fade) | Seamless replays count as rewatches |
 | Frame-1 look | — | red hook key word; gunmetal booth; dithered spotlight + vignette; dim body outline; big always-bright heart; glowing particles and the habit's prop on frame 1 | The first frame needs one focal point and a warm accent against the teal (bright area 10 % → ~4 %) |
 | Text contrast | — | dark bold pixel text on a bright cyan title bar and a near-white caption card; bold strokes for anything read | Light-on-teal text with one-cell strokes didn't grab the eye at phone size |
+| Scene variety | — | away shots: organ dives, life scenes, full-screen charts, with full-screen scanline wipes; booth as home base | Viewers need full scene changes every 2–4 s, like the reference |
