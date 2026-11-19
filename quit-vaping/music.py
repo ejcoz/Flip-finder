@@ -118,6 +118,9 @@ for e in ev['ev']:
     elif e['type'] == 'away': sweep(t, 300, 2400, 0.32, 0.07, duty=0.125)   # dive / cut away: fast upward zip
     elif e['type'] == 'back': sweep(t, 2000, 400, 0.28, 0.05, duty=0.125)   # back to the booth
     elif e['type'] == 'fall': sweep(t, 1500, 140, 1.0, 0.1, duty=0.5)
+    elif e['type'] == 'xout':   # the X stamps on: a low thud, then a bright two-note chime
+        sweep(t, 220, 60, 0.12, 0.12, duty=0.5); hat(t, 0.25, seed=41)
+        note(t + 0.05, 88, 0.09, 0.07, duty=0.25, d=0.05, s=0.4, r=0.05); note(t + 0.13, 95, 0.18, 0.07, duty=0.25, d=0.08, s=0.4, r=0.1)
     elif e['type'] == 'gulp':   # a mug goes into the liver: a quick two-step glug
         sweep(t, 620, 240, 0.09, 0.08, duty=0.5); sweep(t + 0.1, 520, 190, 0.1, 0.07, duty=0.5)
     elif e['type'] == 'tick': note(t, 84 + e['k'], 0.04, 0.05, duty=0.5, d=0.02, s=0.3, r=0.01)

@@ -31,7 +31,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.final) { EV.push({ t: m.t0, type: 'confetti' }); EV.push({ t: REWIND, type: 'rewind' }); }
     if (m.chart) for (let k = 0; k < 10; k++) EV.push({ t: m.t0 + BAR / 2 + k * 0.25, type: 'tick', k: m.chart.down ? 9 - k : k });
     if (m.hook) EV.push({ t: m.t0 + BEAT, type: 'blip', k: 2 });
-    if (m.hookX) EV.push({ t: m.t0 + 0.05, type: 'blip', k: 0 });
+    if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'xout' });   // the X stamps on: a thud and a chime
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens || m.mech) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
     if (m.mech) (m.mech.extra || []).forEach((_, j) => EV.push({ t: m.t0 + BAR / 2 + .5 + j * BEAT, type: 'tick', k: 6 + j }));
@@ -56,7 +56,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   const FULL = OPEN && (QS.get('frame') || READ.frame) === 'full';   // full length: for films about legs (feet on the platform)
   const OPENB = { x0: 0, x1: 1080, gx0: 0, gx1: 1080, capY: 560, glassY0: 600, glassY1: 1700, floorY: 1700 };
   const LAB = buildLab({ dark: LOUD, spot: LOUD && !OPEN, open: OPEN, B: OPEN ? OPENB : null });
-  const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = FULL ? 17 : OPEN ? 25 : CLEAR ? 21 : 15, FOOT = FULL ? B.glassY1 - 8 : OPEN ? B.glassY1 + 18 * PX : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
+  const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = FULL ? 17 : OPEN ? 25 : CLEAR ? 21 : 15, FOOT = FULL ? B.glassY1 - 8 : OPEN ? B.glassY1 + 18 * PX + 40 : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
   const at = (cx, cy) => [CX + cx * PX, TOP + cy * PX];
   const TY = SAFE.y0;
   const dirCol = d => d > 0 ? C.lime : d < 0 ? C.amber : '#39E0F0';
@@ -71,7 +71,21 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     drawText(out, text, FW / 2, cy + (h - 7 * c) / 2, c, fg, { align: 'center', shadow: c >= 8 ? '#03262C' : null, bold: true });
     return cy + Math.round(h) + (line ? c : 0);
   }
-  function hook(m, n) {         // lines 1–2 from the first frame; line 3 lands on beat 2
+  const rew0 = t => t >= REWIND + BAR / 4;
+  const HV = QS.has('hook') ? QS.get('hook') : (READ.hookStyle || 'B');   // B is the house hook now   // hook look: '' (classic), A (huge topic), B (A on a solid label bar), C (B + warm glow + tease chip)
+  function hook(m, n) {         // the whole hook on frame 1
+    if (HV && m.hookBig) {
+      const [[a, ca], [b, cb], [c3, cc]] = m.hookBig;
+      let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
+      y = (HV === 'A' ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#FFFFFF', '#E5484D', '#7A1E22')) + 14;
+      y = bar(c3, y, cc, '#03262C', '#39E0F0', null);
+      if (HV === 'C' && m.tease) {
+        const c = 5, w = textW(m.tease, c) + 40, x = Math.round((FW - w) / 2), yy = y + 18;
+        out.fillStyle = '#03262C'; out.fillRect(x, yy, w, 7 * c + 24); out.strokeStyle = '#FFE066'; out.lineWidth = 4; out.strokeRect(x, yy, w, 7 * c + 24);
+        drawText(out, m.tease, FW / 2, yy + 12, c, '#FFE066', { align: 'center' });
+      }
+      return;
+    }
     const [[a, ca], [b, cb], [c3, cc]] = m.hook;
     let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
     y = (LOUD ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#F2FBFC', '#0B8EA0', '#39E0F0')) + 14;
@@ -301,13 +315,16 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     }
   }
   function props(list, lt) {
+    const XT = 2 * BEAT;   // the item shows clean for a second, then the X stamps on
     const step = Math.floor(lt * 15) / 15;
     for (const p of list || []) {
       // held props sit in Bit's right hand (figure cell 12.7, 39) with pixel fingers wrapped over the grip
       const BIGP = OPEN && !FULL, [hx, hy] = BIGP ? [900, 1150] : at(12.7, 39), c = BIGP ? 21 : 10;   // bust look: no hands, the item floats big beside the chest
       const fingers = (x0, y0, n, w) => { if (BIGP) return; for (let f = 0; f < n; f++) { ctx.fillStyle = '#1597A8'; ctx.fillRect(x0, y0 + f * 14, w, 12); ctx.fillStyle = '#123D45'; ctx.fillRect(x0 + 3, y0 + f * 14 + 3, w - 6, 6); } };
       const cross = (x0, y0, w, h) => {
-        if (BIGP) { const cx0 = x0 + w / 2, cy0 = y0 + h / 2, R = Math.max(w, h) * .62;   // big: a thick red X with a dark outline, over the whole item
+        if (lt < XT) return;
+        const pop = 1 + .45 * Math.max(0, 1 - (lt - XT) / .12);   // stamps on: a quick scale-down
+        if (BIGP) { const cx0 = x0 + w / 2, cy0 = y0 + h / 2, R = Math.max(w, h) * .62 * pop;   // big: a thick red X with a dark outline, over the whole item
           for (const [col, th] of [['#03262C', 34], ['#FF5A5F', 22]]) { ctx.fillStyle = col; for (let k = 0; k <= 24; k++) { const u = k / 24 * 2 - 1; ctx.fillRect(cx0 + u * R - th / 2, cy0 + u * R - th / 2, th, th); ctx.fillRect(cx0 - u * R - th / 2, cy0 + u * R - th / 2, th, th); } }
           return; }
         ctx.fillStyle = '#FF5A5F'; for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.fillRect(x0 + u * w - 7, y0 + u * h - 7, 14, 14); ctx.fillRect(x0 + (1 - u) * w - 7, y0 + u * h - 7, 14, 14); } };
@@ -376,6 +393,13 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const p = prev ? Math.min(1, lt / (BAR / 2)) : 1;
     const rew = m.final && t >= REWIND ? Math.min(1, (t - REWIND) / (BAR / 2)) : 0;   // upward rewind sweep
     ctx.drawImage(LAB, 0, 0);
+    if (HV === 'C' && (m.hook || (m.final && rew0(t)))) {   // hook frame only: a warm dithered glow behind the body
+      const gcx = CX, gcy = TOP + 22 * PX, cell = 8;
+      for (let y = gcy - 560; y < gcy + 560; y += cell) for (let x = 0; x < FW; x += cell) {
+        const d = Math.hypot((x - gcx) / 520, (y - gcy) / 560); if (d > 1) continue;
+        if ((1 - d) * .85 > bayer(x / cell, y / cell)) { ctx.fillStyle = d < .45 ? '#7A2E4A' : '#4A2340'; ctx.fillRect(x, y, cell, cell); }
+      }
+    }
     const dropNow = m.drop && lt >= 2 * BAR;
     const rim = OPEN ? ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#5FE3EF') : DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
     const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, tick: Math.floor(t * 8), sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
@@ -414,7 +438,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       ctx.fillStyle = '#39E0F0'; ctx.fillRect(B.x0 - 14, ys - 5, 34, 10); ctx.fillRect(B.x1 - 20, ys - 5, 34, 10);
     }
     if (!OPEN) glassSheen(ctx);
-    if (rew >= 1) props(FIRST.props, 0);   // the loop lands on frame 1 exactly: the item already crossed out
+    if (rew >= 1) props(FIRST.props.map(q => q.endsWith('X') ? q.slice(0, -1) : q), 0);   // the loop lands on frame 1: the item, not yet crossed out
     else if (p >= 1 && !m.chart && !rew) props(m.props, lt);
     if (m.dir > 0 && !m.chart && p >= 1 && !rew && m.sparkle) {
       const tw = Math.floor(t / BEAT);
@@ -489,13 +513,13 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const i = Math.max(0, MS.findLastIndex(m => t >= m.t0)), m = MS[i], prev = MS[i - 1], T = [];
     const box = (id, text, y0, y1, extra = {}) => T.push({ id, text, x0: SAFE.x0, y0, x1: SAFE.x1, y1, ...extra });
     if (m.final && t >= REWIND + 0.6 * BAR / 2) {   // the loop's last second shows the opening hook again: it carries on at frame 0
-      FIRST.hook.slice(0, 3).forEach(([h], k) => box('endhook' + k, h, TY + k * 110, TY + k * 110 + 160, { pass: true }));
+      (HV && FIRST.hookBig ? FIRST.hookBig : FIRST.hook).slice(0, 3).forEach(([h], k) => box('endhook' + k, h, TY + k * 110, TY + k * 110 + 160, { pass: true }));
       return T;
     }
     const tm = m;
     if (tm.hook) {
       const n = 3;
-      tm.hook.slice(0, Math.min(3, n)).forEach(([h], k) => box('hook' + k, h, TY + k * 110, TY + k * 110 + 160));
+      (HV && tm.hookBig ? tm.hookBig : tm.hook).slice(0, Math.min(3, n)).forEach(([h], k) => box('hook' + k, h, TY + k * 110, TY + k * 110 + 160));
     } else {
       box('title', tm.title, TY, TY + 150);
       if (tm.cap) box('cap', tm.cap.join(' '), TY + 160, TY + 330);
