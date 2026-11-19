@@ -11,7 +11,7 @@ window.render = (t) => {
   A.park();
   let x, pose, look = 0, tilt = 0, run = false;
   if (t < 2.6) { x = -200 + 300 * Math.min(t, 2.4) + 300 * .6 * Math.max(0, Math.min(t - 2.4, .2) / .2) * .1; pose = t < 2.4 ? walkPose(Math.floor(t / HOLD)) : 'stand'; x = -200 + 300 * (t < 2.4 ? t : 2.4 + (1 - Math.pow(1 - (t - 2.4) / .2, 2)) * .1); }
-  else if (t < 5.2) { x = -200 + 300 * 2.5; pose = 'stand'; look = ease((t - 2.8) / .3) * (1 - ease((t - 4.9) / .25)); tilt = -.3 * ease((t - 3.4) / .2) * (1 - ease((t - 4.9) / .25)); }
+  else if (t < 5.2) { x = -200 + 300 * 2.5; pose = 'stand'; look = (t > 2.85 && t < 5.0) ? Math.min(1, .5 + (t - 2.85) * 3) : 0; tilt = -.3 * ease((t - 3.4) / .2) * (1 - ease((t - 4.9) / .25)); }
   else { const u = t - 5.2; x = -200 + 300 * 2.5 + 180 * u + 700 * u * u; pose = u < .25 ? 'stepA' : runPose(Math.floor(u / (HOLD * .75))); run = u > .25; }
   if (run) smear(g, x, 1640, Math.min(1, (t - 5.45) / .2));
   g.save(); g.translate(x, 1640); g.scale(SC, SC);

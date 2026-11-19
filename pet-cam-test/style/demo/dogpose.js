@@ -99,8 +99,14 @@ export function dogProfile(g, x, y, o = {}) {
   limb(g, K.fn.map(([px, py, w]) => [px, py + (py < -200 ? b : 0), w]), B.coat, '#FBF4E6');
   // head in profile (same parts and colours as the sitting dog), turning toward the camera with `look`
   const [hx, hy, hr] = K.head;
+  if (look >= .5) {   // limited animation: a head turn is a swap to the front-facing drawing (with a small pop), not a morph
+    const pop = 1 + .06 * Math.max(0, 1 - (look - .5) * 6);
+    g.save(); g.translate(222 + hx, -440 + b + hy); g.rotate(tilt); g.scale(.82 * pop, .82 * pop);
+    A.frontHead(breed, { blink, perk: Math.min(1, Math.abs(tilt) / .3), brow: Math.min(1, Math.abs(tilt) / .3) });
+    g.restore(); g.restore(); return;
+  }
   g.save(); g.translate(236 + hx, -432 + b + hy); g.rotate(hr + tilt);
-  const t2 = look, sl = 104 * (1 - .5 * t2);
+  const t2 = 0, sl = 104;
   g.fillStyle = A.shade(-90, 70, B.coat); A.ell(0, 0, 86, 80); g.fill();
   if (B.eyePatch) { g.save(); A.ell(0, 0, 86, 80); g.clip(); g.fillStyle = A.shade(-70, 10, B.patch); A.ell(30 - 24 * t2, -20, 42, 36, .2); g.fill(); g.restore(); }
   g.fillStyle = A.shade(-10, 70, ['#FFFDF6', '#F6ECDA', '#DCCAAA']); g.beginPath(); g.ellipse(46 - 22 * t2 + sl / 2, 20, sl / 2 + 16, 36, 0, 0, Math.PI * 2); g.fill();

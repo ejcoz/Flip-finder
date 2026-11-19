@@ -77,6 +77,14 @@ export function dog(x, y, o = {}) {
   g.restore();
   // head
   g.save(); g.translate(0, -470); g.rotate(tilt);
+  frontHead(breed, { blink, perk, brow });
+  g.restore();
+  g.restore();
+}
+
+// the front-facing head (drawn at the current origin, centre of the skull); shared by the sitting dog and the profile dog's look
+export function frontHead(breed = 'cream', { blink = 0, perk = 0, brow = .5 } = {}) {
+  const B = BREEDS[breed];
   const [hx, hy] = B.head;
   const ear = (sx, up) => {
     g.save(); g.scale(sx, 1); g.translate(-(hx - 112) * .6, 0); g.scale(1, B.earLen);
@@ -112,8 +120,6 @@ export function dog(x, y, o = {}) {
   const by = 8 * brow;
   g.beginPath(); g.moveTo(-ex - 18, ey - 32 - by * .4); g.quadraticCurveTo(-ex, ey - 46 - by, -ex + 18, ey - 36 - by * .6); g.stroke();
   g.beginPath(); g.moveTo(ex - 18, ey - 28); g.quadraticCurveTo(ex, ey - 36, ex + 18, ey - 26); g.stroke();
-  g.restore();
-  g.restore();
 }
 
 // small dog-head icon for survey grids; long = long muzzle, tilt in radians
