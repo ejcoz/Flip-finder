@@ -1,6 +1,7 @@
 // "You quit vaping" — a Pixel Scan film. The film is data; engine.js draws it. Facts: FACTS.md.
 import { film } from './engine.js';
-import { C } from './bit.js';
+import { C, showOnly } from './bit.js';
+showOnly(['heart', 'brain']);   // only the organs this film talks about
 
 // lungs, liver, stomach, muscle stay unchanged: this film makes no claims about them (FACTS.md)
 const BODY = { lung: 1, liver: 1, stomach: 1, muscle: 1 };

@@ -51,6 +51,12 @@ const FACES = {
   shut: { e: [[11, 10], [12, 10], [13, 10], [16, 10], [17, 10], [18, 10]], m: [[14, 12], [15, 12]] },
 };
 
+// Only the organs a film talks about are drawn (the rest of the body stays empty, so the scan reads cleanly).
+// showOnly(['liver', 'heart']) in main.js; null = every organ.
+let SHOWN = null;
+export function showOnly(list) { SHOWN = list ? new Set(list) : null; }
+const shown = k => !SHOWN || SHOWN.has(k);
+
 // state: health 0..1 per organ { brain, lung, heart, liver, stomach, muscle }, face, toxins, seed
 // x,y = midpoint under the feet; px = cell size
 export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
@@ -78,16 +84,17 @@ export function drawBit(ctx, { x, y, px = 11, state = {}, rim = C.rim }) {
     const [good, bad] = pal[ch]; const cc = c0 + c, rr = r0 + r;
     cell(cc, rr, bad == null ? good : mix(k, cc, rr, good, bad, r0, rows.length));
   }));
-  organ(BRAIN, 10, 2, brain, { b: [C.brain, C.grey], d: [C.brainD, C.greyD] });
-  for (let r = 15; r <= 19; r++) for (const c of [14, 15]) cell(c, r, mix(lung, c, r, '#E8A39A', C.grey, 14, 6));
-  organ(LUNG, 9, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
-  organ(LUNG.map(row => [...row].reverse().join('')), 16, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
-  if (bigHeart) organ(HEART_BIG, 11, 21, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
+  if (shown('brain')) organ(BRAIN, 10, 2, brain, { b: [C.brain, C.grey], d: [C.brainD, C.greyD] });
+  if (shown('lung')) for (let r = 15; r <= 19; r++) for (const c of [14, 15]) cell(c, r, mix(lung, c, r, '#E8A39A', C.grey, 14, 6));
+  if (shown('lung')) organ(LUNG, 9, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
+  if (shown('lung')) organ(LUNG.map(row => [...row].reverse().join('')), 16, 19, lung, { o: [C.lung, C.grey], h: [C.lungHi, '#8FA7AB'] });
+  if (!shown('heart')) {}
+  else if (bigHeart) organ(HEART_BIG, 11, 21, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
   else organ(HEART, 12, 22, heart, { r: [C.heart, C.heartD], h: [C.heartHi], d: [C.heartD] });
-  organ(LIVER, 9, 31, liver, { l: [C.liver, C.greyD] });
-  organ(STOMACH, 16, 31, stomach, { s: [C.stomach, C.grey] });
+  if (shown('liver')) organ(LIVER, 9, 31, liver, { l: [C.liver, C.greyD] });
+  if (shown('stomach')) organ(STOMACH, 16, 31, stomach, { s: [C.stomach, C.grey] });
   // leg muscles: a two-cell strip down each thigh and calf
-  for (let r = 41; r <= 56; r++) for (const side of [-1, 1]) {
+  if (shown('muscle')) for (let r = 41; r <= 56; r++) for (const side of [-1, 1]) {
     const cx = W / 2 + side * legX(r + .5);
     for (const c of [Math.floor(cx - 1), Math.floor(cx)]) if (inBody(c - 1, r) && inBody(c + 1, r)) cell(c, r, sore ? C.amber : mix(muscle, c, r, C.muscle, C.greyD, 41, 16));
   }

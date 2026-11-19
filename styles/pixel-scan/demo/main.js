@@ -1,7 +1,8 @@
 // Pixel Scan demo: "10K steps a day". The film is data; engine.js draws it.
 // Captions, callouts and numbers here are placeholder copy for a style test (see ../FACTS.md).
 import { film } from './engine.js';
-import { C } from './bit.js';
+import { C, showOnly } from './bit.js';
+showOnly(['muscle', 'brain', 'heart']);   // only the organs this film talks about
 
 const HEALTHY = { lung: 1, heart: 1, brain: 1, liver: 1, stomach: 1, muscle: 1, toxins: 0 };
 const SPARKS = [[-9, 25], [9, 47], [-8, 52], [7, 3]];

@@ -1,6 +1,7 @@
 // "You stop drinking" — a Pixel Scan film. The film is data; engine.js draws it. Facts: FACTS.md.
 import { film } from './engine.js';
-import { C } from './bit.js';
+import { C, showOnly } from './bit.js';
+showOnly(['liver', 'brain', 'heart']);   // only the organs this film talks about
 
 const HEAD_SPARKS = [[-6, 3], [7, 2], [-8, 9], [6, 10]];
 const BELLY_SPARKS = [[-9, 30], [8, 33], [-6, 3], [7, 22]];

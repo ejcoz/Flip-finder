@@ -1,7 +1,8 @@
 // "You cut added sugar" — a Pixel Scan film. The film is data; engine.js draws it. Facts: FACTS.md.
 // Organs stay as they are (this film makes no organ claims); the amber particles stand for sugar and are illustrative.
 import { film } from './engine.js';
-import { C } from './bit.js';
+import { C, showOnly } from './bit.js';
+showOnly([]);   // only the organs this film talks about
 
 const BODY = { lung: 1, heart: 1, brain: 1, liver: 1, stomach: 1, muscle: 1 };
 const HEAD_SPARKS = [[-6, 3], [7, 2], [-8, 9], [6, 10]];
