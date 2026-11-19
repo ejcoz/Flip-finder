@@ -1,7 +1,7 @@
 """Subtitles from the page's voice placements: python make_srt.py <events.json> <lines.json> <voice/dur.json> <cues.json>"""
 import json, sys
 ev, lines, dur = (json.load(open(p)) for p in sys.argv[1:4])
-DISPLAY = {'l03': 'In one survey, owners said their dogs responded to about 89 words.'}   # digits on screen, the spoken spelling in the voice
+DISPLAY = {'l03': 'In one survey, owners said their dogs responded to 89 words, on average.'}   # digits on screen, the spoken spelling in the voice
 vo = [e for e in ev['ev'] if e['type'] == 'vo']
 cues = []
 for i, e in enumerate(vo):

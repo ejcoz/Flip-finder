@@ -13,10 +13,10 @@
  },
  {
   "id": "l03",
-  "text": "In one survey, owners said their dogs responded to about eighty-nine words.",
+  "text": "In one survey, owners said their dogs responded to eighty-nine words, on average.",
   "voice": "af_heart",
-  "speed": 0.95,
-  "asr": "In one survey, owners said their dogs responded to about 89 words."
+  "speed": 0.9,
+  "asr": "In one survey, owners said their dogs responded to 89 words on average."
  },
  {
   "id": "l04",

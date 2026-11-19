@@ -6,7 +6,7 @@ const { W, H, ACC } = A;
 const LINES = [
   { id: 'l01', lead: 5, key: 1, kind: 'ask', scene: 'home' },
   { id: 'l02', lead: 0, key: 4, kind: 'fact', scene: 'home' },
-  { id: 'l03', lead: 9, key: 3, kind: 'fact', scene: 'home', display: 'In one survey, owners said their dogs responded to about 89 words.' },
+  { id: 'l03', lead: 9, key: 2, kind: 'fact', scene: 'home', display: 'In one survey, owners said their dogs responded to 89 words, on average.' },
   { id: 'l04', lead: 6, key: 3, kind: 'fact', scene: 'home' },
   { id: 'l05', lead: 6, key: 2, kind: 'ask', scene: 'lab' },
   { id: 'l06', lead: 2, key: 3, kind: 'fact', scene: 'lab' },
