@@ -276,8 +276,8 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
-        for (const [cx, ph] of [[-10.5, 0], [8, .5]]) {
-          const k = ((step / 0.8 + ph) % 1), [x, y] = at(cx, 3 + k * 6);
+        for (const [cx, ph] of OPEN ? [[-7.4, 0], [6.6, .5]] : [[-10.5, 0], [8, .5]]) {
+          const k = ((step / 0.8 + ph) % 1), [x, y] = at(cx, (OPEN ? 4 : 3) + k * 6);
           ctx.fillStyle = '#BFF4FF';
           for (const [c, r] of [[1, 0], [0, 1], [1, 1], [2, 1], [0, 2], [1, 2], [2, 2], [1, 3]]) ctx.fillRect(Math.round(x + c * 11), Math.round(y + r * 11), 11, 11);
         }
@@ -321,7 +321,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     ctx.drawImage(LAB, 0, 0);
     const dropNow = m.drop && lt >= 2 * BAR;
     const rim = OPEN ? ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#5FE3EF') : DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
-    const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
+    const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, tick: Math.floor(t * 8), sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
       ...(LOUD ? { toxins: Math.round((st.toxins || 0) * 1.7), glow: true } : {}), ...(BIG ? { bigHeart: true, heart: Math.max(st.heart ?? 1, .85) } : {}) } });
     const scene = (mm, rv) => {
       if (!mm.chart) return bit0(mm.s);

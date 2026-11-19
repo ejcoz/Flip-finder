@@ -135,6 +135,21 @@ function drawClear(ctx, { x, y, px, state, rim }) {
       ctx.fillRect(ox + Math.round((xx + W / 2) * px), oy + Math.round(yy * px), Math.ceil(d * px), Math.ceil(d * px));
     }
   }
+  if (face === 'panic') {   // withdrawal: huge round eyes with tiny darting pupils, steep angry brows, a wobbly mouth
+    const tk = state.tick || 0, jx = [0, .16, -.14, .08][tk % 4] * px, hx = ox + 15 * px, ey = oy + 10.3 * px, R = px * 1.05, q = px * .35;
+    for (const sd of [-1, 1]) {
+      const ex = hx + sd * 2.6 * px;
+      ctx.fillStyle = C.eye;   // a pixel circle: a square with its corners knocked off
+      ctx.fillRect(Math.round(ex - R + q), Math.round(ey - R), Math.round(2 * R - 2 * q), Math.round(2 * R));
+      ctx.fillRect(Math.round(ex - R), Math.round(ey - R + q), Math.round(2 * R), Math.round(2 * R - 2 * q));
+      ctx.fillStyle = '#061419'; ctx.fillRect(Math.round(ex - px * .24 + jx), Math.round(ey - px * .24), Math.round(px * .48), Math.round(px * .48));
+      ctx.fillStyle = '#FF7A6B';   // brow: a steep bar, low at the nose end
+      for (let k = 0; k < 6; k++) { const bx = ex - sd * (1.25 - k * .45) * px, by = ey - R - px * (1.05 - k * .2); ctx.fillRect(Math.round(bx - px * .3), Math.round(by), Math.round(px * .6), Math.round(px * .38)); }
+    }
+    ctx.fillStyle = C.eye;   // wobbly mouth: a zigzag that shifts every tick
+    for (let k = 0; k < 7; k++) ctx.fillRect(Math.round(hx + (k - 3.5) * px * .5), Math.round(oy + 13.1 * px + (((k + tk) % 2) ? .3 : -.1) * px), Math.round(px * .5), Math.round(px * .3));
+    return { ox, oy, w: W * px, h: H * px };
+  }
   const fc = FACES[face] || FACES.flat;   // HD face: one dash per eye, a thin mouth
   ctx.fillStyle = C.eye;
   for (const side of [fc.e.filter(([c]) => c < 15), fc.e.filter(([c]) => c >= 15)]) {
