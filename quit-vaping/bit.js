@@ -26,7 +26,9 @@ const headIn = (x, y, rx = 6.3, ry = 7.2, cy = 7.6) => (x / rx) ** 2 + ((y - cy)
 const SHAPES = {
   human: null,   // the original figure (inBodyXY below)
   bust: (x, y) => headIn(x, y) || (Math.abs(x) <= 2.4 && y >= 13.5 && y <= 17.5)
-    || (y >= 16.2 && se(x, y, 0, 30, 10.4, 13.8, 3.2) && (y > 20 || Math.abs(x) <= 10.4 - (20 - y) ** 2 * .45)),
+    || (y >= 16.2 && y <= 41 && se(x, y, 0, 30, 10.4, 13.8, 3.2) && (y > 20 || Math.abs(x) <= 10.4 - (20 - y) ** 2 * .45))
+    || (y > 38 && y <= 60.5 && Math.abs(Math.abs(x) - 4.3) <= 3.9 - (y - 38) * .055 && !(y > 41 && Math.abs(x) < .45 + (y - 41) * .02))   // legs: rounded, a small gap between
+    || (y > 59 && y <= 61.8 && se(Math.abs(x), y, 5.2, 60.6, 3.6, 1.3, 3)),   // feet
   chibi: (x, y) => headIn(x, y, 7.2, 7.4, 7.3) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
     || se(x, y, 0, 28.5, 8.6, 12.4, 4) || se(Math.abs(x), y, 9.6, 27, 2.2, 7.2, 2.6),
   hero: (x, y) => headIn(x, y, 6, 7, 7.6) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
@@ -103,6 +105,8 @@ const ORG = {
   trachea: { box: [-1, 1, 13.6, 20], test: (x, y) => Math.abs(x) < .85 && y > 13.8 && y < 19.8, pal: ['#F7C1B8', '#E8A39A', '#B9675E'], detail: (x, y) => (y * 1.4) % 1 < .22, k: 'lung' },
   heart: { box: [-5, 6, 20.5, 31.5], test: (x, y) => heartIn(x, y, .5, 25.2, 2.0), pal: ['#FFD0D2', '#FF4F58', '#B32C3B'], detail: () => false },
   liver: { box: [-7, 1.5, 30, 35.5], test: (x, y) => ell(x, y, -3, 32.2, 4, 2.2) || ell(x, y, .2, 31.6, 1.8, 1.5), pal: ['#F29A8E', '#E0675E', '#9E3D44'], detail: () => false },
+  muscle: { box: [-8, 8, 41.5, 57], test: (x, y) => se(Math.abs(x), y, 4.3, 45.5, 2.3, 4, 2.4) || se(Math.abs(x), y, 4.3, 52.6, 1.8, 3.6, 2.4), pal: ['#FFB3A8', '#F07F74', '#B4534C'],
+    detail: (x, y) => Math.abs(Math.abs(x) - 4.3 - (y - 44) * .04) < .12 },
   stomach: { box: [1.5, 7, 30.2, 36], test: (x, y) => ell(x, y, 4.1, 32.8, 2.3, 2.3), pal: ['#FFD2C8', '#FFB0A3', '#D27C70'], detail: () => false },
 };
 const GREYP = ['#A9BBBE', '#6F8A8E', '#4E6569'];
@@ -118,7 +122,7 @@ function drawClear(ctx, { x, y, px, state, rim }) {
     if (glow) { ctx.fillStyle = 'rgba(255,181,71,.3)'; ctx.fillRect(X - 2 * f, Y - 2 * f, 4 * f, 4 * f); }
     ctx.fillStyle = glow ? '#FFD27A' : C.amber; ctx.fillRect(X - f, Y - f, 2 * f, 2 * f);
   }
-  for (const name of ['lung', 'trachea', 'liver', 'stomach', 'heart', 'brain']) {
+  for (const name of ['lung', 'trachea', 'liver', 'stomach', 'heart', 'brain', 'muscle']) {
     const o = ORG[name], key = o.k || name; if (!shown(key)) continue;
     const k = state[key] ?? 1, [x0, x1, y0, y1] = o.box;
     for (let yy = Math.floor(y0 / d) * d; yy < y1; yy += d) for (let xx = Math.floor(x0 / d) * d; xx < x1; xx += d) {

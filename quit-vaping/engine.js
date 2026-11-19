@@ -43,14 +43,16 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   const AW = document.createElement('canvas'); AW.width = FW; AW.height = FH; const aw = AW.getContext('2d');
   // look variant: A = original; B = red hook word, gunmetal booth, spotlight + vignette, loud habit on frame 0; C = B + big bright heart
   // default look is E (the chosen one): B + big bright heart + a dimmer body outline. A–D are kept for comparisons (?v=A)
-  const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'E';
+  const V = (typeof location !== 'undefined' && new URLSearchParams(location.search).get('v')) || READ.variant || 'G';   // G is the look now: HD pixels, no booth, the bust body
   const LOUD = V !== 'A', BIG = 'CDEF'.includes(V), DIM = 'DEF'.includes(V), VAPE_AT_MOUTH = V === 'D';
   const OPEN = V === 'G', CLEAR = V === 'F' || OPEN;   // G: F without the booth — the body is the frame   // F: the clear look — head and torso fill the glass, smooth solid body, detailed organs
   if (CLEAR) setLook('clear');
-  const SH = typeof location !== 'undefined' && new URLSearchParams(location.search).get('shape'); if (SH) setShape(SH);
+  const QS = typeof location !== 'undefined' ? new URLSearchParams(location.search) : new URLSearchParams();
+  setShape(QS.get('shape') || READ.shape || 'bust');
+  const FULL = OPEN && (QS.get('frame') || READ.frame) === 'full';   // full length: for films about legs (feet on the platform)
   const OPENB = { x0: 0, x1: 1080, gx0: 0, gx1: 1080, capY: 560, glassY0: 600, glassY1: 1700, floorY: 1700 };
   const LAB = buildLab({ dark: LOUD, spot: LOUD && !OPEN, open: OPEN, B: OPEN ? OPENB : null });
-  const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = OPEN ? 25 : CLEAR ? 21 : 15, FOOT = OPEN ? B.glassY1 + 18 * PX : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
+  const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = FULL ? 17 : OPEN ? 25 : CLEAR ? 21 : 15, FOOT = FULL ? B.glassY1 - 8 : OPEN ? B.glassY1 + 18 * PX : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
   const at = (cx, cy) => [CX + cx * PX, TOP + cy * PX];
   const TY = SAFE.y0;
   const dirCol = d => d > 0 ? C.lime : d < 0 ? C.amber : '#39E0F0';
@@ -179,7 +181,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const step = Math.floor(lt * 15) / 15;
     for (const p of list || []) {
       // held props sit in Bit's right hand (figure cell 12.7, 39) with pixel fingers wrapped over the grip
-      const [hx, hy] = at(12.7, 39), c = 10;
+      const [hx, hy] = OPEN && !FULL ? at(13.2, 25) : at(12.7, 39), c = 10;
       const fingers = (x0, y0, n, w) => { for (let f = 0; f < n; f++) { ctx.fillStyle = '#1597A8'; ctx.fillRect(x0, y0 + f * 14, w, 12); ctx.fillStyle = '#123D45'; ctx.fillRect(x0 + 3, y0 + f * 14 + 3, w - 6, 6); } };
       const cross = (x0, y0, w, h) => { ctx.fillStyle = '#FF5A5F'; for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.fillRect(x0 + u * w - 7, y0 + u * h - 7, 14, 14); ctx.fillRect(x0 + (1 - u) * w - 7, y0 + u * h - 7, 14, 14); } };
       if (p === 'vapeX' || p === 'vape') {        // a pixel vape gripped upright in the fist

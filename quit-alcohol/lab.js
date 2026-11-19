@@ -15,7 +15,7 @@ function band(v) { // v 0..3 → [colA, colB, k] across the room ramp
 export function buildLab(o = {}) {
   const cv = document.createElement('canvas'); cv.width = FW; cv.height = FH;
   const g = cv.getContext('2d');
-  const B = BOOTH, cx = (B.x0 + B.x1) / 2, cy = (B.glassY0 + B.glassY1) / 2;
+  const B = o.B || BOOTH, cx = (B.x0 + B.x1) / 2, cy = (B.glassY0 + B.glassY1) / 2;
   // back wall: vertical ramp + a halo around the booth, all ordered dither
   ditherField(g, 0, 0, FW, B.floorY, (x, y) => {
     const halo = Math.max(0, 1 - Math.hypot((x - cx) * 0.85, (y - cy) * 0.6) / 620);
@@ -43,6 +43,12 @@ export function buildLab(o = {}) {
       const d = Math.hypot((x - cx) / (FW * 0.62), (y - 1000) / (FH * 0.6)), v = Math.min(1, Math.max(0, (d - 0.55) / 0.45));
       if (v * 0.9 > bayer(x / CELL + 2, y / CELL + 1)) { g.fillStyle = '#01080A'; g.fillRect(x, y, CELL, CELL); }
     }
+  }
+  if (o.open) {   // open stage: no booth; a glowing scan platform the body stands on
+    const sh = g.createRadialGradient(cx, B.floorY, 10, cx, B.floorY, 520);
+    sh.addColorStop(0, 'rgba(57,224,240,.22)'); sh.addColorStop(1, 'rgba(57,224,240,0)');
+    g.fillStyle = sh; g.beginPath(); g.ellipse(cx, B.floorY + 4, 520, 60, 0, 0, Math.PI * 2); g.fill();
+    return cv;
   }
   // ---- booth (smooth) ----
   const metal = (x0, y0, x1, y1, horiz) => {

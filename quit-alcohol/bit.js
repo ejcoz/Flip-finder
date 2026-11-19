@@ -20,8 +20,27 @@ function torsoHW(y) {
   return 6.6 + (y - 30) * 0.13;
 }
 export function inBody(c, r) { return inBodyXY(c + .5 - W / 2, r + .5); }
+// body shapes for the clear look (x from the centre line, y from the top, cell units). Organs keep their places in all of them.
+const se = (x, y, cx, cy, rx, ry, n = 4) => Math.abs((x - cx) / rx) ** n + Math.abs((y - cy) / ry) ** n <= 1;   // superellipse
+const headIn = (x, y, rx = 6.3, ry = 7.2, cy = 7.6) => (x / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+const SHAPES = {
+  human: null,   // the original figure (inBodyXY below)
+  bust: (x, y) => headIn(x, y) || (Math.abs(x) <= 2.4 && y >= 13.5 && y <= 17.5)
+    || (y >= 16.2 && y <= 41 && se(x, y, 0, 30, 10.4, 13.8, 3.2) && (y > 20 || Math.abs(x) <= 10.4 - (20 - y) ** 2 * .45))
+    || (y > 38 && y <= 60.5 && Math.abs(Math.abs(x) - 4.3) <= 3.9 - (y - 38) * .055 && !(y > 41 && Math.abs(x) < .45 + (y - 41) * .02))   // legs: rounded, a small gap between
+    || (y > 59 && y <= 61.8 && se(Math.abs(x), y, 5.2, 60.6, 3.6, 1.3, 3)),   // feet
+  chibi: (x, y) => headIn(x, y, 7.2, 7.4, 7.3) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
+    || se(x, y, 0, 28.5, 8.6, 12.4, 4) || se(Math.abs(x), y, 9.6, 27, 2.2, 7.2, 2.6),
+  hero: (x, y) => headIn(x, y, 6, 7, 7.6) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
+    || (y >= 16.4 && se(x, y, 0, 21.5, 11.4, 5.2, 3)) || (y >= 20 && y <= 42 && Math.abs(x) <= (y < 33 ? 10.6 - (y - 20) * .22 : 7.75 + (y - 33) * .1))
+    || se(Math.abs(x), y, 11.2, 28, 1.7, 9.5, 2.6),
+  capsule: (x, y) => headIn(x, y) || (Math.abs(x) <= 2.4 && y >= 13.5 && y <= 17.5) || se(x, y, 0, 30.5, 10.6, 14.6, 5),
+};
+let SHAPE = 'human';
+export function setShape(name) { if (name in SHAPES) SHAPE = name; }
 // continuous version: x from the centre line, y from the top, in cell units
 export function inBodyXY(x, y) {
+  if (SHAPES[SHAPE]) return SHAPES[SHAPE](x, y);
   const ax = Math.abs(x);
   if ((x / 6.3) ** 2 + ((y - 7.6) / 7.2) ** 2 <= 1) return true;                    // head
   if (ax <= 2.1 && y >= 14 && y <= 17) return true;                                // neck
@@ -64,14 +83,14 @@ let LOOK = 'pixel';
 export function setLook(l) { LOOK = l; }
 const SIL = new Map();
 function silhouette(px, rim, f) {   // cached: the body on a fine grid (f px cells), a solid fill and a 2-cell rim
-  const key = px + rim + f; if (SIL.has(key)) return SIL.get(key);
+  const key = px + rim + f + SHAPE; if (SIL.has(key)) return SIL.get(key);
   const cv = document.createElement('canvas'); cv.width = W * px; cv.height = H * px; const g = cv.getContext('2d');
   const d = f / px, inn = (x, y) => inBodyXY(x, y);
   for (let fy = 0; fy < H * px; fy += f) for (let fx = 0; fx < W * px; fx += f) {
     const x = (fx + f / 2) / px - W / 2, y = (fy + f / 2) / px;
     if (!inn(x, y)) continue;
-    const e = 2 * d, edge = !inn(x - e, y) || !inn(x + e, y) || !inn(x, y - e) || !inn(x, y + e);
-    g.fillStyle = edge ? rim : '#0E2E36'; g.fillRect(fx, fy, f, f);
+    const e = 2.6 * d, edge = !inn(x - e, y) || !inn(x + e, y) || !inn(x, y - e) || !inn(x, y + e);
+    g.fillStyle = edge ? rim : '#061419'; g.fillRect(fx, fy, f, f);
   }
   SIL.set(key, cv); return cv;
 }
@@ -80,12 +99,14 @@ const heartIn = (x, y, cx, cy, s) => { const u = (x - cx) / s, v = (y - cy) / s;
 // organs in body-cell units (x from the centre line, y from the top); pal = [highlight, base, shadow], grey when unhealthy
 const ORG = {
   brain: { box: [-5.6, 5.6, 1.2, 8.2], test: (x, y) => ell(x, y, 0, 4.9, 5.4, 3.4) && y < 8, pal: ['#FFD3DD', '#FF9BB0', '#C95C7A'],
-    detail: (x, y) => Math.abs(x) < .16 || Math.abs(Math.sin(x * 2.6 + Math.sin(y * 3.1) * 1.4 + y * .8)) < .16 },
+    detail: (x, y) => Math.abs(x) < .22 || Math.abs(Math.sin(x * 2.2 + Math.sin(y * 2.6) * 1.6 + y * .9)) < .24 },
   lung: { box: [-8, 8, 17.2, 31.5], test: (x, y) => (ell(Math.abs(x), y, 4.4, 24.6, 3.3, 6.6) && y > 18) , pal: ['#FFD6CE', '#F4A196', '#B9675E'],
     detail: (x, y) => { const ax = Math.abs(x); return (ax > .9 && Math.abs(y - (19.5 + (ax - .9) * 1.15)) < .2 && ax < 4.4) || (ax > 3 && ax < 5.8 && Math.abs(ax - 3 - (y - 21.9) * .45) < .17 && y > 21.9 && y < 27) || (ax > 2.4 && ax < 3.8 && Math.abs(ax - 3.4 + (y - 22.4) * .5) < .17 && y > 22.4 && y < 26); } },
   trachea: { box: [-1, 1, 13.6, 20], test: (x, y) => Math.abs(x) < .85 && y > 13.8 && y < 19.8, pal: ['#F7C1B8', '#E8A39A', '#B9675E'], detail: (x, y) => (y * 1.4) % 1 < .22, k: 'lung' },
   heart: { box: [-5, 6, 20.5, 31.5], test: (x, y) => heartIn(x, y, .5, 25.2, 2.0), pal: ['#FFD0D2', '#FF4F58', '#B32C3B'], detail: () => false },
   liver: { box: [-7, 1.5, 30, 35.5], test: (x, y) => ell(x, y, -3, 32.2, 4, 2.2) || ell(x, y, .2, 31.6, 1.8, 1.5), pal: ['#F29A8E', '#E0675E', '#9E3D44'], detail: () => false },
+  muscle: { box: [-8, 8, 41.5, 57], test: (x, y) => se(Math.abs(x), y, 4.3, 45.5, 2.3, 4, 2.4) || se(Math.abs(x), y, 4.3, 52.6, 1.8, 3.6, 2.4), pal: ['#FFB3A8', '#F07F74', '#B4534C'],
+    detail: (x, y) => Math.abs(Math.abs(x) - 4.3 - (y - 44) * .04) < .12 },
   stomach: { box: [1.5, 7, 30.2, 36], test: (x, y) => ell(x, y, 4.1, 32.8, 2.3, 2.3), pal: ['#FFD2C8', '#FFB0A3', '#D27C70'], detail: () => false },
 };
 const GREYP = ['#A9BBBE', '#6F8A8E', '#4E6569'];
@@ -101,7 +122,7 @@ function drawClear(ctx, { x, y, px, state, rim }) {
     if (glow) { ctx.fillStyle = 'rgba(255,181,71,.3)'; ctx.fillRect(X - 2 * f, Y - 2 * f, 4 * f, 4 * f); }
     ctx.fillStyle = glow ? '#FFD27A' : C.amber; ctx.fillRect(X - f, Y - f, 2 * f, 2 * f);
   }
-  for (const name of ['lung', 'trachea', 'liver', 'stomach', 'heart', 'brain']) {
+  for (const name of ['lung', 'trachea', 'liver', 'stomach', 'heart', 'brain', 'muscle']) {
     const o = ORG[name], key = o.k || name; if (!shown(key)) continue;
     const k = state[key] ?? 1, [x0, x1, y0, y1] = o.box;
     for (let yy = Math.floor(y0 / d) * d; yy < y1; yy += d) for (let xx = Math.floor(x0 / d) * d; xx < x1; xx += d) {
@@ -114,9 +135,14 @@ function drawClear(ctx, { x, y, px, state, rim }) {
       ctx.fillRect(ox + Math.round((xx + W / 2) * px), oy + Math.round(yy * px), Math.ceil(d * px), Math.ceil(d * px));
     }
   }
-  const fc = FACES[face] || FACES.flat;
+  const fc = FACES[face] || FACES.flat;   // HD face: one dash per eye, a thin mouth
   ctx.fillStyle = C.eye;
-  for (const [c, r] of [...fc.e, ...fc.m]) ctx.fillRect(ox + c * px + px * .1, oy + r * px + px * .3, px * .8, px * .45);
+  for (const side of [fc.e.filter(([c]) => c < 15), fc.e.filter(([c]) => c >= 15)]) {
+    if (!side.length) continue;
+    const cs = side.map(q => q[0]), rs = side.map(q => q[1]), c0 = Math.min(...cs), c1 = Math.max(...cs) + 1, r = rs.reduce((a, b) => a + b, 0) / rs.length;
+    const w = Math.max(1.3, c1 - c0) * px; ctx.fillRect(Math.round(ox + (c0 + c1) / 2 * px - w / 2), Math.round(oy + (r + .3) * px), Math.round(w), Math.round(px * .42));
+  }
+  for (const [c, r] of fc.m) ctx.fillRect(ox + c * px, Math.round(oy + (r + .35) * px), px, Math.round(px * .3));
   return { ox, oy, w: W * px, h: H * px };
 }
 
