@@ -2,6 +2,7 @@
 // extreme close-up hook that pulls back; camera moves inside shots; tags pinned to the dog; a myth struck through;
 // one evolving full-takeover data card; a persistent progress HUD; few cuts (bush → wild → guard → bush).
 import * as A from './art.js';
+import { dogProfile, runPose } from './dogpose.js';
 const { W, H, ACC } = A;
 
 const LINES = [
@@ -10,9 +11,9 @@ const LINES = [
   { id: 'l03', lead: 8, key: 3, kind: 'fact', scene: 'bush' },
   { id: 'l04', lead: 6, key: 4, kind: 'bad', scene: 'wild' },
   { id: 'l05', lead: 6, key: 3, kind: 'good', scene: 'guard' },
-  { id: 'l06', lead: 3, key: 2, kind: 'ask', scene: 'bush' },
-  { id: 'l07', lead: 9, key: 5, kind: 'fact', scene: 'bush', display: 'In a study of 70 dogs, they preferred to line up north to south.' },
-  { id: 'l08', lead: 4, key: 2, kind: 'fact', scene: 'bush' },
+  { id: 'l06', lead: 3, key: 2, kind: 'ask', scene: 'align' },
+  { id: 'l07', lead: 9, key: 5, kind: 'fact', scene: 'align', display: 'In a study of 70 dogs, they preferred to line up north to south.' },
+  { id: 'l08', lead: 4, key: 2, kind: 'fact', scene: 'align' },
   { id: 'l09', lead: 3, key: 3, kind: 'ask', scene: 'bush' },
   { id: 'l10', lead: 1, key: 2, kind: 'good', scene: 'bush' },
   { id: 'l11', lead: 3, key: 3, kind: 'good', scene: 'bush' },
@@ -96,7 +97,7 @@ function bushScene(g, t) {
   A.dog(DX, DY, { tilt, stare, blink: stare > .7 ? 0 : blinkAt(t), perk: clamp(-tilt / .3), brow: .4, breath: breathAt(t), wag: t > L11.wt[3] && t < END - .8 ? Math.sin(t * 14) * .3 : 0 });
   A.bush(DX + 10, DY + 10, 760);
   A.leashPOV(DX + 6, DY - 345, Math.sin(t * 1.4) * 20);
-  if (t > L6.wt[3] && t < L7.t0 - .1) { const k = back((t - L6.wt[3]) / .25); g.save(); g.translate(790, 1060); g.scale(k, k); g.fillStyle = ACC.ask; g.font = '800 130px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 0); g.restore(); }
+  if (false) { const k = 0; g.save(); g.translate(790, 1060); g.scale(k, k); g.fillStyle = ACC.ask; g.font = '800 130px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 0); g.restore(); }
 }
 function wildScene(g, t, lt) {
   const z = 1 + .08 * ease(lt / 3);   // slow push into the dark
@@ -121,10 +122,29 @@ function guardScene(g, t, lt) {
   A.bush(780, 1720, 560);
   g.setTransform(1, 0, 0, 1, 0, 0);
 }
+// the strangest part: the dog trots in on a north-south compass line and pulls up, lined up along it
+function alignScene(g, t) {
+  A.park();
+  // the compass line on the ground
+  g.save(); g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 8; g.setLineDash([26, 20]);
+  g.beginPath(); g.moveTo(90, 1700); g.lineTo(990, 1700); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#FFFFFF'; g.beginPath(); g.moveTo(1010, 1700); g.lineTo(975, 1680); g.lineTo(975, 1720); g.closePath(); g.fill();
+  g.font = '900 64px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = ACC.good; g.fillText('N', 1010, 1610); g.fillStyle = '#FFFFFF'; g.fillText('S', 70, 1610);
+  g.restore();
+  const t0 = L6.t0 - .15, u = t - t0, run = 1.1, stopX = 560;
+  const x = u < run ? -260 + (stopX + 260) * (1 - Math.pow(1 - u / run, 2)) : stopX;
+  const pose = u < run - .25 ? runPose(Math.floor(u / (2 / 15 * .75))) : u < run ? 'stepA' : 'stand';
+  if (u < run - .25) { g.save(); g.globalAlpha = .55; g.strokeStyle = '#fff'; g.lineWidth = 5; g.lineCap = 'round'; for (let i = 0; i < 5; i++) { const yy = 1440 - i * 40; g.beginPath(); g.moveTo(x - 260 - i * 20, yy); g.lineTo(x - 440 - i * 30, yy); g.stroke(); } g.restore(); }
+  g.save(); g.translate(x, 1690); g.scale(.72, .72);
+  dogProfile(g, 0, 0, { pose, wag: Math.sin(Math.floor(t * 15) / 15 * 10) * .2, blink: ((t + .4) % 3.1) < .12 ? 1 : 0 });
+  g.restore();
+  if (t > L6.wt[3] && t < L7.t0 - .1) { const k = back((t - L6.wt[3]) / .25); g.save(); g.translate(820, 1180); g.scale(k, k); g.fillStyle = ACC.ask; g.font = '800 130px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 0); g.restore(); }
+}
 function drawScene(name, g, t, lt) {
   A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1;
   if (name === 'bush') { CAM = camFor(bushZoom(t)); g.setTransform(...[CAM[0], 0, 0, CAM[0], CAM[1], CAM[2]]); bushScene(g, t); g.setTransform(1, 0, 0, 1, 0, 0); }
   else if (name === 'wild') wildScene(g, t, lt);
+  else if (name === 'align') alignScene(g, t);
   else guardScene(g, t, lt);
 }
 
