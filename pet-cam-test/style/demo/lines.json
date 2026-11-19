@@ -1,0 +1,64 @@
+[
+ {
+  "id": "l01",
+  "text": "Why does your dog tilt its head when you talk?",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l02",
+  "text": "One idea: its muzzle blocks part of your face.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l03",
+  "text": "In one owner survey, long-muzzled dogs tilted more often than flat-faced ones.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "In one owner survey, long muzzle dogs tilted more often than flat-faced ones."
+ },
+ {
+  "id": "l04",
+  "text": "But a twenty twenty-one study found something stranger.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "But a 2021 study found something stranger."
+ },
+ {
+  "id": "l05",
+  "text": "Dogs that had learned their toys' names tilted their heads very often when they heard those names.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l06",
+  "text": "Most other dogs rarely did.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l07",
+  "text": "And each dog tended to tilt to the same side.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l08",
+  "text": "So that little tilt may mean one thing.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l09",
+  "text": "Your dog is listening hard.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l10",
+  "text": "Say the name of their favorite ball, and watch.",
+  "voice": "af_heart",
+  "speed": 0.95
+ }
+]

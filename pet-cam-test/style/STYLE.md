@@ -96,7 +96,7 @@ The CAM-feed card is in every film; the others are a menu.
 
 ## 10. Engine
 
-To be written with the demo film: a soft-shading vector kit (shape helpers, gradient shading), the pet rig (head, ears, eyes, brows, mouth, legs, tail with poses), scenes, the CAM card, captions from word timestamps, HUD moves. Techniques from `$LIB/styles/scifi-toon/demo/` (matrix stack, parametric eyes and mouths, voice processing and lip-sync envelopes).
+In [`demo/`](demo/) (how it was made: [DEMO.md](DEMO.md)): `art.js` (soft-shading kit: scene, grass, the dog rig with tilt / blink / ear perk / brows, icons, owner face, ball, CAM card, pill tags, x-ray head, two-tier caption), `film.js` (page contract: a timeline laid on the narration's `dur.json` + `words.json`, card cut-ins, animation curves, word-timed captions, camera on the world layer only, `EV`, `TEXTS`), `music.py` (narrator + ducked underscore + foley), `make_srt.py`, `build.sh`. A new film copies `demo/`, writes a new `lines.json`, regenerates the voice and rewrites `LINES` and the card contents in `film.js`. Techniques from `$LIB/styles/scifi-toon/demo/` (parametric faces, voice processing).
 
 ## 11. Variation space
 
