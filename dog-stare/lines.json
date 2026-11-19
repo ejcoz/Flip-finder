@@ -1,0 +1,69 @@
+[
+ {
+  "id": "l01",
+  "text": "Why does your dog stare at you while it poops?",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l02",
+  "text": "It's not being weird.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l03",
+  "text": "For a dog, pooping is one of its most vulnerable moments.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l04",
+  "text": "In the wild, that's exactly when a predator could strike.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l05",
+  "text": "So your dog looks to you to keep watch.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l06",
+  "text": "And here's the strangest part.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l07",
+  "text": "In a study of seventy dogs, they preferred to line up north to south.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "In a study of 70 dogs, they preferred to line up north to south."
+ },
+ {
+  "id": "l08",
+  "text": "But only when Earth's magnetic field was calm.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l09",
+  "text": "So that stare means one thing.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l10",
+  "text": "You're their bodyguard.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l11",
+  "text": "Send this to a dog owner who needs to know.",
+  "voice": "af_heart",
+  "speed": 0.95
+ }
+]
