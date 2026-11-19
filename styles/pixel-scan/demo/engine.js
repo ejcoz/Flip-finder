@@ -157,31 +157,22 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   function props(list, lt) {
     const step = Math.floor(lt * 15) / 15;
     for (const p of list || []) {
-      if (p === 'vapeX' || p === 'vape') {   // a pixel vape beside Bit's hand; 'vapeX' crosses it out on beat 2
-        const [x, y] = VAPE_AT_MOUTH ? at(1.5, 9.5) : at(11, 30), c = VAPE_AT_MOUTH ? 12 : 10;
+      // held props sit in Bit's right hand (figure cell 12.7, 39) with pixel fingers wrapped over the grip
+      const [hx, hy] = at(12.7, 39), c = 10;
+      const fingers = (x0, y0, n, w) => { for (let f = 0; f < n; f++) { ctx.fillStyle = '#1597A8'; ctx.fillRect(x0, y0 + f * 14, w, 12); ctx.fillStyle = '#123D45'; ctx.fillRect(x0 + 3, y0 + f * 14 + 3, w - 6, 6); } };
+      const cross = (x0, y0, w, h) => { ctx.fillStyle = '#FF5A5F'; for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.fillRect(x0 + u * w - 7, y0 + u * h - 7, 14, 14); ctx.fillRect(x0 + (1 - u) * w - 7, y0 + u * h - 7, 14, 14); } };
+      if (p === 'vapeX' || p === 'vape') {        // a pixel vape gripped upright in the fist
         const V = ['.kk.', '.kk.', 'wwww', 'wccw', 'wccw', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wllw', 'wwww'];
-        const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber };
-        V.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x + cc * c, y + r * c, c, c); } }));
-        if (p === 'vapeX' && lt >= 2 * BEAT) {
-          ctx.fillStyle = '#FF5A5F';
-          for (let i = 0; i < 13; i++) { ctx.fillRect(x - 40 + i * 9.2, y - 10 + i * 11, 14, 14); ctx.fillRect(x + 70 - i * 9.2, y - 10 + i * 11, 14, 14); }
-        }
-      } else if (p === 'vapor') {   // pixel vapor puffs drifting up from the mouth
-        const puffs = [[2.5, 11, 2], [4.5, 9.5, 3], [7, 7.5, 4], [9.5, 5, 5]];
-        puffs.forEach(([cx, cy, rad], k) => {
-          const dr = ((lt * 0.6 + k * 0.25) % 1), [x, y] = at(cx + dr * 1.5, cy - dr * 2), c = 8, R = rad * (0.8 + 0.4 * dr);
-          ctx.fillStyle = `rgba(222,242,245,${0.85 - 0.5 * dr})`;
-          for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) if (i * i + j * j <= R * R) ctx.fillRect(Math.round(x / c) * c + i * c, Math.round(y / c) * c + j * c, c, c);
-        });
-      } else if (p === 'drinkX' || p === 'drink') {   // a pixel mug of beer beside Bit's hand; 'drinkX' crosses it out on beat 3
-        const [x, y] = at(10, 28), c = 10;
-        const D = ['.wwww...', 'wwwwww..', 'aaaaaa..', 'aaaaaakk', 'aaaaaa.k', 'aaaaaa.k', 'aaaaaakk', 'aaaaaa..', 'gggggg..'];
-        const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' };
-        D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x + cc * c, y + r * c, c, c); } }));
-        if (p === 'drinkX' && lt >= 2 * BEAT) {
-          ctx.fillStyle = '#FF5A5F';
-          for (let i = 0; i < 12; i++) { ctx.fillRect(x - 30 + i * 11, y - 10 + i * 10, 14, 14); ctx.fillRect(x + 92 - i * 11, y - 10 + i * 10, 14, 14); }
-        }
+        const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber }, x0 = hx - 20, y0 = hy + 30 - V.length * c;
+        V.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
+        fingers(hx - 26, hy - 14, 3, 52);
+        if (p === 'vapeX' && lt >= 2 * BEAT) cross(x0 - 40, y0 - 10, 120, 150);
+      } else if (p === 'drinkX' || p === 'drink') {   // a pixel mug of beer held by its handle, body outward
+        const D = ['...wwww.', '..wwwwww', '..aaaaaa', 'kkaaaaaa', 'k.aaaaaa', 'k.aaaaaa', 'kkaaaaaa', '..aaaaaa', '..gggggg'];
+        const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' }, x0 = hx - 10, y0 = hy - 45;
+        D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
+        fingers(hx - 18, hy - 16, 3, 30);
+        if (p === 'drinkX' && lt >= 2 * BEAT) cross(x0 - 20, y0 - 10, 120, 110);
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
