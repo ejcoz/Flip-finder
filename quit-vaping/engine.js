@@ -145,6 +145,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       const u = lt - BAR / 2 - .15, step = Math.floor(t / BEAT);
       (M.legend || []).forEach(([s, col], j) => { if (u > j * .25) drawText(out, s, cx, cy - 190 + j * 62, 6, col, { align: 'center', shadow: '#011012' }); });
       if (M.kind === 'tooth') { toothDiagram(M, cx, cy, u); }
+      else if (M.kind === 'liver') { liverDiagram(M, cx, cy, u); }
       else {
       // membrane: two rows of dots with little tails between, like a cell wall
       const my = cy + 110, x0 = cx - 340, x1 = cx + 340;
@@ -199,6 +200,28 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       out.fillStyle = '#4FA845'; out.fillRect(bx - gw / 2, by - 12, gw, 12);
       out.fillStyle = '#03262C'; out.fillRect(bx - 18, by - gh + 12, 10, 13); out.fillRect(bx + 9, by - gh + 12, 10, 13);
     });
+  }
+  // liver: beer mugs ride a conveyor into a big pixel liver, strictly one at a time (it can't go faster)
+  const MUG = ['...wwww.', '..wwwwww', '..aaaaaa', 'kkaaaaaa', 'k.aaaaaa', 'k.aaaaaa', 'kkaaaaaa', '..aaaaaa', '..gggggg'];
+  function liverDiagram(M, cx, cy, u) {
+    const b = 14, lx = cx + 130, ly = cy + 60, liv = (x, y) => ((x + 40) / 150) ** 2 + (y / 82) ** 2 <= 1 || ((x - 85) / 70) ** 2 + ((y + 16) / 55) ** 2 <= 1;
+    const pulse = (u % 1) < .25 && u > .5 ? 1 : 0;
+    for (let y = -100; y < 100; y += b) for (let x = -200; x < 170; x += b) {
+      if (!liv(x + b / 2, y + b / 2)) continue;
+      const edge = !liv(x + b / 2 + b, y + b / 2) || !liv(x + b / 2 - b, y + b / 2) || !liv(x + b / 2, y + b / 2 + b) || !liv(x + b / 2, y + b / 2 - b);
+      out.fillStyle = edge ? '#A9434A' : y < -40 && x < 0 ? '#F29A8E' : pulse ? '#EE7A70' : '#E0675E'; out.fillRect(lx + x, ly + y, b, b);
+    }
+    out.fillStyle = 'rgba(57,224,240,.35)'; out.fillRect(cx - 360, ly + 112, 400, 10);   // the conveyor
+    for (let x = cx - 360; x < cx + 40; x += 40) { out.fillStyle = 'rgba(57,224,240,.6)'; out.fillRect(x + ((u * 80) % 40), ly + 112, 16, 10); }
+    const c = 12, mw = 8 * c, mh = 9 * c;
+    for (let k = 0; k < 5; k++) {   // mugs queue left to right; the front one goes in once per second (one "hour")
+      const pos = k - (u % 1) * (u > .3 ? 1 : 0), into = pos < 0, x = cx - 140 - pos * 105 - mw / 2, y = ly + 112 - mh;
+      if (pos < -1 || x < cx - 400) continue;
+      const a = into ? 1 + pos : 1, s = into ? .4 + .6 * a : 1;
+      out.save(); out.globalAlpha = a; out.translate(x + mw / 2 + (into ? -pos * 110 : 0), y + mh / 2); out.scale(s, s);
+      MUG.forEach((row, r) => [...row].forEach((ch, cc) => { const col = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' }[ch]; if (col) { out.fillStyle = col; out.fillRect(-mw / 2 + cc * c, -mh / 2 + r * c, c, c); } }));
+      out.restore();
+    }
   }
   // tags: symptom pills pop around the head one per beat-and-a-bit; meter: a segmented gauge beside the body
   function tagPill(s, x, y, col, k) {
@@ -280,27 +303,32 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const step = Math.floor(lt * 15) / 15;
     for (const p of list || []) {
       // held props sit in Bit's right hand (figure cell 12.7, 39) with pixel fingers wrapped over the grip
-      const [hx, hy] = OPEN && !FULL ? at(13.2, 25) : at(12.7, 39), c = 10;
-      const fingers = (x0, y0, n, w) => { for (let f = 0; f < n; f++) { ctx.fillStyle = '#1597A8'; ctx.fillRect(x0, y0 + f * 14, w, 12); ctx.fillStyle = '#123D45'; ctx.fillRect(x0 + 3, y0 + f * 14 + 3, w - 6, 6); } };
-      const cross = (x0, y0, w, h) => { ctx.fillStyle = '#FF5A5F'; for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.fillRect(x0 + u * w - 7, y0 + u * h - 7, 14, 14); ctx.fillRect(x0 + (1 - u) * w - 7, y0 + u * h - 7, 14, 14); } };
+      const BIGP = OPEN && !FULL, [hx, hy] = BIGP ? [900, 1150] : at(12.7, 39), c = BIGP ? 21 : 10;   // bust look: no hands, the item floats big beside the chest
+      const fingers = (x0, y0, n, w) => { if (BIGP) return; for (let f = 0; f < n; f++) { ctx.fillStyle = '#1597A8'; ctx.fillRect(x0, y0 + f * 14, w, 12); ctx.fillStyle = '#123D45'; ctx.fillRect(x0 + 3, y0 + f * 14 + 3, w - 6, 6); } };
+      const cross = (x0, y0, w, h) => {
+        if (BIGP) { const cx0 = x0 + w / 2, cy0 = y0 + h / 2, R = Math.max(w, h) * .62;   // big: a thick red X with a dark outline, over the whole item
+          for (const [col, th] of [['#03262C', 34], ['#FF5A5F', 22]]) { ctx.fillStyle = col; for (let k = 0; k <= 24; k++) { const u = k / 24 * 2 - 1; ctx.fillRect(cx0 + u * R - th / 2, cy0 + u * R - th / 2, th, th); ctx.fillRect(cx0 - u * R - th / 2, cy0 + u * R - th / 2, th, th); } }
+          return; }
+        ctx.fillStyle = '#FF5A5F'; for (let k = 0; k <= 12; k++) { const u = k / 12; ctx.fillRect(x0 + u * w - 7, y0 + u * h - 7, 14, 14); ctx.fillRect(x0 + (1 - u) * w - 7, y0 + u * h - 7, 14, 14); } };
+      const box = (rows) => { const w = rows[0].length * c, h = rows.length * c; return [hx - w / 2, hy - h / 2, w, h]; };
       if (p === 'vapeX' || p === 'vape') {        // a pixel vape gripped upright in the fist
         const V = ['.kk.', '.kk.', 'wwww', 'wccw', 'wccw', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wwww', 'wllw', 'wwww'];
-        const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber }, x0 = hx - 20, y0 = hy + 30 - V.length * c;
+        const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber }, [x0, y0] = BIGP ? box(V) : [hx - 20, hy + 30 - V.length * c];
         V.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 26, hy - 14, 3, 52);
-        if (p === 'vapeX' && lt >= 2 * BEAT) cross(x0 - 40, y0 - 10, 120, 150);
+        if (p === 'vapeX' && lt >= 2 * BEAT) BIGP ? cross(...box(V)) : cross(x0 - 40, y0 - 10, 120, 150);
       } else if (p === 'drinkX' || p === 'drink') {   // a pixel mug of beer held by its handle, body outward
         const D = ['...wwww.', '..wwwwww', '..aaaaaa', 'kkaaaaaa', 'k.aaaaaa', 'k.aaaaaa', 'kkaaaaaa', '..aaaaaa', '..gggggg'];
-        const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' }, x0 = hx - 10, y0 = hy - 45;
+        const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' }, [x0, y0] = BIGP ? box(D) : [hx - 10, hy - 45];
         D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 18, hy - 16, 3, 30);
-        if (p === 'drinkX' && lt >= 2 * BEAT) cross(x0 - 20, y0 - 10, 120, 110);
+        if (p === 'drinkX' && lt >= 2 * BEAT) BIGP ? cross(...box(D)) : cross(x0 - 20, y0 - 10, 120, 110);
       } else if (p === 'sodaX' || p === 'soda') {   // a pixel soda can gripped in the fist
         const S2 = ['.kkkk.', 'kssssk', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'kssssk'];
-        const pal = { k: '#8FA7AB', s: '#D5E7EA', r: '#E5484D', w: '#F2FBFC' }, x0 = hx - 30, y0 = hy - 70;
+        const pal = { k: '#8FA7AB', s: '#D5E7EA', r: '#E5484D', w: '#F2FBFC' }, [x0, y0] = BIGP ? box(S2) : [hx - 30, hy - 70];
         S2.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 34, hy - 14, 3, 68);
-        if (p === 'sodaX' && lt >= 2 * BEAT) cross(x0 - 30, y0 - 10, 120, 120);
+        if (p === 'sodaX' && lt >= 2 * BEAT) BIGP ? cross(...box(S2)) : cross(x0 - 30, y0 - 10, 120, 120);
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
