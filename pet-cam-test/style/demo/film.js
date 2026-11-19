@@ -272,6 +272,7 @@ load().then(data => {
       A.setCtx(out); out.setTransform(1, 0, 0, 1, 0, 0);
       out.filter = `blur(${blur}px)`; out.drawImage(SA, -W * e, 0); out.drawImage(SB, W * (1 - e), 0); out.filter = 'none';
     }
+    if (window.COVER) return;   // cover stills: the scene only, the title is set on top
     if (p == null) pins(t, S.scene);
     cardLayer(t);
     hud(t);
