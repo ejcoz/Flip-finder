@@ -12,12 +12,13 @@ const LINES = [
   { id: 'l05', lead: 7, key: 3, kind: 'fact', scene: 'toys' },
   { id: 'l06', lead: 3, key: 2, kind: 'fact', scene: 'toys' },
   { id: 'l07', lead: 7, key: 3, kind: 'fact', scene: 'split' },
-  { id: 'l08', lead: 4, key: 4, kind: 'ask', scene: 'close' },
-  { id: 'l09', lead: 3, key: 2, kind: 'good', scene: 'close' },
+  { id: 'l08', lead: 4, key: 4, kind: 'ask', scene: 'home' },
+  { id: 'l09', lead: 3, key: 2, kind: 'good', scene: 'home' },
   { id: 'l10', lead: 6, key: 1, kind: 'good', scene: 'home' },
 ];
 const GAP = { l02: .45, l03: .3, l04: .5, l05: .4, l06: .3, l07: .45, l08: .4, l09: .25, l10: .35 };
 const START = 0.15, TAIL = 2.2, LOOP = 0.7, WHIP = .3;
+const STEPS = [['VIEW?', 1], ['WORDS', 4], ['SAME SIDE', 6]];   // the persistent progress HUD: [label, line index]
 const BRAND = '@pupexplained';
 
 const cv = document.getElementById('c'), out = cv.getContext('2d');
@@ -53,15 +54,12 @@ function build({ dur, words, script }) {
   LINES.forEach((L, i) => { if (!i || LINES[i - 1].scene !== L.scene) SHOTS.push({ scene: L.scene, t0: i ? L.t0 - .15 : 0 }); });
   SHOTS.forEach((s, i) => s.t1 = SHOTS[i + 1] ? SHOTS[i + 1].t0 : window.DUR);
   // cards: windows inside the lines (they cut in on the word that needs them)
-  CARDS = [
-    { kind: 'survey', t0: L3.wt[6] - .1, t1: L4.t0 - .3 },
-    { kind: 'xray', t0: L5.wt[7] - .1, t1: L6.t0 - .12 },
-    { kind: 'study', t0: L6.t0 - .12, t1: L7.t0 - .3 },
-  ];
+  CARDS = [{ kind: 'big', t0: L5.wt[7] - .1, t1: L7.t0 - .3 }];   // one card, held for two lines, evolving (x-ray → + the study)
   const EV = [];
   LINES.forEach(L => { EV.push({ t: L.t0, type: 'vo', id: L.id }); EV.push({ t: L.wt[L.lead], type: 'cap', kind: L.kind }); });
   SHOTS.slice(1).forEach(s => EV.push({ t: s.t0 - WHIP / 2, type: 'whoosh' }));
-  CARDS.forEach((c, i) => EV.push({ t: c.t0, type: i === 2 ? 'swap' : 'whoosh' }));
+  EV.push({ t: CARDS[0].t0, type: 'whoosh' }, { t: L6.t0, type: 'swap' }, { t: L3.wt[6], type: 'tick' }, { t: L3.wt[10], type: 'tick' });
+  STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
   EV.push({ t: L1.wt[4], type: 'pop' }, { t: L4.wt[6], type: 'pop' }, { t: L5.t0 + .05, type: 'pop' }, { t: L10.wt[6], type: 'pop' });
   for (const k of [3, 5, 8]) EV.push({ t: L7.wt[k], type: 'tick' });
   EV.push({ t: L9.wt[3], type: 'chime' }, { t: L10.wt[6] + .25, type: 'boing' }, { t: END, type: 'loop' });
@@ -86,8 +84,8 @@ const BALLBUB = () => [L10.wt[6] - .1, L10.t1 + .9];
 function home(g, t, close) {
   A.livingRoom();
   const tilt = homeTilt(t);
-  const hookBubble = t > .8 && t < L1.t1 + .3;   // frame 1 carries one message: the question
-  A.owner(230, 1650, { talk: hookBubble ? talkAt(t, .8, L1.t1) : talkAt(t, L10.wt[6] - .1, L10.wt[6] + .5), reach: ease((t - (L10.wt[6] - .3)) / .4) * (t < END - .5 ? 1 : 0), blink: blinkAt(t, 1.4) });
+  const hookBubble = t > L1.t1 - .2 && t < L2.t0 + .1;   // frame 1 carries one message: the question
+  A.owner(230, 1650, { talk: hookBubble ? talkAt(t, L1.t1 - .2, L2.t0) : talkAt(t, L10.wt[6] - .1, L10.wt[6] + .5), reach: ease((t - (L10.wt[6] - .3)) / .4) * (t < END - .5 ? 1 : 0), blink: blinkAt(t, 1.4) });
   const wag = t > L10.wt[6] && t < END - .3 ? Math.sin(t * 14) * .35 : Math.sin(t * 5) * .08;
   A.dog(720, 1660, dogOpts(t, tilt, { wag }));
   // '?' on the tilts
@@ -105,7 +103,7 @@ function home(g, t, close) {
     const k = clamp((t - (L10.wt[6] - .2)) / .7), x = 1150 - 260 * (1 - Math.pow(1 - k, 3)), fade = 1 - ease((t - (END - .7)) / .4);
     g.globalAlpha = fade; g.save(); g.translate(x, 1740); g.rotate(-k * 6); g.translate(-x, -1740); A.ball(x, 1740, 44); g.restore(); g.globalAlpha = 1;
   }
-  if (hookBubble) A.bubble("Who's a good dog?", 360, 860, 300, 1040, ease((t - .8) / .2));
+  if (hookBubble) A.bubble("Who's a good dog?", 360, 860, 300, 1040, ease((t - L1.wt[4] - .55) / .2));
   const [b0, b1] = BALLBUB(); if (t > b0 && t < b1) A.bubble('Where’s your ball?', 380, 860, 300, 1040, ease((t - b0) / .2));
 }
 function pov(g, t, lt) {     // the dog's-eye view: the owner's face, the muzzle hiding the mouth
@@ -120,15 +118,19 @@ function pov(g, t, lt) {     // the dog's-eye view: the owner's face, the muzzle
   g.restore();
   A.pill('THEORY: VIEW BLOCKED?', 540, 640, ACC.ask);
 }
+let PIN = [];   // tags pinned to things in the current scene: [text, x, y, anchorX, anchorY, colour]
 function park(g, t) {        // a long-muzzled dog and a flat-faced dog side by side
   A.park();
+  if (t > L3.wt[10] + .8) { const k = back((t - L3.wt[10] - .8) / .3); g.save(); g.translate(540, 900); g.scale(k, k); A.pill('VIEW BLOCKED? \u2192 PARTLY', 0, 0, ACC.ask, 26); g.restore(); }
   const tH = keyed([[0, 0], [L3.wt[4], -.34], [L3.wt[6], -.05], [L3.wt[8], -.34], [L3.t1 + .2, -.3]], t);
   const tP = keyed([[0, 0], [L3.wt[10], -.14], [L3.t1, -.05]], t);
   for (const [x, breed, tilt, label, ph] of [[300, 'hound', tH, 'LONG MUZZLE', .3], [790, 'pug', tP, 'FLAT FACE', 1.9]]) {
     g.save(); g.translate(x, 1700); g.scale(.78, .78);
     A.dog(0, 0, { ...dogOpts(t + ph, tilt), breed, wag: Math.sin(t * 5 + ph) * .1 });
     g.restore();
-    if (t < CARDS[0].t0) A.pill(label, x, 1180, ACC.fact, 24);   // the card carries the labels once it is up
+    const pct = label === 'LONG MUZZLE' ? 71 : 52, tw = label === 'LONG MUZZLE' ? L3.wt[6] : L3.wt[10];
+    const n = t < tw ? 0 : Math.round(pct * ease((t - tw) / .7));
+    PIN.push([n ? label + ' \u00B7 ' + n + '%' : label, x, 1080, x, 1290, n ? ACC.fact : '#8B95AD']);
   }
 }
 function toys(g, t) {        // the toy pile: the owner names a toy, the dog tilts
@@ -144,7 +146,7 @@ function split(g, t) {       // three dogs, each tilting to its own side, every 
   const P = [[580, 'cream', -1, '#24304F'], [880, 'black', 1, '#2B2448'], [1180, 'hound', -1, '#1F3A3A']];
   const ticks = [3, 5, 8].map(k => L7.wt[k]);
   const n = ticks.filter(w => t >= w).length;   // one tag for all three panels
-  if (n) A.pill(n === 1 ? 'SAME SIDE' : 'SAME SIDE ×' + n, 540, 535, ACC.fact, 22);
+  if (n) A.pill(n === 1 ? 'SAME SIDE' : 'SAME SIDE \u00D7' + n, 540, 535, ACC.fact, 22);
   P.forEach(([y0, breed, side, bg], i) => {
     g.save(); g.beginPath(); g.roundRect(60, y0, 860, 280, 24); g.clip();
     g.fillStyle = bg; g.fillRect(60, y0, 860, 280);
@@ -155,15 +157,19 @@ function split(g, t) {       // three dogs, each tilting to its own side, every 
     g.restore();
     g.restore();
     g.strokeStyle = 'rgba(120,150,210,.28)'; g.lineWidth = 2; g.beginPath(); g.roundRect(60, y0, 860, 280, 24); g.stroke();
-    g.fillStyle = '#9AA6C2'; g.font = '500 24px JetBrains Mono'; g.textBaseline = 'top'; g.fillText('CAM 0' + (6 + i), 90, y0 + 22);
+    g.fillStyle = '#9AA6C2'; g.font = '500 24px JetBrains Mono'; g.textBaseline = 'top'; g.textAlign = 'right'; g.fillText('CAM 0' + (6 + i), 890, y0 + 22); g.textAlign = 'left';
   });
 }
+const glide = (keys, t) => { let i = 0; while (i < keys.length - 1 && t >= keys[i + 1][0]) i++; if (i >= keys.length - 1) return keys[keys.length - 1][1]; const [ta, va] = keys[i], [tb, vb] = keys[i + 1]; return va + (vb - va) * ease((t - ta) / (tb - ta)); };
+const HEADW = [720, 1190];
+let CAM = [1, 0, 0];
+const camAt = (z, fx, fy) => [z, Math.min(0, Math.max(W - W * z, W / 2 - fx * z)), Math.min(0, Math.max(H - H * z, fy - fy * z))];
+const toScreen = (x, y) => [x * CAM[0] + CAM[1], y * CAM[0] + CAM[2]];
 function drawScene(name, g, t, lt) {
-  A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1;
-  if (name === 'home') home(g, t);
-  else if (name === 'close') {      // slow push-in on the dog's face
-    const z = 1 + .32 * ease((t - L8.t0) / (L9.t1 - L8.t0)), fx = 720, fy = 1260;
-    g.setTransform(z, 0, 0, z, Math.min(0, Math.max(W - W * z, W / 2 - fx * z)), Math.min(0, Math.max(H - H * z, fy - fy * z))); home(g, t); g.setTransform(1, 0, 0, 1, 0, 0);
+  A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1; CAM = [1, 0, 0];
+  if (name === 'home') {   // extreme close-up on the tilt → pull back; slow push-in on l08–l09; push back in for the loop
+    const z = glide([[0, 2.3], [L1.wt[4] + .35, 2.3], [L1.t1 + .15, 1], [L8.t0, 1], [L9.t1, 1.35], [L10.t0 + .5, 1], [L10.t1 + .4, 1], [END, 2.3]], t);
+    CAM = camAt(z, ...HEADW); g.setTransform(CAM[0], 0, 0, CAM[0], CAM[1], CAM[2]); home(g, t); g.setTransform(1, 0, 0, 1, 0, 0);
   }
   else if (name === 'pov') pov(g, t, lt);
   else if (name === 'park') park(g, t);
@@ -173,41 +179,61 @@ function drawScene(name, g, t, lt) {
 }
 
 // ---------- cards, captions, watermark ----------
-function cardLayer(t) {
+function cardLayer(t) {   // one tall card takes over: the scene drops away; x-ray first, then the study grows underneath
   A.setCtx(out);
-  const c = CARDS.find(c => t >= c.t0 && t < c.t1); if (!c) return;
-  const i = CARDS.indexOf(c), prev = CARDS[i - 1], next = CARDS[i + 1];
-  const enter = prev && Math.abs(prev.t1 - c.t0) < .05 ? 1 : ease((t - c.t0) / .2), leave = next && Math.abs(next.t0 - c.t1) < .05 ? 1 : ease((c.t1 - t) / .15);
-  const k = Math.min(enter, leave), s = .94 + .06 * k, x = 60, y = 560, w = 860, h = 470, lt = t - c.t0;
+  const c = CARDS[0]; if (t < c.t0 || t >= c.t1) return;
+  const lt = t - c.t0, k = Math.min(ease(lt / .3), ease((c.t1 - t) / .25));
+  out.save(); out.globalAlpha = k * .88; out.fillStyle = '#05080F'; out.fillRect(0, 0, W, H); out.restore();
+  const x = 60, y = 610, w = 860, h = 860, s = .92 + .08 * k, phaseB = t >= L6.t0 - .1;
   out.save(); out.globalAlpha = k; out.translate(x + w / 2, y + h / 2); out.scale(s, s); out.translate(-(x + w / 2), -(y + h / 2));
-  const META = { survey: ['the survey', '582 dog owners', 'CAM 02'], xray: ['inside the head', 'listening mode', 'CAM 04'], study: ['the study', '40 dogs, 2021', 'CAM 05'] }[c.kind];
-  A.card(x, y, w, h, ...META, (lt / 6) % 1);
-  out.save(); out.beginPath(); out.roundRect(x, y, w, h, 28); out.clip();
-  if (c.kind === 'survey') {
-    const p = ease((lt - .2) / .8);
-    const row = (y0, label, pct, long) => {
-      A.dogIcon(150, y0 + 30, 1.5, { long });
-      out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textBaseline = 'top'; out.fillText(label, 210, y0);
-      out.fillStyle = 'rgba(120,150,210,.18)'; out.beginPath(); out.roundRect(210, y0 + 42, 560, 34, 10); out.fill();
-      out.fillStyle = ACC.fact; out.beginPath(); out.roundRect(210, y0 + 42, Math.max(12, 560 * pct / 100 * p), 34, 10); out.fill();
-      out.fillStyle = '#F2F5FF'; out.font = '800 44px Inter'; out.textAlign = 'right'; out.fillText(Math.round(pct * p) + '%', 880, y0 + 34); out.textAlign = 'left';
-    };
-    row(700, 'LONG MUZZLE', 71, true); row(850, 'FLAT FACE', 52, false);
-    out.fillStyle = '#8B95AD'; out.font = 'italic 400 24px Inter'; out.fillText('owners who said their dog often tilts', 210, 965);
-  } else if (c.kind === 'xray') {
-    A.xrayHead(500, 860, -.3 * ease((lt - .3) / .4), (t * 1.2) % 1, ease((lt - .5) / .5));
-    A.pill('TOY NAME → TILT', 490, 660, ACC.fact);
-  } else {
-    const p = ease((lt - .2) / .6);
-    out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textBaseline = 'top';
-    out.fillText('WORD LEARNERS · 7', 100, 668);
-    for (let i = 0; i < 7; i++) A.dogIcon(130 + i * 66, 748, 1.2, { tilt: -.35 * p });
-    A.pill('OFTEN TILTED', 760, 748, ACC.good, 22);
-    out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.fillText('TYPICAL DOGS · 33', 100, 818);
-    for (let i = 0; i < 33; i++) A.dogIcon(130 + (i % 11) * 60, 892 + Math.floor(i / 11) * 48, .95, { col: '#D9CDB8' });
-    A.pill('RARELY', 840, 940, '#8B95AD', 22);
+  A.card(x, y, w, h, phaseB ? 'the study' : 'inside the head', phaseB ? '40 dogs, 2021' : 'listening mode', phaseB ? 'CAM 05' : 'CAM 04', (lt / 6) % 1);
+  out.save(); out.beginPath(); out.roundRect(x, y, w, h, 28); out.clip(); out.textBaseline = 'top';
+  const xs = phaseB ? .62 : 1, xy = phaseB ? 830 : 1010;
+  out.save(); out.translate(490, xy); out.scale(xs, xs); out.translate(-500, -960);
+  A.xrayHead(500, 960, -.3 * ease((lt - .3) / .4), (t * 1.2) % 1, ease((lt - .5) / .5)); out.restore();
+  A.pill('TOY NAME → TILT', 490, phaseB ? 720 : 740, ACC.fact);
+  if (phaseB) {
+    const b = ease((t - L6.t0) / .35), p = ease((t - L6.t0 - .2) / .6);
+    out.globalAlpha = k * b;
+    out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textAlign = 'left'; out.fillText('WORD LEARNERS · 7', 100, 1010);
+    for (let i = 0; i < 7; i++) A.dogIcon(130 + i * 66, 1090, 1.2, { tilt: -.35 * p });
+    A.pill('OFTEN TILT', 790, 1090, ACC.good, 22);
+    out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textAlign = 'left'; out.fillText('TYPICAL DOGS · 33', 100, 1170);
+    for (let i = 0; i < 33; i++) A.dogIcon(130 + (i % 11) * 60, 1250 + Math.floor(i / 11) * 60, .95, { col: '#D9CDB8' });
+    A.pill('RARELY', 840, 1250, '#8B95AD', 22);
   }
   out.restore(); out.restore();
+}
+// tags pinned to things (leader line + dot), drawn over the scene in screen space
+function pins(t, scene) {
+  A.setCtx(out);
+  const list = [...PIN];
+  if (scene === 'home' && t > L1.wt[4] && t < L1.t1 + .1) { const [ax, ay] = toScreen(HEADW[0] - 40, HEADW[1] - 40); list.push(['HEAD TILT', 700, 780, ax, ay, ACC.ask]); }
+  for (const [text, x, y, ax, ay, col] of list) {
+    out.strokeStyle = col; out.lineWidth = 3; out.beginPath(); out.moveTo(x, y); out.lineTo(ax, ay); out.stroke();
+    out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 8, 0, Math.PI * 2); out.fill();
+    A.pill(text, x, y, col, 24);
+  }
+}
+// persistent progress HUD on the left edge: numbered dots light up as the thread advances
+function hud(t) {
+  if (t < L2.t0 + .1) return;
+  A.setCtx(out);
+  const a = ease((t - L2.t0 - .1) / .3) * (t > END - .6 ? 1 - ease((t - (END - .6)) / .4) : 1);
+  const onCard = t >= CARDS[0].t0 && t < CARDS[0].t1;
+  out.save(); out.globalAlpha = a * (onCard ? 0 : 1);
+  out.fillStyle = 'rgba(8,14,28,.72)'; out.beginPath(); out.roundRect(52, 632, 290, 206, 22); out.fill();
+  out.font = '600 24px JetBrains Mono'; out.textBaseline = 'middle'; out.textAlign = 'left';
+  STEPS.forEach(([label, li], i) => {
+    const on = t >= LINES[li].t0 + .2, y = 670 + i * 65, pop = on ? back((t - LINES[li].t0 - .2) / .25) : 1;
+    const col = i === 0 ? ACC.ask : ACC.good;   // the first idea is only partly true: amber, not green
+    out.strokeStyle = on ? col : 'rgba(120,150,210,.45)'; out.lineWidth = 3; out.beginPath(); out.arc(88, y, 18 * pop, 0, Math.PI * 2); out.stroke();
+    if (on) { out.fillStyle = col; out.beginPath(); out.arc(88, y, 12 * pop, 0, Math.PI * 2); out.fill(); }
+    out.fillStyle = on ? '#0B1224' : 'rgba(201,210,232,.6)'; out.textAlign = 'center'; out.fillText(String(i + 1), 88, y + 1); out.textAlign = 'left';
+    out.fillStyle = on ? '#F2F5FF' : 'rgba(201,210,232,.45)'; out.fillText(label, 116, y + 1);
+    if (i < STEPS.length - 1) { out.fillStyle = 'rgba(120,150,210,.3)'; out.fillRect(87, y + 20, 2, 25); }
+  });
+  out.restore();
 }
 function lineAt(t) { let cur = null; for (const L of LINES) if (t >= L.t0 - 0.12) cur = L; return cur; }
 function captionLayer(t) {
@@ -217,7 +243,7 @@ function captionLayer(t) {
   const full = L === L1;   // the opening question is whole from frame 1 and returns for the loop
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
-  const onCard = CARDS.some(c => t >= c.t0 && t < c.t1);   // the card shows it and the voice says it: drop the third line
+  const onCard = t >= CARDS[0].t0 && t < CARDS[0].t1;   // the card shows it and the voice says it: drop the third line
   A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
 }
 function watermark() {
@@ -238,6 +264,7 @@ load().then(data => {
     let p = null, from = null, to = null;
     if (next && t > next.t0 - WHIP / 2) { p = (t - (next.t0 - WHIP / 2)) / WHIP; from = S; to = next; }
     else if (prev && t < S.t0 + WHIP / 2) { p = (t - (S.t0 - WHIP / 2)) / WHIP; from = prev; to = S; }
+    PIN = [];
     if (p == null) { drawScene(S.scene, out, t, t - S.t0); }
     else {
       const e = ease(p), blur = Math.sin(clamp(p) * Math.PI) * 18;
@@ -245,13 +272,15 @@ load().then(data => {
       A.setCtx(out); out.setTransform(1, 0, 0, 1, 0, 0);
       out.filter = `blur(${blur}px)`; out.drawImage(SA, -W * e, 0); out.drawImage(SB, W * (1 - e), 0); out.filter = 'none';
     }
+    if (p == null) pins(t, S.scene);
     cardLayer(t);
+    hud(t);
     captionLayer(t);
     watermark();
   };
   window.TEXTS = (t) => {
-    const T = [], c = CARDS.find(c => t >= c.t0 && t < c.t1);
-    if (c) T.push({ id: 'card-' + c.kind, text: c.kind, x0: 60, y0: 560, x1: 920, y1: 1030 });
+    const T = [], c = CARDS[0];
+    if (t >= c.t0 && t < c.t1) T.push({ id: 'card', text: 'the study', x0: 60, y0: 610, x1: 920, y1: 1470 });
     return T;   // captions follow the voice and are checked as subtitles (subs.srt)
   };
   window.render(0);
