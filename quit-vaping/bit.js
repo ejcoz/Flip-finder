@@ -20,8 +20,25 @@ function torsoHW(y) {
   return 6.6 + (y - 30) * 0.13;
 }
 export function inBody(c, r) { return inBodyXY(c + .5 - W / 2, r + .5); }
+// body shapes for the clear look (x from the centre line, y from the top, cell units). Organs keep their places in all of them.
+const se = (x, y, cx, cy, rx, ry, n = 4) => Math.abs((x - cx) / rx) ** n + Math.abs((y - cy) / ry) ** n <= 1;   // superellipse
+const headIn = (x, y, rx = 6.3, ry = 7.2, cy = 7.6) => (x / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
+const SHAPES = {
+  human: null,   // the original figure (inBodyXY below)
+  bust: (x, y) => headIn(x, y) || (Math.abs(x) <= 2.4 && y >= 13.5 && y <= 17.5)
+    || (y >= 16.2 && se(x, y, 0, 30, 10.4, 13.8, 3.2) && (y > 20 || Math.abs(x) <= 10.4 - (20 - y) ** 2 * .45)),
+  chibi: (x, y) => headIn(x, y, 7.2, 7.4, 7.3) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
+    || se(x, y, 0, 28.5, 8.6, 12.4, 4) || se(Math.abs(x), y, 9.6, 27, 2.2, 7.2, 2.6),
+  hero: (x, y) => headIn(x, y, 6, 7, 7.6) || (Math.abs(x) <= 2.6 && y >= 13.5 && y <= 17.5)
+    || (y >= 16.4 && se(x, y, 0, 21.5, 11.4, 5.2, 3)) || (y >= 20 && y <= 42 && Math.abs(x) <= (y < 33 ? 10.6 - (y - 20) * .22 : 7.75 + (y - 33) * .1))
+    || se(Math.abs(x), y, 11.2, 28, 1.7, 9.5, 2.6),
+  capsule: (x, y) => headIn(x, y) || (Math.abs(x) <= 2.4 && y >= 13.5 && y <= 17.5) || se(x, y, 0, 30.5, 10.6, 14.6, 5),
+};
+let SHAPE = 'human';
+export function setShape(name) { if (name in SHAPES) SHAPE = name; }
 // continuous version: x from the centre line, y from the top, in cell units
 export function inBodyXY(x, y) {
+  if (SHAPES[SHAPE]) return SHAPES[SHAPE](x, y);
   const ax = Math.abs(x);
   if ((x / 6.3) ** 2 + ((y - 7.6) / 7.2) ** 2 <= 1) return true;                    // head
   if (ax <= 2.1 && y >= 14 && y <= 17) return true;                                // neck
@@ -64,7 +81,7 @@ let LOOK = 'pixel';
 export function setLook(l) { LOOK = l; }
 const SIL = new Map();
 function silhouette(px, rim, f) {   // cached: the body on a fine grid (f px cells), a solid fill and a 2-cell rim
-  const key = px + rim + f; if (SIL.has(key)) return SIL.get(key);
+  const key = px + rim + f + SHAPE; if (SIL.has(key)) return SIL.get(key);
   const cv = document.createElement('canvas'); cv.width = W * px; cv.height = H * px; const g = cv.getContext('2d');
   const d = f / px, inn = (x, y) => inBodyXY(x, y);
   for (let fy = 0; fy < H * px; fy += f) for (let fx = 0; fx < W * px; fx += f) {

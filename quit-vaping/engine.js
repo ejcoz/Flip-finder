@@ -3,7 +3,7 @@
 // the text layer (hook, title, caption, callout, lens, readout) never moves and stays inside the platform safe area.
 import { drawText, textW } from './font.js';
 import { bayer } from './pix.js';
-import { drawBit, sparkle, C, setLook } from './bit.js';
+import { drawBit, sparkle, C, setLook, setShape } from './bit.js';
 import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 import { drawAway } from './scenes.js';
 
@@ -47,6 +47,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   const LOUD = V !== 'A', BIG = 'CDEF'.includes(V), DIM = 'DEF'.includes(V), VAPE_AT_MOUTH = V === 'D';
   const OPEN = V === 'G', CLEAR = V === 'F' || OPEN;   // G: F without the booth — the body is the frame   // F: the clear look — head and torso fill the glass, smooth solid body, detailed organs
   if (CLEAR) setLook('clear');
+  const SH = typeof location !== 'undefined' && new URLSearchParams(location.search).get('shape'); if (SH) setShape(SH);
   const OPENB = { x0: 0, x1: 1080, gx0: 0, gx1: 1080, capY: 560, glassY0: 600, glassY1: 1700, floorY: 1700 };
   const LAB = buildLab({ dark: LOUD, spot: LOUD && !OPEN, open: OPEN, B: OPEN ? OPENB : null });
   const B = OPEN ? OPENB : BOOTH, GH = B.glassY1 - B.glassY0, PX = OPEN ? 25 : CLEAR ? 21 : 15, FOOT = OPEN ? B.glassY1 + 18 * PX : CLEAR ? B.glassY1 + 17 * PX : B.glassY1 - 6, CX = (B.gx0 + B.gx1) / 2, TOP = FOOT - 62 * PX;
