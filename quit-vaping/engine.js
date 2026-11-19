@@ -12,7 +12,8 @@ export const BAR = 2, BEAT = 0.5;
 export const SAFE = { x0: 60, x1: 920, y0: 250, y1: 1480 };
 const TW = (SAFE.x1 - 540) * 2 - 20;   // widest centred text block that keeps its right edge inside SAFE.x1
 
-export function film({ MS, READ }) {
+// BRAND: the account handle, burned in small on the booth's base plate (visible on downloads and reposts; the apps show the username anyway)
+export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   let acc = 0; for (const m of MS) { m.t0 = acc; acc += m.bars * BAR; m.t1 = acc; }
   window.DUR = acc;
   const PUNCH = MS.find(m => m.punch), FINAL = MS.find(m => m.final), FIRST = MS[0];
@@ -61,6 +62,10 @@ export function film({ MS, READ }) {
     let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
     y = (LOUD ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#F2FBFC', '#0B8EA0', '#39E0F0')) + 14;
     if (n >= 3) bar(c3, y, cc, '#03262C', '#39E0F0', null);
+  }
+  function watermark() {   // fixed on the text layer: the camera, the scan sweeps and the loop never move it
+    if (!BRAND) return;
+    out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' });   // on the booth's base plate out.restore();
   }
   function titleBar(m, k = 1) {   // title only when there is a caption; the subline shows only without one
     const c = fit(m.title, 13), w = textW(m.title, c) + 2 * Math.max(28, c * 4), x = Math.round((FW - w) / 2), h = 7 * c + 44;
@@ -273,6 +278,7 @@ export function film({ MS, READ }) {
     if (rew >= .6) {                     // back to the opening frame: hook lines 1–2, opening readout
       readout(FIRST.read[0]);
       hook(FIRST, 2);
+      watermark();
       return;
     }
     readout(readValue(m, lt, p));
@@ -285,6 +291,7 @@ export function film({ MS, READ }) {
       if (tm.cap) caption(tm.cap, tm.dir, yb + 16);
     }
     if (m.final && !rew) confetti(out, lt);
+    watermark();
   };
 
   window.TEXTS = (t) => {

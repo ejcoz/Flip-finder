@@ -51,6 +51,7 @@ Not Sci-Fi Sitcom Toon (no boiling outlines, no dialogue comedy, no portal), not
 - **Two-tier caption, synced to the voice word by word** (from the voice's word timestamps): a grey lead-in line (Inter 400, ~44 px, `#A7B0C4`) with the words around the key phrase; the **key phrase** (Inter 800, ~84 px, white) in a selection box: thin border and four round corner handles in the meaning colour, a faint dark fill. An optional grey follow line underneath. The box pops in on the first word of the key phrase.
 - **Pill tags** (JetBrains Mono 600, ~26 px) in the meaning colour inside cards and the HUD: one short label (`TILT = BETTER SIGNAL?`, `WORMS OUT ✓`).
 - Every caption and tag passes readcheck against the voice timing.
+- **Watermark**: the account handle `@pupexplained` (Inter 600, 30 px, white ~80 % on a faint dark pill), centred on the ground below the pet (y ≈ 1740), fixed on the overlay layer for the whole film. For downloads and reposts; no ™ or ®.
 
 ## 5. Motion quality
 

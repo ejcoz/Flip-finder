@@ -63,6 +63,7 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 - **Callout labels**: when one organ is the subject, a box at the left edge with a leader line to that organ says **what is happening to it**, never just its name (the line already names it): the organ's name tiny on top (cell 3, dim cyan), then two short lines of change (cell 4, ≤ 11 characters each) in the direction colour, e.g. HEART · "PUMPS MORE / PER BEAT", LEG MUSCLES · "MICRO-TEARS / REBUILDING". The callout gives the organ-level *how*; the caption gives the outcome; they never repeat each other. One callout at a time, never covering the body.
 - **Two layers**: the hook, titles, captions, callouts and readouts sit on a text layer the camera never moves; only the world (lab, booth, body) zooms and shakes. Callout lines follow the organ's on-screen position.
 - Every hook line, title and caption passes readcheck.
+- **Watermark**: the account handle `@8bitbodyscan` in the pixel font (cell 4, `#A8D8E0`, ~70 % opacity, dark drop shadow), centred on the booth's base plate (y ≈ 1590), on the text layer so camera moves, sweeps and the loop never shift it. It is for downloads and reposts; the apps already show the username. No ™ or ® (® only once a mark is registered).
 
 ## 5. Motion quality
 

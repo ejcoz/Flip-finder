@@ -189,6 +189,15 @@ function sideTags(t) {   // "LEFT · LEFT · LEFT": one per tilt on the same sid
   if (marks) A.pill(marks === 1 ? 'SAME SIDE' : 'SAME SIDE ×' + marks, 540, 640, ACC.fact);
 }
 
+// the account handle, burned in small on the grass below the dog (visible on downloads and reposts)
+const BRAND = '@pupexplained';
+function watermark() {
+  A.setCtx(out);
+  out.save(); out.font = '600 30px Inter'; const w = out.measureText(BRAND).width + 36;
+  out.globalAlpha = .6; out.fillStyle = 'rgba(8,14,28,.55)'; out.beginPath(); out.roundRect(540 - w / 2, 1716, w, 46, 23); out.fill();
+  out.globalAlpha = .82; out.fillStyle = '#F2F5FF'; out.textAlign = 'center'; out.textBaseline = 'middle'; out.fillText(BRAND, 540, 1740); out.restore();
+}
+
 load().then(data => {
   build(data);
   window.render = (t) => {
@@ -202,6 +211,7 @@ load().then(data => {
     cardLayer(t, L);
     sideTags(t);
     captionLayer(t);
+    watermark();
   };
   window.TEXTS = (t) => {
     const T = [], cl = LINES.filter(x => isCard(x.vis)).find(x => t >= x.t0 && t < (LINES[LINES.indexOf(x) + 1]?.t0 ?? 1e9) - .12);
