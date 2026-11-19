@@ -114,7 +114,7 @@ The CAM-feed card is in every film; the others are a menu.
 
 In [`demo/`](demo/) (how it was made: [DEMO.md](DEMO.md)): `art.js` (soft-shading kit: scene, grass, the dog rig with tilt / blink / ear perk / brows, icons, owner face, ball, CAM card, pill tags, x-ray head, two-tier caption), `film.js` (page contract: a timeline laid on the narration's `dur.json` + `words.json`, card cut-ins, animation curves, word-timed captions, camera on the world layer only, `EV`, `TEXTS`), `music.py` (narrator + ducked underscore + foley), `make_srt.py`, `build.sh`. A new film copies `demo/`, writes a new `lines.json`, regenerates the voice and rewrites `LINES` and the card contents in `film.js`. Techniques from `$LIB/styles/scifi-toon/demo/` (parametric faces, voice processing).
 
-**Still to build (the first film that needs them builds them into `art.js`):** a standing pose and **walk and run cycles** for the dog rig (side and three-quarter views, legs on a 4-beat gait, body bob, ear and tail follow-through, a motion-blur variant for whips), a lying-down pose, and a walking owner. Until then every pet sits; plan stories that need movement after these exist.
+**Movement (`dogSide` in `art.js`):** a side-view rig with `stand`, `walk` (4-beat gait) and `trot` (diagonal pairs). Two-bone legs solved per frame so planted paws never slide (the caller advances `phase` by distance / stride); body bob, head nod lagging the body, ear swinging a beat late, tail wag; `look` turns the head toward the camera. Test clip: `walktest/`. Still to build: a lying-down pose, a three-quarter walk and a walking owner.
 
 ## 11. Variation space
 

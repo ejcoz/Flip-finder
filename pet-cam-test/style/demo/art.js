@@ -304,3 +304,76 @@ export function toy(kind, x, y, s = 1) {
   } else { ball(0, 0, 40); }
   g.restore();
 }
+
+// ================= side-view dog: stand / walk / trot =================
+// Faces right. (x, y) = the point on the ground under the middle of the body. o = { gait: 'stand'|'walk'|'trot',
+// phase 0..1 (one full stride), breed, tilt, blink, wag, look 0..1 (turns the head toward the camera) }.
+// The caller advances phase with distance travelled (phase = distance / stride), so planted paws never slide.
+export const GAIT = { walk: { stride: 170, duty: .62, bob: 6, offs: [0, .25, .5, .75] }, trot: { stride: 260, duty: .5, bob: 12, offs: [0, .5, .5, 0] } };
+const LEG = { up: 112, low: 118 };
+function ik(px, py, fx, fy, bendBack) {   // two-bone leg from hip/shoulder to paw; returns the joint
+  const dx = fx - px, dy = fy - py, d = Math.min(LEG.up + LEG.low - 1, Math.hypot(dx, dy));
+  const a = Math.atan2(dy, dx), c = (LEG.up ** 2 + d * d - LEG.low ** 2) / (2 * LEG.up * d), k = Math.acos(Math.max(-1, Math.min(1, c)));
+  const ang = a + (bendBack ? k : -k);
+  return [px + Math.cos(ang) * LEG.up, py + Math.sin(ang) * LEG.up];
+}
+function footAt(p, G, lift) {   // paw offset from straight-under-the-joint at stride phase p
+  const S = G.stride, d = G.duty;
+  if (p < d) return [S * (.5 - p / d), 0];                       // stance: planted, sliding back relative to the body
+  const u = (p - d) / (1 - d), e = u * u * (3 - 2 * u);
+  return [-S / 2 + S * e, -lift * Math.sin(Math.PI * u)];        // swing: lifts and reaches forward
+}
+export function dogSide(x, y, o = {}) {
+  const { gait = 'stand', phase = 0, breed = 'cream', tilt = 0, blink = 0, wag = 0, look = 0 } = o;
+  const B = BREEDS[breed], G = GAIT[gait] || GAIT.walk, moving = gait !== 'stand';
+  const bob = moving ? (gait === 'trot' ? -G.bob * Math.abs(Math.sin(2 * Math.PI * phase)) : -G.bob * Math.sin(4 * Math.PI * phase)) : 0;
+  g.save(); g.translate(x, y);
+  g.fillStyle = 'rgba(0,0,0,.28)'; ell(0, 6, 290, 24); g.fill();
+  // legs: [pivot x, front?, near?, phase offset index]  LH, LF, RH, RF — L = near side
+  const legs = [[-150, false, true, 0], [135, true, true, 1], [-150, false, false, 2], [135, true, false, 3]];
+  const drawLeg = ([px, front, near, oi]) => {
+    const p = ((phase + (moving ? G.offs[oi] : 0)) % 1 + 1) % 1, py = -232 + bob;
+    const [fx, fy] = moving ? footAt(p, G, front ? 70 : 60) : [front ? 8 : -6, 0];
+    const ax = px + fx + (near ? 0 : -18), ay = fy - 14;
+    const [jx, jy] = ik(px, py, ax, ay, !front);
+    const cols = near ? B.coat : B.coat.map((c, i) => B.coat[Math.min(2, i + 1)]);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    g.strokeStyle = shade(py, 0, cols); g.lineWidth = 50; g.beginPath(); g.moveTo(px, py); g.lineTo(jx, jy); g.stroke();
+    g.lineWidth = 38; g.beginPath(); g.moveTo(jx, jy); g.lineTo(ax, ay); g.stroke();
+    g.fillStyle = near ? '#FBF4E6' : cols[1]; ell(ax + 12, ay + 6, 30, 14); g.fill();
+  };
+  legs.filter(l => !l[2]).forEach(drawLeg);                         // far legs behind the body
+  // tail (wags around its base)
+  g.save(); g.translate(-305, -300 + bob); g.rotate(-.5 + wag);
+  g.fillStyle = shade(-120, 0, B.patch); g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(-60, -10, -90, -70, -70, -130); g.bezierCurveTo(-55, -80, -30, -40, 10, -14); g.closePath(); g.fill();
+  g.restore();
+  // body: haunch, barrel, chest
+  g.fillStyle = shade(-370 + bob, -150 + bob, B.coat);
+  ell(-150, -265 + bob, 115, 100); g.fill(); ell(0, -270 + bob, 200, 92); g.fill(); ell(135, -265 + bob, 100, 100); g.fill();
+  if (B.saddle) { g.save(); ell(0, -270 + bob, 200, 92); g.clip(); g.fillStyle = shade(-370, -260, B.patch); ell(-30, -360 + bob, 190, 70); g.fill(); g.restore(); }
+  g.fillStyle = 'rgba(255,255,255,.14)'; ell(40, -320 + bob, 140, 22); g.fill();
+  legs.filter(l => l[2]).forEach(drawLeg);                          // near legs in front
+  // neck + head (the head nods a little behind the body bob; 'look' turns it toward the camera)
+  const hb = moving ? -G.bob * .6 * Math.sin(4 * Math.PI * phase - .8) : 0;
+  g.fillStyle = shade(-440, -240, B.coat); g.beginPath(); g.moveTo(110, -330 + bob); g.quadraticCurveTo(170, -420, 225, -430 + hb); g.lineTo(255, -350 + hb); g.quadraticCurveTo(200, -300, 170, -250 + bob); g.closePath(); g.fill();
+  if (B.collar) { g.save(); g.translate(190, -345 + (bob + hb) / 2); g.rotate(-.9); g.fillStyle = B.collar; g.beginPath(); g.roundRect(-44, -12, 88, 24, 10); g.fill(); g.fillStyle = '#FFC94D'; ell(0, 22, 11, 11); g.fill(); g.restore(); }
+  g.save(); g.translate(255, -440 + hb); g.rotate(tilt);
+  const turn = look;   // 0 = profile, 1 = three-quarter toward camera (snout shortens, second eye appears)
+  g.fillStyle = shade(-80, 70, B.coat); ell(0, 0, 78, 74); g.fill();
+  if (B.eyePatch) { g.save(); ell(0, 0, 78, 74); g.clip(); g.fillStyle = shade(-60, 10, B.patch); ell(28 - 20 * turn, -18, 36, 30, .2); g.fill(); g.restore(); }
+  const sl = 120 * (1 - .55 * turn);
+  g.fillStyle = shade(-20, 60, ['#FFFDF6', '#F6ECDA', '#DCCAAA']); g.beginPath(); g.roundRect(30 - 20 * turn, -14, sl, 62, 30); g.fill();
+  g.fillStyle = DOG.dark; ell(30 - 20 * turn + sl - 10, -2, 18, 14); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.35)'; ell(30 - 20 * turn + sl - 16, -6, 6, 4); g.fill();
+  g.strokeStyle = '#6E5444'; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); g.moveTo(30 - 20 * turn + sl - 14, 18); g.quadraticCurveTo(70, 46, 40 - 20 * turn, 36); g.stroke();
+  const eyes = turn > .3 ? [[24 - 20 * turn, -20], [-14, -22]] : [[24, -20]];
+  for (const [ex, ey] of eyes) { g.fillStyle = DOG.dark; ell(ex, ey, 13, Math.max(2, 15 * (1 - blink * .9))); g.fill(); if (blink < .5) { g.fillStyle = '#FFFFFF'; ell(ex + 4, ey - 6, 4.5, 4.5); g.fill(); } }
+  g.strokeStyle = '#4A3226'; g.lineWidth = 4.5; g.beginPath(); g.moveTo(8, -46); g.quadraticCurveTo(24, -56, 40, -46); g.stroke();
+  // ear: floppy, swings a beat behind the head
+  const earSwing = moving ? .28 * Math.sin(4 * Math.PI * phase - 1.6) : 0;
+  g.save(); g.translate(-30, -50); g.rotate(earSwing);
+  g.fillStyle = shade(-10, 120, B.ear); g.beginPath(); g.moveTo(0, 0); g.bezierCurveTo(-40, 10, -55, 80, -30, 120); g.bezierCurveTo(-10, 135, 15, 110, 18, 70); g.bezierCurveTo(20, 40, 15, 10, 0, 0); g.fill();
+  g.restore();
+  g.restore();
+  g.restore();
+}
