@@ -61,6 +61,15 @@ Not Sci-Fi Sitcom Toon (no boiling outlines, no dialogue comedy, no portal), not
 - Cards cut in on a quick scale-up from 96 % with a motion-blur whip; content inside animates once (waves pulse, a glow fades up, icons count up).
 - Caption words appear exactly on their spoken word; the key box pops in with a small overshoot.
 
+**Reference grammar (from the pet explainers that perform):**
+- **Open on an extreme close-up of the behaviour** (the stare, the tilt, the chomp filling the frame), then pull back to the scene on line 2.
+- **Fewer cuts, more camera:** about one scene per idea; inside a scene the camera pushes and pulls. Never a cut away and back inside one line.
+- **Tags pinned to the animal:** small mono tags with a leader line and a dot on the body part or thing they name (EYES ON YOU, EXPOSED, PREDATOR), tracking the camera.
+- **The myth strike:** when the topic has a common wrong answer, state it as a tag/caption, then strike it through in red with a red X.
+- **One evolving data card:** the scene drops to near-black and a single tall card takes over for two or three lines, revealing step by step (counter rolls, icons align, a second panel grows) instead of swapping several small cards.
+- **A persistent progress HUD:** numbered step dots on the left edge (1 · 2 · 3, short labels) light up as the film's thread advances, from line 2 to the end.
+- No flash-cuts or typewriter here (those are Pixel Scan's); Pet Cam uses whip-blurs and word-synced captions.
+
 ## 6. Camera grammar
 
 A locked camera inside each scene; the film moves by changing scenes (whip-pan with motion blur, ~0.3 s) and by cards cutting in.
