@@ -74,7 +74,8 @@ const FACES = {
 
 // Only the organs a film talks about are drawn (the rest of the body stays empty, so the scan reads cleanly).
 // showOnly(['liver', 'heart']) in main.js; null = every organ.
-let SHOWN = null;
+let SHOWN = null, PARTICLE = 'speck';
+export function particles(kind) { PARTICLE = kind; }   // 'speck' (amber dots) or 'cube' (white sugar cubes)
 export function showOnly(list) { SHOWN = list ? new Set(list) : null; }
 const shown = k => !SHOWN || SHOWN.has(k);
 
@@ -141,6 +142,13 @@ function drawClear(ctx, { x, y, px, state, rim }) {
     const tx = (rnd() - .5) * 14, ty = 18 + rnd() * 18;
     if (!inBodyXY(tx - 1, ty) || !inBodyXY(tx + 1, ty)) continue;
     const X = ox + (tx + W / 2) * px, Y = oy + ty * px;
+    if (PARTICLE === 'cube') {   // a little sugar cube: white face, a grey shaded side, a soft glow
+      const q = Math.round(2.6 * f);
+      ctx.fillStyle = 'rgba(244,251,255,.16)'; ctx.fillRect(X - q, Y - q, 2 * q, 2 * q);
+      ctx.fillStyle = '#F4FBFF'; ctx.fillRect(X - q / 2, Y - q / 2, q, q);
+      ctx.fillStyle = '#AFC6CC'; ctx.fillRect(X + q / 2 - f, Y - q / 2 + f, f, q - f); ctx.fillRect(X - q / 2 + f, Y + q / 2 - f, q - f, f);
+      continue;
+    }
     if (glow) { ctx.fillStyle = 'rgba(255,181,71,.3)'; ctx.fillRect(X - 2 * f, Y - 2 * f, 4 * f, 4 * f); }
     ctx.fillStyle = glow ? '#FFD27A' : C.amber; ctx.fillRect(X - f, Y - f, 2 * f, 2 * f);
   }

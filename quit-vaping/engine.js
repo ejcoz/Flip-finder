@@ -144,6 +144,8 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (k >= 1) {
       const u = lt - BAR / 2 - .15, step = Math.floor(t / BEAT);
       (M.legend || []).forEach(([s, col], j) => { if (u > j * .25) drawText(out, s, cx, cy - 190 + j * 62, 6, col, { align: 'center', shadow: '#011012' }); });
+      if (M.kind === 'tooth') { toothDiagram(M, cx, cy, u); }
+      else {
       // membrane: two rows of dots with little tails between, like a cell wall
       const my = cy + 110, x0 = cx - 340, x1 = cx + 340;
       out.fillStyle = 'rgba(57,224,240,.5)';
@@ -166,11 +168,37 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
         }
         out.restore();
       }
+      }
       (M.foot || []).forEach(([s, col], j) => { if (u > .6) drawText(out, s, cx, cy + 170 + j * 62, 5, col, { align: 'center', shadow: '#011012' }); });
     }
     out.restore();
     out.strokeStyle = '#5FE3EF'; out.lineWidth = 8; out.beginPath(); out.arc(cx, cy, r, 0, Math.PI * 2); out.stroke();
     if (r > 30) { out.strokeStyle = 'rgba(255,255,255,.22)'; out.lineWidth = 4; out.beginPath(); out.arc(cx, cy, r - 14, Math.PI * 1.1, Math.PI * 1.45); out.stroke(); }
+  }
+  // tooth: sugar cubes rain on a pixel molar; bacteria eat them and drip acid; the rain thins out (less sugar, less acid)
+  const TOOTH = ['..####...####..', '.######.######.', '###############', '###############', '###############', '###############', '.#############.',
+    '.#############.', '..###########..', '..####...####..', '..###.....###..', '..###.....###..', '...##.....##...', '...#.......#...'];
+  function toothDiagram(M, cx, cy, u) {
+    const b = 27, tw = 15 * b, top = Math.round(cy - 10), left = Math.round(cx - tw / 2);
+    TOOTH.forEach((row, r) => [...row].forEach((ch, c) => { if (ch !== '#') return;
+      const edgeR = row[c + 1] !== '#', low = r > 8;
+      out.fillStyle = edgeR || low ? '#BFD9DE' : r < 2 && c < 7 ? '#FFFFFF' : '#EAF6F8'; out.fillRect(left + c * b, top + r * b, b, b); }));
+    const hash = (n, i) => Math.abs(Math.sin(n * 91.3 + i * 17.7) * 43758.5) % 1, rate = Math.max(.12, 1 - Math.max(0, u - .4) / 1.8);
+    [-135, 0, 135].forEach((dx, i) => {
+      const P = .8, off = i * .27, n = Math.floor((u + off) / P), ph = ((u + off) / P) % 1, bx = cx + dx, by = top - 10;
+      const active = u > 0 && hash(n, i) < rate, eat = active && ph > .45 && ph < .6;
+      if (active && ph < .5) {   // a cube falls onto the bacterium
+        const y = cy - 150 + ph / .5 * (by - 60 - (cy - 150));
+        out.fillStyle = '#F4FBFF'; out.fillRect(bx - 17, y - 17, 34, 34); out.fillStyle = '#AFC6CC'; out.fillRect(bx + 8, y - 9, 9, 26); out.fillRect(bx - 9, y + 8, 26, 9);
+      }
+      if (active && ph >= .5) {   // acid drips onto the tooth
+        const y = by + 4 + (ph - .5) / .5 * 50; out.fillStyle = C.amber; out.fillRect(bx - 26, y, 13, 18); out.fillRect(bx + 14, y + 10, 13, 18);
+      }
+      const s = eat ? 1.2 : 1, gw = 78 * s, gh = 50 * s;   // the bacterium: a green blob with two eyes
+      out.fillStyle = '#7CE06A'; out.fillRect(bx - gw / 2, by - gh, gw, gh); out.fillRect(bx - gw / 2 + 12, by - gh - 12, gw - 24, 12);
+      out.fillStyle = '#4FA845'; out.fillRect(bx - gw / 2, by - 12, gw, 12);
+      out.fillStyle = '#03262C'; out.fillRect(bx - 18, by - gh + 12, 10, 13); out.fillRect(bx + 9, by - gh + 12, 10, 13);
+    });
   }
   // tags: symptom pills pop around the head one per beat-and-a-bit; meter: a segmented gauge beside the body
   function tagPill(s, x, y, col, k) {
