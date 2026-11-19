@@ -8,7 +8,7 @@ import { buildLab, glassSheen, BOOTH, FW, FH } from './lab.js';
 import { drawAway } from './scenes.js';
 
 export const BAR = 2, BEAT = 0.5;
-const TAG0 = BAR / 2 + .1, TAGDT = .42;   // symptom tags: first pop, then one every TAGDT s
+const TAG0 = BAR / 2, TAGDT = .3;   // symptom tags: first pop, then one every TAGDT s
 // Reels / Shorts safe area for text and anything that must be read: clear of the top header, the right-hand buttons
 // and the bottom caption/username band.
 export const SAFE = { x0: 60, x1: 920, y0: 250, y1: 1480 };
@@ -142,10 +142,10 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     out.fillStyle = `rgba(1,8,10,${.55 * e})`; out.fillRect(0, 0, FW, FH);
     out.save(); out.beginPath(); out.arc(cx, cy, r, 0, Math.PI * 2); out.fillStyle = 'rgba(4,26,31,.98)'; out.fill(); out.clip();
     if (k >= 1) {
-      const u = lt - BAR / 2 - .25, step = Math.floor(t / BEAT);
-      (M.legend || []).forEach(([s, col], j) => { if (u > j * .25) drawText(out, s, cx, cy - 300 + j * 62, 5, col, { align: 'center', shadow: '#011012' }); });
+      const u = lt - BAR / 2 - .15, step = Math.floor(t / BEAT);
+      (M.legend || []).forEach(([s, col], j) => { if (u > j * .25) drawText(out, s, cx, cy - 190 + j * 62, 6, col, { align: 'center', shadow: '#011012' }); });
       // membrane: two rows of dots with little tails between, like a cell wall
-      const my = cy + 46, x0 = cx - 340, x1 = cx + 340;
+      const my = cy + 110, x0 = cx - 340, x1 = cx + 340;
       out.fillStyle = 'rgba(57,224,240,.5)';
       for (let x = x0; x <= x1; x += 18) { out.fillRect(x, my, 10, 10); out.fillRect(x, my + 70, 10, 10); if ((x / 18) % 1 === 0) out.fillRect(x + 3, my + 16, 4, 48); }
       const n = M.slots || 8, gap = (x1 - x0 - 40) / (n - 1), extra = new Set(M.extra || []);
@@ -411,7 +411,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       if (!m.mech || p < 1) readout(readValue(m, lt, p));
       if (m.tags && p >= 1 && !rew) tags(m, lt);
       if (m.meter && p >= 1 && !rew) meter(m.meter, lt, t);
-      if (m.mech && p >= 1 && !rew) mech(m.mech, Math.min(1, (lt - BAR / 2) / 0.3), cam, t, lt);
+      if (m.mech && p >= 1 && !rew) mech(m.mech, Math.min(1, (lt - BAR / 2) / 0.15), cam, t, lt);
       if (m.label && p >= 1 && !rew) callout(m.label, m.dir, cam);
       if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
     }
@@ -446,7 +446,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     }
     if (m.label && t - m.t0 >= BAR / 2 && !(m.final && t >= REWIND)) T.push({ id: 'callout', text: m.label.say.join(' '), x0: 40, y0: 600, x1: 330, y1: 1260 });
     if (m.lens && t - m.t0 >= BAR / 2 + 0.25) T.push({ id: 'lens', text: m.lens.foot, x0: LENS.cx - LENS.r, y0: LENS.cy - LENS.r, x1: LENS.cx + LENS.r, y1: LENS.cy + LENS.r });
-    if (m.mech && t - m.t0 >= BAR / 2 + .3) T.push({ id: 'mech', text: [...(m.mech.legend || []), ...(m.mech.foot || [])].map(q => q[0]).join(' '), x0: MECH.cx - MECH.r, y0: MECH.cy - MECH.r, x1: MECH.cx + MECH.r, y1: MECH.cy + MECH.r });
+    if (m.mech && t - m.t0 >= BAR / 2 + .15) T.push({ id: 'mech', text: [...(m.mech.legend || []), ...(m.mech.foot || [])].map(q => q[0]).join(' '), x0: MECH.cx - MECH.r, y0: MECH.cy - MECH.r, x1: MECH.cx + MECH.r, y1: MECH.cy + MECH.r });
     if (m.tags) m.tags.forEach(([s], j) => { if (t - m.t0 >= TAG0 + j * TAGDT) T.push({ id: 'tag' + j, text: s, x0: 40, y0: 620, x1: 1040, y1: 980 }); });
     return T;
   };
