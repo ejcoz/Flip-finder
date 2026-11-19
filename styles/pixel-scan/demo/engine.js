@@ -173,6 +173,15 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
           ctx.fillStyle = `rgba(222,242,245,${0.85 - 0.5 * dr})`;
           for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) if (i * i + j * j <= R * R) ctx.fillRect(Math.round(x / c) * c + i * c, Math.round(y / c) * c + j * c, c, c);
         });
+      } else if (p === 'drinkX' || p === 'drink') {   // a pixel mug of beer beside Bit's hand; 'drinkX' crosses it out on beat 3
+        const [x, y] = at(10, 28), c = 10;
+        const D = ['.wwww...', 'wwwwww..', 'aaaaaa..', 'aaaaaakk', 'aaaaaa.k', 'aaaaaa.k', 'aaaaaakk', 'aaaaaa..', 'gggggg..'];
+        const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' };
+        D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x + cc * c, y + r * c, c, c); } }));
+        if (p === 'drinkX' && lt >= 2 * BEAT) {
+          ctx.fillStyle = '#FF5A5F';
+          for (let i = 0; i < 12; i++) { ctx.fillRect(x - 30 + i * 11, y - 10 + i * 10, 14, 14); ctx.fillRect(x + 92 - i * 11, y - 10 + i * 10, 14, 14); }
+        }
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
@@ -257,7 +266,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       ctx.fillStyle = '#39E0F0'; ctx.fillRect(B.x0 - 14, ys - 5, 34, 10); ctx.fillRect(B.x1 - 20, ys - 5, 34, 10);
     }
     glassSheen(ctx);
-    if (rew >= 1) props(FIRST.props.filter(q => q !== 'vapeX').concat(FIRST.props.includes('vapeX') ? ['vape'] : []), 0);
+    if (rew >= 1) props(FIRST.props.map(q => q.endsWith('X') ? q.slice(0, -1) : q), 0);
     else if (p >= 1 && !m.chart && !rew) props(m.props, lt);
     if (m.dir > 0 && !m.chart && p >= 1 && !rew && m.sparkle) {
       const tw = Math.floor(t / BEAT);
