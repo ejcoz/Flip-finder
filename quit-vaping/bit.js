@@ -110,6 +110,28 @@ const ORG = {
   stomach: { box: [1.5, 7, 30.2, 36], test: (x, y) => ell(x, y, 4.1, 32.8, 2.3, 2.3), pal: ['#FFD2C8', '#FFB0A3', '#D27C70'], detail: () => false },
 };
 const GREYP = ['#A9BBBE', '#6F8A8E', '#4E6569'];
+// HD faces: tiny sprites on a fine grid (one char = px * .34), one eye shape + one mouth per mood, nothing else
+const HDF = {
+  flat:  { eye: ['#####', '#####'], mouth: ['####'] },
+  shut:  { eye: ['#####'], mouth: ['###'] },
+  tired: { eye: ['.....', '#####'], mouth: ['..##', '##..'] },
+  happy: { eye: ['.###.', '#...#', '#...#'], mouth: ['#.....#', '.#####.'] },
+  wide:  { eye: ['.###.', '##.##', '#...#', '##.##', '.###.'], eyeFill: true, mouth: ['.##.', '#..#', '.##.'] },
+};
+function sprite(ctx, rows, cx, cy, b) {
+  const h = rows.length, w = rows[0].length;
+  rows.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === '#') ctx.fillRect(Math.round(cx + (c - w / 2) * b), Math.round(cy + (r - h / 2) * b), Math.ceil(b), Math.ceil(b)); }));
+}
+function drawHDFace(ctx, ox, oy, px, face) {
+  const f = HDF[face] || HDF.flat, b = px * .34, hx = ox + 15 * px;
+  ctx.fillStyle = C.eye;
+  for (const sd of [-1, 1]) {
+    const ex = hx + sd * 2.6 * px, ey = oy + 10.2 * px;
+    if (f.eyeFill) { sprite(ctx, ['.###.', '#####', '#####', '#####', '.###.'], ex, ey, b); ctx.fillStyle = '#061419'; ctx.fillRect(Math.round(ex - b * .7), Math.round(ey - b * .7), Math.ceil(b * 1.4), Math.ceil(b * 1.4)); ctx.fillStyle = C.eye; }
+    else sprite(ctx, f.eye, ex, ey, b);
+  }
+  sprite(ctx, f.mouth, hx, oy + 12.9 * px, b);
+}
 function drawClear(ctx, { x, y, px, state, rim }) {
   const { face = 'flat', toxins = 0, seed = 1, glow = false } = state;
   const ox = Math.round(x - (W * px) / 2), oy = Math.round(y - H * px), f = Math.max(3, Math.round(px / 3.5)), d = f / px;
@@ -150,20 +172,7 @@ function drawClear(ctx, { x, y, px, state, rim }) {
     for (let k = 0; k < 7; k++) ctx.fillRect(Math.round(hx + (k - 3.5) * px * .5), Math.round(oy + 13.1 * px + (((k + tk) % 2) ? .3 : -.1) * px), Math.round(px * .5), Math.round(px * .3));
     return { ox, oy, w: W * px, h: H * px };
   }
-  const fc = FACES[face] || FACES.flat;   // HD face: one dash per eye, a thin mouth
-  ctx.fillStyle = C.eye;
-  for (const side of [fc.e.filter(([c]) => c < 15), fc.e.filter(([c]) => c >= 15)]) {
-    if (!side.length) continue;
-    if (face === 'wide') {   // worried: round eyes with a dark pupil
-      const cs = side.map(q => q[0]), rs = side.map(q => q[1]), ex = ox + (Math.min(...cs) + .5) * px, ey = oy + (rs.reduce((p, q) => p + q, 0) / rs.length + .5) * px, R = px * .75;
-      ctx.fillStyle = C.eye; ctx.fillRect(Math.round(ex - R), Math.round(ey - R), Math.round(2 * R), Math.round(2 * R));
-      ctx.fillStyle = '#061419'; ctx.fillRect(Math.round(ex - R * .45), Math.round(ey - R * .45), Math.round(R * .9), Math.round(R * .9)); ctx.fillStyle = C.eye; continue;
-    }
-    const cs = side.map(q => q[0]), rs = side.map(q => q[1]), c0 = Math.min(...cs), c1 = Math.max(...cs) + 1, r = rs.reduce((a, b) => a + b, 0) / rs.length;
-    const w = Math.max(1.3, c1 - c0) * px; ctx.fillRect(Math.round(ox + (c0 + c1) / 2 * px - w / 2), Math.round(oy + (r + .3) * px), Math.round(w), Math.round(px * .42));
-  }
-  if (face === 'wide') { const cs = fc.m.map(q => q[0]), rs = fc.m.map(q => q[1]); ctx.fillRect(ox + Math.min(...cs) * px + px * .3, oy + Math.min(...rs) * px + px * .2, (Math.max(...cs) - Math.min(...cs) + 1) * px - px * .6, px * 1.1); }   // worried: a small open mouth
-  else for (const [c, r] of fc.m) ctx.fillRect(ox + c * px, Math.round(oy + (r + .35) * px), px, Math.round(px * .3));
+  drawHDFace(ctx, ox, oy, px, face);
   return { ox, oy, w: W * px, h: H * px };
 }
 
