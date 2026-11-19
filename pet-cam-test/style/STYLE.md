@@ -16,6 +16,7 @@ A 45–65 s vertical film about why a pet does something, or how to keep it well
 ## 1. Essence, and what it is not
 
 - **A narrator explains; the picture proves.** Every beat is one spoken idea and one visual that shows it.
+- **A new scene for every idea.** The pet is never stuck in one place for the whole film: each spoken idea gets its own scene (home with the owner, a dog's-eye view, a park lineup with other breeds, the toy pile, a split screen of several dogs), joined by whip-pans with motion blur, a cut every 3–6 s. Characters are always alive: breathing, blinks, ear flicks, tail wags, a talking owner.
 - **CAM-feed cards are the signature.** The answer lives in rounded inset "camera" views that cut in over the scene: inside the head, inside the gut, a thermal cam, a survey. Each card has an italic title, a small italic subtitle, a mono `CAM 04` tag and a timer icon.
 - **Soft flat vector, no outlines.** Friendly rounded animals and people built from clean shapes with soft top-to-bottom shading; the scene is lit for the story's mood.
 - **Captions are the voice.** Grey lead-in words, then the key phrase big and bold in a selection box with corner handles, coloured by meaning.
@@ -61,7 +62,7 @@ Not Sci-Fi Sitcom Toon (no boiling outlines, no dialogue comedy, no portal), not
 
 ## 6. Camera grammar
 
-Mostly a locked camera on one scene; movement is purposeful.
+A locked camera inside each scene; the film moves by changing scenes (whip-pan with motion blur, ~0.3 s) and by cards cutting in.
 
 | Move | Expresses | Serves |
 |---|---|---|
@@ -69,6 +70,8 @@ Mostly a locked camera on one scene; movement is purposeful.
 | Card cut-in (whip + blur) | "look inside" | the mechanism; the evidence |
 | Slow push-in on the pet | attention, feeling | an emotional beat |
 | Whip-pan between scenes | another time or place | a comparison; a myth vs fact |
+| Point-of-view shot | what the pet sees | a theory about perception; the owner from below |
+| Split screen (2–3 CAM panels) | many animals, one pattern | "each dog…"; comparing breeds |
 
 ## 7. Sound palette
 
@@ -88,6 +91,8 @@ The CAM-feed card is in every film; the others are a menu.
 ## 9. Pitfalls of the medium
 
 - Outlines creeping in, or hard cel shadows → soft shading only.
+- One static scene for the whole film → a new scene per idea, whips between them, idle life in every shot.
+- Grey caption words lost on a bright scene → the caption block always sits on a soft dark plate.
 - A behaviour shown in profile that only reads front-on (head tilt, a look) → turn the character three-quarter front.
 - An x-ray that doesn't match the character's pose → redraw the same pose and angle.
 - Caption words off the voice → captions come from the voice's word timestamps.
