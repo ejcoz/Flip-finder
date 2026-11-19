@@ -74,6 +74,12 @@ Not Mascot Screencast (no product UI, no cursor, no window recording), not a pix
 - Particles (toxins, plaque, sugar) are bright single cells with a dim 3×3 amber glow, drifting on a seeded path; on frame 1 there are plenty of them (the problem should be loud); they clear in bursts on beats.
 - Readouts count and fill in steps on beats (one step per beat or half-beat).
 
+**Cut grammar (from the reference that performs):**
+- **Flash-cut:** every beat change and every away cut lands on a bar line with a single near-white frame (1/30 s, ~78 % white), then the new state. Never more than one flash per cut (stays far under 3 flashes a second).
+- **Title slam:** the new title is on screen in the flash frame and settles with a small scale bounce (~0.15 s); it never fades or waits for the sweep.
+- **Typewriter caption:** the caption card types on letter by letter (~34 characters a second, starting ~0.2 s after the cut) with a blinking block cursor, so something keeps moving after the cut.
+- **Grow from the source:** a lens or an away shot opens out of the organ it is about: an opening circle with a zoom from close-up to full (~0.3 s). Coming back to the booth is a plain flash-cut.
+
 ## 6. Camera grammar
 
 One continuous camera inside the lab. Cuts only as scan sweeps. A chart or diagram is never a cut away: the glass switches into monitor mode (§8).
