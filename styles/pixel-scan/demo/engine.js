@@ -24,7 +24,8 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   const EV = [];
   MS.forEach((m, i) => {
     EV.push({ t: m.t0, type: 'section', i, bars: m.bars, mood: m.mood, drop: !!m.drop, dir: m.dir, final: !!m.final });
-    if (i > 0) EV.push({ t: m.t0, type: m.dir < 0 && MS[i - 1].dir >= 0 ? 'fall' : 'sweep' });
+    const whole = m.away && !m.away.at;   // a whole-beat away shot: its own zip replaces the sweep sound
+    if (i > 0 && !whole) EV.push({ t: m.t0, type: m.dir < 0 && MS[i - 1].dir >= 0 ? 'fall' : 'sweep' });
     if (m.coin) EV.push({ t: m.t0 + BAR + BEAT, type: 'coin' });
     if (m.final) { EV.push({ t: m.t0, type: 'confetti' }); EV.push({ t: REWIND, type: 'rewind' }); }
     if (m.chart) for (let k = 0; k < 10; k++) EV.push({ t: m.t0 + BAR / 2 + k * 0.25, type: 'tick', k: m.chart.down ? 9 - k : k });
@@ -32,7 +33,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'blip', k: 0 });
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
-    if (m.away) { EV.push({ t: m.t0 + m.away.at, type: 'away' }); if (MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
+    if (m.away) { EV.push({ t: m.t0 + (m.away.at || 0), type: 'away' }); if (m.away.at && MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
   });
   window.EV = EV;
 
