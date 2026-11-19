@@ -1,0 +1,69 @@
+[
+ {
+  "id": "l01",
+  "text": "What does your dog really understand when you talk?",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l02",
+  "text": "More than you think.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l03",
+  "text": "In one survey, owners said their dogs responded to about eighty-nine words.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "In one survey, owners said their dogs responded to about 89 words."
+ },
+ {
+  "id": "l04",
+  "text": "Their name, sit, and come were the top three.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l05",
+  "text": "But a brain scan study found something cooler.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l06",
+  "text": "Dogs process what you say on one side of the brain,",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l07",
+  "text": "and how you say it on the other.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l08",
+  "text": "Their reward area lit up most when praise words came with a happy tone.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l09",
+  "text": "So a flat good dog doesn't hit the same.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l10",
+  "text": "Say it like you mean it.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l11",
+  "text": "Send this to someone who talks to their dog.",
+  "voice": "af_heart",
+  "speed": 0.95
+ }
+]
