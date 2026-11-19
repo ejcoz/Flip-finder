@@ -47,6 +47,7 @@ const G = {
   '+': ['.....', '..#..', '..#..', '#####', '..#..', '..#..', '.....'],
   '/': ['....#', '...#.', '...#.', '..#..', '.#...', '.#...', '#....'],
   ':': ['.....', '..#..', '.....', '.....', '.....', '..#..', '.....'],
+  '~': ['.....', '.....', '.##.#', '#.##.', '.....', '.....', '.....'],
   '@': ['.###.', '#...#', '#.###', '#.#.#', '#.###', '#....', '.####'],
 };
 
@@ -54,7 +55,8 @@ const G = {
 export const textW = (s, c) => Math.max(0, String(s).length * 6 - 1) * c;
 
 // draw text with its top-left at (x,y); shadow = colour of a 1-cell drop shadow (down-right)
-export function drawText(ctx, s, x, y, c, col, { align = 'left', shadow = null, count = Infinity } = {}) {
+// bold: each cell drawn wider and taller, so strokes stay solid at phone size
+export function drawText(ctx, s, x, y, c, col, { align = 'left', shadow = null, count = Infinity, bold = false } = {}) {
   s = String(s).toUpperCase().slice(0, count);
   if (align === 'center') x -= textW(s, c) / 2;
   else if (align === 'right') x -= textW(s, c);
@@ -64,7 +66,7 @@ export function drawText(ctx, s, x, y, c, col, { align = 'left', shadow = null, 
     [...s].forEach((ch, i) => {
       const g = G[ch] || G['?'];
       for (let r = 0; r < 7; r++) for (let k = 0; k < 5; k++)
-        if (g[r][k] === '#') ctx.fillRect(x + (i * 6 + k) * c + ox, y + r * c + oy, c, c);
+        if (g[r][k] === '#') ctx.fillRect(x + (i * 6 + k) * c + ox, y + r * c + oy, c + (bold ? Math.round(c * .45) : 0), c + (bold ? Math.round(c * .25) : 0));
     });
   };
   if (shadow) pass(c, c, shadow);

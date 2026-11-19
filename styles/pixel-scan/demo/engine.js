@@ -54,7 +54,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const w = textW(text, c) + 2 * Math.max(28, c * 4), h = 7 * c + 2 * Math.max(12, c * 1.7), x = Math.round((FW - w) / 2);
     out.fillStyle = bg; out.fillRect(x, cy, Math.round(w), Math.round(h));
     if (line) { out.fillStyle = line; out.fillRect(x, cy + Math.round(h), Math.round(w), c); }
-    drawText(out, text, FW / 2, cy + (h - 7 * c) / 2, c, fg, { align: 'center', shadow: c >= 8 ? '#03262C' : null });
+    drawText(out, text, FW / 2, cy + (h - 7 * c) / 2, c, fg, { align: 'center', shadow: c >= 8 ? '#03262C' : null, bold: true });
     return cy + Math.round(h) + (line ? c : 0);
   }
   function hook(m, n) {         // lines 1–2 from the first frame; line 3 lands on beat 2
@@ -65,21 +65,21 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
   }
   function watermark() {   // fixed on the text layer: the camera, the scan sweeps and the loop never move it
     if (!BRAND) return;
-    out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' });   // on the booth's base plate out.restore();
+    out.save(); out.globalAlpha = 0.72; drawText(out, BRAND, FW / 2, 1590, 4, '#A8D8E0', { align: 'center', shadow: '#03262C' }); out.restore();   // on the booth's base plate
   }
   function titleBar(m, k = 1) {   // title only when there is a caption; the subline shows only without one
     const c = fit(m.title, 13), w = textW(m.title, c) + 2 * Math.max(28, c * 4), x = Math.round((FW - w) / 2), h = 7 * c + 44;
-    out.fillStyle = m.final ? '#03262C' : '#0B8EA0'; out.fillRect(x, TY, Math.round(w), h);
-    out.fillStyle = dirCol(m.dir); out.fillRect(x, TY + h, Math.round(w), c);
-    drawText(out, m.title, FW / 2, TY + 22, c, m.final ? C.lime : '#F2FBFC', { align: 'center', shadow: '#03262C', count: Math.ceil(m.title.length * k) });
+    out.fillStyle = m.final ? C.lime : '#39E0F0'; out.fillRect(x, TY, Math.round(w), h);
+    out.fillStyle = m.final ? '#03262C' : dirCol(m.dir); out.fillRect(x, TY + h, Math.round(w), c);
+    drawText(out, m.title, FW / 2, TY + 22, c, '#03262C', { align: 'center', bold: true, count: Math.ceil(m.title.length * k) });
     if (m.sub && !m.cap) bar(m.sub, TY + h + c + 16, 6, '#F2FBFC', '#03262C', null);
     return TY + h + c;
   }
   function caption(lines, dir, y) {   // directly under the title, inside the safe area
     const c = 6, lh = 7 * c + 16, h = lines.length * lh + 26 - 16 + 16, w = Math.max(...lines.map(l => textW(l, c))) + 64, x = Math.round((FW - w) / 2);
-    out.fillStyle = 'rgba(3,24,28,.95)'; out.beginPath(); out.roundRect(x, y, w, h, 12); out.fill();
-    out.strokeStyle = dirCol(dir); out.lineWidth = 4; out.stroke();
-    lines.forEach((l, i) => drawText(out, l, FW / 2, y + 13 + i * lh, c, '#F2FBFC', { align: 'center' }));
+    out.fillStyle = '#F2FBFC'; out.beginPath(); out.roundRect(x, y, w, h, 12); out.fill();
+    out.strokeStyle = dirCol(dir); out.lineWidth = 7; out.stroke();
+    lines.forEach((l, i) => drawText(out, l, FW / 2, y + 13 + i * lh, c, '#06222A', { align: 'center', bold: true }));
   }
   const RD = { x: 40, y: 1276, w: 176, h: 200 };
   function readout(v) {
@@ -103,7 +103,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     out.fillStyle = 'rgba(3,24,28,.95)'; out.fillRect(x, y, w, h);
     out.strokeStyle = col; out.lineWidth = 3; out.strokeRect(x, y, w, h);
     drawText(out, lb.organ, x + 14, y + 14, 3, 'rgba(57,224,240,.75)');
-    lb.say.forEach((l, k) => drawText(out, l, x + 14, y + 47 + k * 38, 4, col));
+    lb.say.forEach((l, k) => drawText(out, l, x + 14, y + 47 + k * 38, 4, col, { bold: true }));
   }
   const LENS = { cx: 222, cy: 760, r: 168 };
   function lens(L, k, cam, t) {   // left edge: grows out of the brain; receptor (or any) icons, the count is the story
