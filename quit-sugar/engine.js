@@ -71,7 +71,21 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     drawText(out, text, FW / 2, cy + (h - 7 * c) / 2, c, fg, { align: 'center', shadow: c >= 8 ? '#03262C' : null, bold: true });
     return cy + Math.round(h) + (line ? c : 0);
   }
-  function hook(m, n) {         // lines 1–2 from the first frame; line 3 lands on beat 2
+  const rew0 = t => t >= REWIND + BAR / 4;
+  const HV = QS.get('hook') || READ.hookStyle || '';   // hook look: '' (classic), A (huge topic), B (A on a solid label bar), C (B + warm glow + tease chip)
+  function hook(m, n) {         // the whole hook on frame 1
+    if (HV && m.hookBig) {
+      const [[a, ca], [b, cb], [c3, cc]] = m.hookBig;
+      let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
+      y = (HV === 'A' ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#FFFFFF', '#E5484D', '#7A1E22')) + 14;
+      y = bar(c3, y, cc, '#03262C', '#39E0F0', null);
+      if (HV === 'C' && m.tease) {
+        const c = 5, w = textW(m.tease, c) + 40, x = Math.round((FW - w) / 2), yy = y + 18;
+        out.fillStyle = '#03262C'; out.fillRect(x, yy, w, 7 * c + 24); out.strokeStyle = '#FFE066'; out.lineWidth = 4; out.strokeRect(x, yy, w, 7 * c + 24);
+        drawText(out, m.tease, FW / 2, yy + 12, c, '#FFE066', { align: 'center' });
+      }
+      return;
+    }
     const [[a, ca], [b, cb], [c3, cc]] = m.hook;
     let y = bar(a, TY, ca, '#F2FBFC', '#03262C', null) + 8;
     y = (LOUD ? bar(b, y, cb, '#FF5A5F', '#03262C', '#FF5A5F') : bar(b, y, cb, '#F2FBFC', '#0B8EA0', '#39E0F0')) + 14;
@@ -376,6 +390,13 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const p = prev ? Math.min(1, lt / (BAR / 2)) : 1;
     const rew = m.final && t >= REWIND ? Math.min(1, (t - REWIND) / (BAR / 2)) : 0;   // upward rewind sweep
     ctx.drawImage(LAB, 0, 0);
+    if (HV === 'C' && (m.hook || (m.final && rew0(t)))) {   // hook frame only: a warm dithered glow behind the body
+      const gcx = CX, gcy = TOP + 22 * PX, cell = 8;
+      for (let y = gcy - 560; y < gcy + 560; y += cell) for (let x = 0; x < FW; x += cell) {
+        const d = Math.hypot((x - gcx) / 520, (y - gcy) / 560); if (d > 1) continue;
+        if ((1 - d) * .85 > bayer(x / cell, y / cell)) { ctx.fillStyle = d < .45 ? '#7A2E4A' : '#4A2340'; ctx.fillRect(x, y, cell, cell); }
+      }
+    }
     const dropNow = m.drop && lt >= 2 * BAR;
     const rim = OPEN ? ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#5FE3EF') : DIM ? ((t % BEAT) < 0.12 && !dropNow ? '#39E0F0' : '#1597A8') : ((t % BEAT) < 0.12 && !dropNow ? '#C8FAFF' : '#39E0F0');
     const bit0 = st => drawBit(ctx, { x: CX, y: FOOT, px: PX, rim, state: { ...st, seed: 5, tick: Math.floor(t * 8), sore: st.sore && Math.floor(t / BEAT) % 2 === 0,
