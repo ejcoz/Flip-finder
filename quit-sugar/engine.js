@@ -35,6 +35,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens || m.mech) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
     if (m.mech) (m.mech.extra || []).forEach((_, j) => EV.push({ t: m.t0 + BAR / 2 + .5 + j * BEAT, type: 'tick', k: 6 + j }));
+    if (m.mech && m.mech.kind === 'liver') for (let n = 0; n < 3; n++) EV.push({ t: m.t0 + BAR / 2 + .15 + .85 + n, type: 'gulp' });   // each mug disappears into the liver
     if (m.tags) m.tags.forEach((_, j) => EV.push({ t: m.t0 + TAG0 + j * TAGDT, type: 'blip', k: j % 3 }));
     if (m.away) { EV.push({ t: m.t0 + (m.away.at || 0), type: 'away' }); if (m.away.at && MS[i + 1]) EV.push({ t: m.t1, type: 'back' }); }
   });
