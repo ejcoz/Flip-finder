@@ -149,13 +149,13 @@ function drawScene(name, g, t, lt) {
 }
 
 // ---------- tags pinned to things in the scene (leader line to the anchor) ----------
-function tag(text, x, y, ax, ay, col, k = 1, struck = 0) {
+function tag(text, x, y, ax, ay, col, k = 1, struck = 0, size = 24) {
   if (k <= 0) return;
   A.setCtx(out);
   out.save(); out.globalAlpha = Math.min(1, k * 1.5);
   out.strokeStyle = col; out.lineWidth = 3; out.beginPath(); out.moveTo(x, y); out.lineTo(ax, ay); out.stroke();
   out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 8, 0, Math.PI * 2); out.fill();
-  out.translate(x, y); out.scale(.85 + .15 * k, .85 + .15 * k); A.pill(text, 0, 0, col, 24);
+  out.translate(x, y); out.scale(.85 + .15 * k, .85 + .15 * k); A.pill(text, 0, 0, col, size);
   if (struck > 0) {   // the myth gets struck through, then a red X
     out.font = '600 24px JetBrains Mono'; const w = out.measureText(text).width + 40;
     out.strokeStyle = ACC.bad; out.lineWidth = 5; out.beginPath(); out.moveTo(-w / 2, 0); out.lineTo(-w / 2 + w * Math.min(1, struck * 2), 0); out.stroke();
@@ -166,7 +166,7 @@ function tag(text, x, y, ax, ay, col, k = 1, struck = 0) {
 function tagLayer(t, scene) {
   if (scene === 'bush') {
     const [ex, ey] = toScreen(HEAD[0] + 40, HEAD[1] - 20), [bx, by] = toScreen(DX - 80, DY - 300);
-    if (t > L1.wt[4] && t < L2.t0) tag('EYES ON YOU', 780, 760, ex, ey, ACC.ask, ease((t - L1.wt[4]) / .2));
+    if (t < L2.t0 || t > END - .4) tag('EYES ON YOU', 760, 760, ex, ey, ACC.ask, 1, 0, 36);   // on frame 1 already
     if (t > L2.t0 && t < L3.t0 - .1) tag('THEORY: JUST WEIRD?', 540, 760, ex, ey, ACC.ask, ease((t - L2.t0) / .2), (t - L2.wt[2]) / .5);
     if (t > L3.wt[6] && t < L4.t0 - .2) tag('EXPOSED', 790, 900, bx, by, ACC.bad, ease((t - L3.wt[6]) / .2));
     if (t > L10.wt[1] && t < L11.t0) tag('BODYGUARD: YOU', 740, 800, ex, ey, ACC.good, ease((t - L10.wt[1]) / .2));
@@ -254,7 +254,7 @@ function captionLayer(t) {
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
   const onCard = t >= CARD.t0 && t < CARD.t1;
-  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
+  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22, full);
 }
 function watermark() {
   A.setCtx(out);

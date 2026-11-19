@@ -15,8 +15,8 @@ const READ = {
 };
 
 const MS = [
-  { bars: 2, hook: [['YOU QUIT', 10], ['VAPING.', 14], ["HERE'S WHAT HAPPENS", 6]], hookX: true, mood: 'groove', dir: 0, read: [100, 100], props: ['vapeX', 'vapor'],
-    s: { ...BODY, brain: .3, heart: .45, face: 'flat', toxins: 26 } },
+  { bars: 2, hook: [['YOU QUIT', 12], ['VAPING.', 17], ["HERE'S WHAT HAPPENS", 7]], hookX: true, mood: 'groove', dir: 0, read: [100, 100], props: ['vapeX', 'vapor'],
+    s: { ...BODY, brain: .3, heart: .45, face: 'tired', toxins: 26 } },
   { bars: 2, title: 'HOUR 2', cap: ['HALF YOUR', 'NICOTINE IS GONE'], mood: 'groove', dir: 1, read: [100, 50],
     label: { organ: 'HEART', say: ['NICOTINE', 'WEARING OFF'], at: [13.5, 24.5] },
     s: { ...BODY, brain: .3, heart: .7, face: 'flat', toxins: 13 } },

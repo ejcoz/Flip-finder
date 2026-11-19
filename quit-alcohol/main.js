@@ -14,7 +14,7 @@ const READ = {
 };
 
 const MS = [
-  { bars: 2, hook: [['YOU STOP', 10], ['DRINKING.', 14], ["HERE'S WHAT HAPPENS", 6]], hookX: true, mood: 'groove', dir: 0, read: [100, 100], props: ['drinkX'],
+  { bars: 2, hook: [['YOU STOP', 12], ['DRINKING.', 17], ["HERE'S WHAT HAPPENS", 7]], hookX: true, mood: 'groove', dir: 0, read: [100, 100], props: ['drinkX'],
     s: { lung: 1, muscle: 1, liver: .2, stomach: .55, brain: .35, heart: .55, face: 'tired', toxins: 22 } },
   { bars: 2, title: 'DAY 1', cap: ['YOUR LIVER CLEARS', 'ABOUT 1 DRINK/HOUR'], mood: 'groove', dir: 1, read: [100, 0],
     mech: { kind: 'liver', legend: [['1 DRINK PER HOUR', C.amber]] },

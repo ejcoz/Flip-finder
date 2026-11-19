@@ -16,8 +16,8 @@ const READ = {
 };
 
 const MS = [
-  { bars: 2, hook: [['YOU CUT', 10], ['ADDED SUGAR.', 12], ["HERE'S WHAT HAPPENS", 6]], hookX: true, mood: 'groove', dir: 0, read: [60, 60], props: ['sodaX'],
-    s: { ...BODY, face: 'flat', toxins: 26 } },
+  { bars: 2, hook: [['YOU CUT', 12], ['ADDED SUGAR.', 15], ["HERE'S WHAT HAPPENS", 7]], hookX: true, mood: 'groove', dir: 0, read: [60, 60], props: ['sodaX'],
+    s: { ...BODY, face: 'tired', toxins: 26 } },
   { bars: 2, title: 'DAY 1', cap: ['UNDER 25G A DAY', 'IS THE W.H.O. IDEAL'], mood: 'groove', dir: 1, read: [60, 20],
     away: { kind: 'kitchen', at: 0, state: { ...BODY, face: 'flat', toxins: 10 } },
     s: { ...BODY, face: 'flat', toxins: 10 } },

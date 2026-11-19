@@ -205,29 +205,30 @@ export function xrayHead(cx, cy, tilt, wave = 0, glowK = 1) {
 
 // ---------- two-tier caption: lead words (grey), key phrase in a selection box, follow words (grey) ----------
 // lead/key/follow are already cut to what has been spoken; pop = 0..1 box entrance
-export function caption(lead, key, follow, kind, pop = 1) {
+export function caption(lead, key, follow, kind, pop = 1, big = false) {
   const col = ACC[kind], cx = 540;
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-  // a soft dark plate behind the whole caption block, so grey words read on bright scenes too
+  // big: the hook (line 1). White bold lead-in, a huge key phrase: it has to stop the scroll on frame 1
+  const LS = big ? 54 : 44, LW = big ? 700 : 400, LC = big ? '#FFFFFF' : '#C3CAD9', KS = big ? 116 : 84, BH = big ? 152 : 118, LY = big ? 330 : 318, BY = big ? 356 : 344;
   if (lead || key || follow) {
-    const bottom = follow ? 530 : key ? 476 : 336;
-    g.save(); g.fillStyle = 'rgba(8,12,26,.6)'; g.filter = 'blur(18px)'; g.beginPath(); g.roundRect(120, 262, 840, bottom - 262, 40); g.fill(); g.restore();
+    const bottom = (follow ? BY + BH + 70 : key ? BY + BH + 14 : LY + 18);
+    g.save(); g.fillStyle = big ? 'rgba(6,10,22,.72)' : 'rgba(8,12,26,.6)'; g.filter = 'blur(18px)'; g.beginPath(); g.roundRect(100, 262, 880, bottom - 262, 40); g.fill(); g.restore();
   }
   const fitFont = (txt, weight, size, max) => { do { g.font = `${weight} ${size}px Inter`; size -= 2; } while (g.measureText(txt).width > max && size > 20); };
-  if (lead) { fitFont(lead, 400, 44, 760); g.fillStyle = '#C3CAD9'; g.fillText(lead, cx, 318); }
+  if (lead) { fitFont(lead, LW, LS, 800); g.fillStyle = LC; g.fillText(lead, cx, LY); }
   if (key) {
-    fitFont(key, 800, 84, 700);
+    fitFont(key, 800, KS, 780);
     const tw = g.measureText(key).width, s = 0.9 + 0.1 * Math.min(1, pop) + Math.sin(Math.min(1, pop) * Math.PI) * .04;
-    const bw = tw + 64, bh = 118, by = 344;
+    const bw = tw + 64, bh = BH, by = BY;
     g.save(); g.translate(cx, by + bh / 2); g.scale(s, s); g.translate(-cx, -(by + bh / 2));
     const bx = cx - bw / 2;
     g.fillStyle = 'rgba(10,16,30,.55)'; g.fillRect(bx, by, bw, bh);
-    g.strokeStyle = col; g.lineWidth = 3; g.strokeRect(bx, by, bw, bh);
-    for (const [hx, hy] of [[bx, by], [bx + bw, by], [bx, by + bh], [bx + bw, by + bh]]) { g.fillStyle = '#FFFFFF'; ell(hx, hy, 9, 9); g.fill(); g.strokeStyle = col; g.lineWidth = 3; g.stroke(); }
-    g.fillStyle = '#FFFFFF'; g.fillText(key, cx, by + 86);
+    g.strokeStyle = col; g.lineWidth = big ? 5 : 3; g.strokeRect(bx, by, bw, bh);
+    for (const [hx, hy] of [[bx, by], [bx + bw, by], [bx, by + bh], [bx + bw, by + bh]]) { g.fillStyle = '#FFFFFF'; ell(hx, hy, big ? 12 : 9, big ? 12 : 9); g.fill(); g.strokeStyle = col; g.lineWidth = 3; g.stroke(); }
+    g.fillStyle = '#FFFFFF'; g.fillText(key, cx, by + bh / 2 + KS * .36);
     g.restore();
   }
-  if (follow) { fitFont(follow, 400, 40, 760); g.fillStyle = '#C3CAD9'; g.fillText(follow, cx, 344 + 118 + 52); }
+  if (follow) { fitFont(follow, big ? 600 : 400, big ? 46 : 40, 800); g.fillStyle = big ? '#E6EAF4' : '#C3CAD9'; g.fillText(follow, cx, BY + BH + 54); }
   g.textAlign = 'left'; g.textBaseline = 'top';
 }
 

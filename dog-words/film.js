@@ -80,7 +80,7 @@ function keyed(keys, t) {
 const blinkAt = (t, ph = 0) => { const p = (t + .7 + ph) % 3.3; return p < .13 ? Math.sin(p / .13 * Math.PI) : 0; };
 const breathAt = t => (Math.sin(t * 2.4) + 1) / 2;
 const talkAt = (t, a, b) => (t > a && t < b) ? Math.abs(Math.sin((t - a) * 17)) : 0;
-const homeTilt = t => keyed([[0, 0], [L1.wt[5], -.3], [L2.t1, -.3], [L3.t0, 0], [L9.t0, 0], [L10.wt[2], -.32], [L11.t1 + .6, -.32], [END - .3, 0]], t);
+const homeTilt = t => keyed([[0, -.3], [L1.wt[5], -.3], [L2.t1, -.3], [L3.t0, 0], [L9.t0, 0], [L10.wt[2], -.32], [L11.t1 + .6, -.32], [END - .3, -.3]], t);   // frame 1 is already tilted, listening
 
 // ---------- scenes ----------
 function home(g, t) {
@@ -167,7 +167,7 @@ function cardLayer(t) {   // one tall card takes over: the scene drops away and 
 // tags pinned to things: the word chips and the count orbit the dog's head while the camera is in close
 function pins(t, scene) {
   A.setCtx(out);
-  if (scene === 'home' && t > L1.wt[5] && t < L1.t1 + .1) { const [ax, ay] = toScreen(HEADW[0] - 40, HEADW[1] - 40); line3(700, 780, ax, ay, ACC.ask); A.pill('LISTENING', 700, 780, ACC.ask, 24); }
+  if (scene === 'home' && (t < L1.t1 + .1 || t > END - .4)) { const [ax, ay] = toScreen(HEADW[0] - 40, HEADW[1] - 40); line3(720, 780, ax, ay, ACC.ask); A.pill('LISTENING', 720, 780, ACC.ask, 36); }
   if (scene === 'lab' && t > L5.wt[2] && t < CARDS[0].t0) {   // the myth: "dogs only hear tone", struck when the voice says "what you say"
     const k = back((t - L5.wt[2]) / .3), sx = t > L6.wt[2] ? clamp((t - L6.wt[2]) / .3) : 0, label = 'THEORY: JUST TONE?';
     line3(540, 760, 560, 1270, ACC.ask);
@@ -223,7 +223,7 @@ function captionLayer(t) {
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
   const onCard = t >= CARDS[0].t0 && t < CARDS[0].t1;
-  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
+  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22, full);
 }
 function watermark() {
   A.setCtx(out);

@@ -73,7 +73,7 @@ function keyed(keys, t) {   // [time, value] keys, eased with a little overshoot
   const [ta, va] = keys[i], [tb, vb] = keys[i + 1], span = Math.min(.28, tb - ta);
   return va + (vb - va) * (t < tb - span ? 0 : back((t - (tb - span)) / span));
 }
-const homeTilt = t => keyed([[0, 0], [L1.wt[4], -.32], [L2.t0 - .2, -.32], [L4.t0, 0], [L4.wt[6], -.26], [L5.t0, -.26], [L8.t0, -.08], [L9.wt[3], -.3], [L10.t0, -.3], [L10.wt[2], -.05], [L10.wt[6] + .1, -.36], [L10.t1 + 1.2, -.36], [END - .3, 0]], t);
+const homeTilt = t => keyed([[0, -.32], [L1.wt[4], -.32], [L2.t0 - .2, -.32], [L4.t0, 0], [L4.wt[6], -.26], [L5.t0, -.26], [L8.t0, -.08], [L9.wt[3], -.3], [L10.t0, -.3], [L10.wt[2], -.05], [L10.wt[6] + .1, -.36], [L10.t1 + 1.2, -.36], [END - .3, -.32]], t);   // frame 1 is already mid-tilt (and so is the loop's end)
 const blinkAt = (t, ph = 0) => { const p = (t + .7 + ph) % 3.3; return p < .13 ? Math.sin(p / .13 * Math.PI) : 0; };
 const breathAt = t => (Math.sin(t * 2.4) + 1) / 2;
 const talkAt = (t, a, b) => (t > a && t < b) ? Math.abs(Math.sin((t - a) * 17)) : 0;
@@ -89,8 +89,8 @@ function home(g, t, close) {
   const wag = t > L10.wt[6] && t < END - .3 ? Math.sin(t * 14) * .35 : Math.sin(t * 5) * .08;
   A.dog(720, 1660, dogOpts(t, tilt, { wag }));
   // '?' on the tilts
-  for (const [tq, tEnd] of [[L1.wt[4], L2.t0 - .2], [L4.wt[6], L5.t0 - .2]]) if (t > tq && t < tEnd) {
-    const k = back((t - tq) / .25); g.save(); g.translate(930, 1000); g.scale(k, k); g.fillStyle = ACC.ask; g.font = '800 130px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 0); g.restore();
+  for (const [tq, tEnd] of [[-1, L2.t0 - .2], [L4.wt[6], L5.t0 - .2], [END - .5, 1e9]]) if (t > tq && t < tEnd) {
+    const k = back((t - tq) / .25); g.save(); g.translate(880, 1010); g.scale(k, k); g.fillStyle = ACC.ask; g.font = '800 130px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('?', 0, 0); g.restore();
   }
   // listening: sound arcs reaching the perked ear
   if (t > L9.wt[2] && t < L10.t0) {
@@ -208,11 +208,11 @@ function cardLayer(t) {   // one tall card takes over: the scene drops away; x-r
 function pins(t, scene) {
   A.setCtx(out);
   const list = [...PIN];
-  if (scene === 'home' && t > L1.wt[4] && t < L1.t1 + .1) { const [ax, ay] = toScreen(HEADW[0] - 40, HEADW[1] - 40); list.push(['HEAD TILT', 700, 780, ax, ay, ACC.ask]); }
-  for (const [text, x, y, ax, ay, col] of list) {
+  if (scene === 'home' && (t < L1.t1 + .1 || t > END - .4)) { const [ax, ay] = toScreen(HEADW[0] - 40, HEADW[1] - 40); list.push(['HEAD TILT', 720, 780, ax, ay, ACC.ask, 36]); }
+  for (const [text, x, y, ax, ay, col, size = 24] of list) {
     out.strokeStyle = col; out.lineWidth = 3; out.beginPath(); out.moveTo(x, y); out.lineTo(ax, ay); out.stroke();
     out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 8, 0, Math.PI * 2); out.fill();
-    A.pill(text, x, y, col, 24);
+    A.pill(text, x, y, col, size);
   }
 }
 // persistent progress HUD on the left edge: numbered dots light up as the thread advances
@@ -244,7 +244,7 @@ function captionLayer(t) {
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
   const onCard = t >= CARDS[0].t0 && t < CARDS[0].t1;   // the card shows it and the voice says it: drop the third line
-  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22);
+  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22, full);
 }
 function watermark() {
   A.setCtx(out);

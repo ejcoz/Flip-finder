@@ -31,7 +31,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     if (m.final) { EV.push({ t: m.t0, type: 'confetti' }); EV.push({ t: REWIND, type: 'rewind' }); }
     if (m.chart) for (let k = 0; k < 10; k++) EV.push({ t: m.t0 + BAR / 2 + k * 0.25, type: 'tick', k: m.chart.down ? 9 - k : k });
     if (m.hook) EV.push({ t: m.t0 + BEAT, type: 'blip', k: 2 });
-    if (m.hookX) EV.push({ t: m.t0 + 2 * BEAT, type: 'blip', k: 0 });
+    if (m.hookX) EV.push({ t: m.t0 + 0.05, type: 'blip', k: 0 });
     if (m.cap) EV.push({ t: m.t0 + 0.3, type: 'cap' });
     if (m.lens || m.mech) EV.push({ t: m.t0 + BAR / 2, type: 'lens' });
     if (m.mech) (m.mech.extra || []).forEach((_, j) => EV.push({ t: m.t0 + BAR / 2 + .5 + j * BEAT, type: 'tick', k: 6 + j }));
@@ -316,19 +316,19 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
         const pal = { k: '#03262C', w: '#BFD3D6', c: '#39E0F0', l: C.amber }, [x0, y0] = BIGP ? box(V) : [hx - 20, hy + 30 - V.length * c];
         V.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 26, hy - 14, 3, 52);
-        if (p === 'vapeX' && lt >= 2 * BEAT) BIGP ? cross(...box(V)) : cross(x0 - 40, y0 - 10, 120, 150);
+        if (p === 'vapeX') BIGP ? cross(...box(V)) : cross(x0 - 40, y0 - 10, 120, 150);
       } else if (p === 'drinkX' || p === 'drink') {   // a pixel mug of beer held by its handle, body outward
         const D = ['...wwww.', '..wwwwww', '..aaaaaa', 'kkaaaaaa', 'k.aaaaaa', 'k.aaaaaa', 'kkaaaaaa', '..aaaaaa', '..gggggg'];
         const pal = { w: '#F2FBFC', a: '#FFB547', k: '#BFD3D6', g: '#8FA7AB' }, [x0, y0] = BIGP ? box(D) : [hx - 10, hy - 45];
         D.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 18, hy - 16, 3, 30);
-        if (p === 'drinkX' && lt >= 2 * BEAT) BIGP ? cross(...box(D)) : cross(x0 - 20, y0 - 10, 120, 110);
+        if (p === 'drinkX') BIGP ? cross(...box(D)) : cross(x0 - 20, y0 - 10, 120, 110);
       } else if (p === 'sodaX' || p === 'soda') {   // a pixel soda can gripped in the fist
         const S2 = ['.kkkk.', 'kssssk', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'rwwwrr', 'rrwwwr', 'rrrrrr', 'kssssk'];
         const pal = { k: '#8FA7AB', s: '#D5E7EA', r: '#E5484D', w: '#F2FBFC' }, [x0, y0] = BIGP ? box(S2) : [hx - 30, hy - 70];
         S2.forEach((row, r) => [...row].forEach((ch, cc) => { if (pal[ch]) { ctx.fillStyle = pal[ch]; ctx.fillRect(x0 + cc * c, y0 + r * c, c, c); } }));
         fingers(hx - 34, hy - 14, 3, 68);
-        if (p === 'sodaX' && lt >= 2 * BEAT) BIGP ? cross(...box(S2)) : cross(x0 - 30, y0 - 10, 120, 120);
+        if (p === 'sodaX') BIGP ? cross(...box(S2)) : cross(x0 - 30, y0 - 10, 120, 120);
       } else if (p === 'bang') {
         const [x, y] = at(7, 0); drawText(ctx, '!', x, y, 12, C.amber, { shadow: '#03262C' });
       } else if (p === 'sweat') {
@@ -413,7 +413,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       ctx.fillStyle = '#39E0F0'; ctx.fillRect(B.x0 - 14, ys - 5, 34, 10); ctx.fillRect(B.x1 - 20, ys - 5, 34, 10);
     }
     if (!OPEN) glassSheen(ctx);
-    if (rew >= 1) props(FIRST.props.map(q => q.endsWith('X') ? q.slice(0, -1) : q), 0);
+    if (rew >= 1) props(FIRST.props, 0);   // the loop lands on frame 1 exactly: the item already crossed out
     else if (p >= 1 && !m.chart && !rew) props(m.props, lt);
     if (m.dir > 0 && !m.chart && p >= 1 && !rew && m.sparkle) {
       const tw = Math.floor(t / BEAT);
@@ -459,7 +459,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     // text layer (never moved by the camera, always inside SAFE)
     if (rew >= .6) {                     // back to the opening frame: hook lines 1–2, opening readout
       readout(FIRST.read[0]);
-      hook(FIRST, 2);
+      hook(FIRST, 3);
       watermark();
       return;
     }
@@ -472,7 +472,7 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
       if (m.lens && p >= 1) lens(m.lens, Math.min(1, (lt - BAR / 2) / 0.25), cam, t);
     }
     const tm = m;   // the new title lands on the cut (flash frame), as in the reference
-    if (tm.hook) hook(tm, tm === m ? Math.floor(lt / BEAT) + 2 : 3);
+    if (tm.hook) hook(tm, 3);   // frame 1 carries the whole promise: all three hook lines, the X already on
     else {
       const tl = tm === m ? lt : 9;
       const yb = titleBar(tm, m.final ? Math.min(1, lt / 0.6) : 1, tl);
@@ -488,12 +488,12 @@ export function film({ MS, READ, BRAND = '@8bitbodyscan' }) {
     const i = Math.max(0, MS.findLastIndex(m => t >= m.t0)), m = MS[i], prev = MS[i - 1], T = [];
     const box = (id, text, y0, y1, extra = {}) => T.push({ id, text, x0: SAFE.x0, y0, x1: SAFE.x1, y1, ...extra });
     if (m.final && t >= REWIND + 0.6 * BAR / 2) {   // the loop's last second shows the opening hook again: it carries on at frame 0
-      FIRST.hook.slice(0, 2).forEach(([h], k) => box('endhook' + k, h, TY + k * 110, TY + k * 110 + 160, { pass: true }));
+      FIRST.hook.slice(0, 3).forEach(([h], k) => box('endhook' + k, h, TY + k * 110, TY + k * 110 + 160, { pass: true }));
       return T;
     }
     const tm = m;
     if (tm.hook) {
-      const n = tm === m ? Math.floor((t - m.t0) / BEAT) + 2 : 3;
+      const n = 3;
       tm.hook.slice(0, Math.min(3, n)).forEach(([h], k) => box('hook' + k, h, TY + k * 110, TY + k * 110 + 160));
     } else {
       box('title', tm.title, TY, TY + 150);

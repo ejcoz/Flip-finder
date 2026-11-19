@@ -115,7 +115,7 @@ const GREYP = ['#A9BBBE', '#6F8A8E', '#4E6569'];
 const HDF = {
   flat:  { eye: ['#####', '#####'], mouth: ['####'] },
   shut:  { eye: ['#####'], mouth: ['###'] },
-  tired: { eye: ['.....', '#####'], mouth: ['..##', '##..'] },
+  tired: { eye: ['#####', '#####', '.###.'], mouth: ['.###.', '#...#'] },   // heavy, drooping lids and a frown: rough, run-down
   happy: { eye: ['.###.', '#...#', '#...#'], mouth: ['#.....#', '.#####.'] },
   wide:  { eye: ['.###.', '##.##', '#...#', '##.##', '.###.'], eyeFill: true, mouth: ['.##.', '#..#', '.##.'] },
 };
