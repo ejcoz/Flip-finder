@@ -1,6 +1,6 @@
 # Cover images for Shorts / Reels (1080x1920). Everything that matters sits inside the middle 1080x1440 (the Instagram grid's 3:4 crop).
 # Pet Cam: a clean close-up from the film (rendered with window.COVER = true) + the hook as a big two-tier title.
-# Pixel Scan: the film's own title-slam frame (t = 2 s), nudged down so the title clears the crop.
+# Pixel Scan: the film's own hook frame (t = 2 s, X on), slid down 40 px so the title clears the crop.
 import sys, os
 from PIL import Image, ImageDraw, ImageFont
 SRC, OUT = sys.argv[1], os.path.dirname(os.path.abspath(__file__))
@@ -18,11 +18,11 @@ PET = [  # film frame, lead line, key phrase, meaning colour, output name
 for src, lead, key, kind, name in PET:
     im = Image.open(os.path.join(SRC, src)).convert('RGBA')
     ov = Image.new('RGBA', im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
-    fl, fk = inter(60, 500), inter(132, 800)
+    fl, fk = inter(62, 700), inter(140, 800)   # bold white lead, like the videos' hook
     wl = d.textlength(lead, font=fl); wk = d.textlength(key, font=fk)
     cy = 470; pw = max(wl, wk) + 120
     d.rounded_rectangle([540 - pw / 2, cy - 150, 540 + pw / 2, cy + 160], 40, fill=(8, 14, 28, 190))
-    d.text((540, cy - 95), lead, font=fl, fill=(206, 214, 232, 255), anchor='mm')
+    d.text((540, cy - 95), lead, font=fl, fill=(255, 255, 255, 255), anchor='mm')
     col = ACC[kind]; bx0, by0, bx1, by1 = 540 - wk / 2 - 34, cy - 30, 540 + wk / 2 + 34, cy + 120
     d.rectangle([bx0, by0, bx1, by1], fill=(10, 16, 30, 140), outline=col + (255,), width=4)
     for x, y in [(bx0, by0), (bx1, by0), (bx0, by1), (bx1, by1)]: d.ellipse([x - 11, y - 11, x + 11, y + 11], fill=(255, 255, 255, 255), outline=col + (255,), width=4)
@@ -33,6 +33,6 @@ for src, lead, key, kind, name in PET:
     Image.alpha_composite(im, ov).convert('RGB').save(os.path.join(OUT, name + '.jpg'), quality=93)
 for film in ['quit-alcohol', 'quit-vaping', 'quit-sugar']:
     im = Image.open(os.path.join(SRC, film + '_2.png')).convert('RGB')
-    sm = im.resize((1026, 1824), Image.LANCZOS); out = im.copy(); out.paste(sm, (27, 48))   # 95%, centred: title and booth plate both inside the crop
+    out = im.copy(); out.paste(im.crop((0, 0, 1080, 1880)), (0, 40)); out.paste(im.crop((0, 0, 1080, 40)), (0, 0))   # slide down 40 px: the title clears the top of the 3:4 crop, no visible edge
     out.save(os.path.join(OUT, 'pixel-' + film.replace('quit-', 'quit-') + '.jpg'), quality=93)
 print('ok')
