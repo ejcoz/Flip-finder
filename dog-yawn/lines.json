@@ -1,0 +1,64 @@
+[
+ {
+  "id": "l01",
+  "text": "Why does your dog yawn when you yawn?",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l02",
+  "text": "Most people think it's just tired or stressed.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l03",
+  "text": "In one study, twenty-five dogs saw their owner yawn, and a stranger yawn.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "In one study, 25 dogs saw their owner yawn, and a stranger yawn."
+ },
+ {
+  "id": "l04",
+  "text": "They yawned more at their owner's yawns.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l05",
+  "text": "They yawned less when the yawn was fake, just the mouth moving.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l06",
+  "text": "Their heart rate didn't change, so stress is unlikely.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l07",
+  "text": "Forty to sixty percent of adults catch yawns, and your dog's brain may be tuned to you.",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "asr": "40 to 60 percent of adults catch yawns, and your dog's brain may be tuned to you."
+ },
+ {
+  "id": "l08",
+  "text": "Your yawn is contagious, but mostly to the dog that knows you.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l09",
+  "text": "Try it tonight: yawn slowly, then save this and see if yours catches it.",
+  "voice": "af_heart",
+  "speed": 0.95
+ },
+ {
+  "id": "l10",
+  "text": "Follow for why your dog does the next weird thing.",
+  "voice": "af_heart",
+  "speed": 0.95
+ }
+]
