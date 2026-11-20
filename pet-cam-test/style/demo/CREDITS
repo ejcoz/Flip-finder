@@ -1,0 +1,7 @@
+Pet Cam demo film — credits and licences
+
+Code-drawn: all art (art.js, film.js), the score and foley (music.py, numpy synthesis).
+Fonts (SIL Open Font License 1.1, files in fonts/ with their licence texts): Inter (Rasmus Andersson), JetBrains Mono (JetBrains).
+Narration: generated with Kokoro TTS (Apache-2.0 model) through Lemo-Opuscar's core/tts/tts.py; checked with faster-whisper (MIT).
+Rendered and mastered with Lemo-Opuscar's core tools (MIT, github.com/lemomo-ai/lemo-opuscar), used as tools; no library code copied here.
+Facts: see ../FACTS.md.

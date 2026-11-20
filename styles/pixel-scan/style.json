@@ -1,0 +1,12 @@
+{
+  "slug": "pixel-scan",
+  "en": "Pixel Scan",
+  "cn": "像素扫描",
+  "based_on": "living-screencast",
+  "borrows": ["game-show", "pixel-rpg"],
+  "size": "1080x1920",
+  "library_version": "00a7f9e",
+  "created": "2026-11-18",
+  "line": "A pixel mascot in a hi-res x-ray scanner; every milestone sweeps a scanline down the glass to show how its body has changed. Chiptune at 120 BPM, cuts on bar lines.",
+  "line_cn": "高清 X 光扫描仪里的像素吉祥物；每个时间节点一道扫描线扫过，显示身体的变化。120 BPM 芯片音乐，剪辑落在小节线上。"
+}

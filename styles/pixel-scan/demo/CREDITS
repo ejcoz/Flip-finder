@@ -1,0 +1,9 @@
+Pixel Scan demo film — credits and licences
+
+Everything in this film is drawn and synthesized in code in this folder: the pixel font (font.js),
+the figure "Bit" (bit.js), the lab and scanner (lab.js), the chart, props and camera (main.js) and
+the chiptune score (music.py, numpy synthesis). No samples, fonts, images or footage are used.
+
+Rendered and mastered with Lemo-Opuscar's core tools (core/render: events, readcheck, video, mux),
+MIT licence, github.com/lemomo-ai/lemo-opuscar — used as tools, not copied into this folder.
+The page imports nothing from the library; no library code is included here.

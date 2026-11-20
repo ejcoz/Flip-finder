@@ -1,0 +1,12 @@
+{
+  "slug": "pet-cam",
+  "en": "Pet Cam",
+  "cn": "宠物镜头",
+  "based_on": "scifi-toon",
+  "borrows": ["thermal-camera", "dataviz"],
+  "size": "1080x1920",
+  "library_version": "00a7f9e",
+  "created": "2026-11-18",
+  "line": "A narrator answers one pet question over a soft flat-vector scene; CAM-feed cards show the inside story, captions box the key phrase.",
+  "line_cn": "旁白回答一个宠物问题；柔和扁平矢量场景，镜头卡片展示内部原理，字幕框出关键词。"
+}
