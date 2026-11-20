@@ -13,13 +13,13 @@ const LINES = [
   { id: 'l03', lead: 5, key: 4, kind: 'fact', scene: 'split', display: 'In one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
   { id: 'l05', lead: 4, key: 5, kind: 'bad', scene: 'split' },
-  { id: 'l06', lead: 3, key: 2, kind: 'good', scene: 'card' },
+  { id: 'l06', lead: 5, key: 4, kind: 'good', scene: 'card' },   // the box carries the conclusion: "so stress is unlikely."
   { id: 'l07', lead: 3, key: 4, kind: 'fact', scene: 'card', display: L07_DISPLAY },
   { id: 'l08', lead: 7, key: 5, kind: 'good', scene: 'visit' },
   { id: 'l09', lead: 3, key: 2, kind: 'ask', scene: 'home' },
   { id: 'l10', lead: 0, key: 1, kind: 'good', scene: 'home' },
 ];
-const GAP = { l02: .35, l03: 1.6, l04: .45, l05: 0, l06: .7, l07: .45, l08: .7, l09: .5, l10: .4 };   // l03: time to read the strike; l05 follows l04 with no gap (one sentence)
+const GAP = { l02: .35, l03: 1.0, l04: .45, l05: 0, l06: .7, l07: .45, l08: .7, l09: .5, l10: .4 };   // l03: time to read the strike; l05 follows l04 with no gap (one sentence)
 const START = 0, TAIL = 1.6, LOOP = 0.8, WHIP = .4;
 const STEPS = [['OWNER WINS', 3], ['NO STRESS', 5], ['KNOWS YOU', 7]];   // the persistent progress HUD: [label, line index]
 const BRAND = '@pupexplained';
@@ -71,7 +71,7 @@ function build({ dur, words, script }) {
   EV.push({ t: END, type: 'loop' });
   window.EV = EV;
 }
-const STRIKE = () => L2.t1 + .15;                               // the myth tag is struck just after the line ends (slowly, then a red X)
+const STRIKE = () => L2.wt[7] + .1;                             // the myth tag is struck just after the line ends (slowly, then a red X)
 const CTA = () => [L9.wt[4] + 1.5, END - .9];                    // the SAVE THIS button: after the dog catches the yawn, through l10
 const OWNER_TALLY = () => [L4.wt[2], L4.wt[5], L4.t1 + .05];  // the owner panel dog yawns three times on l04 (illustrative)
 const DOG_YAWNS = () => [L1.t1 + 1.0, L9.wt[4] + .9, END - 1.25];
@@ -256,10 +256,10 @@ function pins(t, scene) {
     A.pill(text, x, y, col, size);
   }
   if (scene === 'home' && t > STRIKE() && t < L3.t0 - .4) {   // strike + red X
-    const k = ease((t - STRIKE()) / .45), w = 360;
+    const k = ease((t - STRIKE()) / .35), w = 360;
     out.strokeStyle = ACC.bad; out.lineWidth = 8; out.lineCap = 'round';
     out.beginPath(); out.moveTo(690 - w / 2, 862); out.lineTo(690 - w / 2 + w * k, 862); out.stroke();
-    const xk = back((t - STRIKE() - .45) / .35);
+    const xk = back((t - STRIKE() - .3) / .3);
     if (xk > 0) { out.save(); out.translate(890, 790); out.scale(xk, xk); out.lineWidth = 16; out.beginPath(); out.moveTo(-34, -34); out.lineTo(34, 34); out.moveTo(34, -34); out.lineTo(-34, 34); out.stroke(); out.restore(); }
   }
 }

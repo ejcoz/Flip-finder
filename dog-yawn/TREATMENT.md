@@ -30,7 +30,7 @@ Learn from the pet explainers that perform: behaviour in extreme close-up on fra
 | 6 | l09 | home wide | the owner yawns slowly, the dog catches it; a large `SAVE THIS` button stays up through l10 | the test the viewer can try |
 | 7 | l10 + tail | home | slow push-in back to the shot-1 close-up as the dog yawns again | the loop |
 
-The struck-out myth holds about 1 s before the whip; l04 and l05 play as one sentence with no gap.
+The myth is struck on its last word and the scene whips away about 0.65 s after the line ends; l04 and l05 play as one sentence with no gap.
 
 ## Beat sheet (s)
 0.0 l01 question + yawn · 2.1 l02 pull back, myth · 4.7 strike · 4.9 whip → split · 5.2 l03 · 10.0 l04 owner tallies · 12.4 l05 fake panel · 16.3 l06 card: heart · 19.8 l07 card: brain · 25.1 dog's-eye view, l08 · 29.2 home, l09 · 34.1 l10 push-in · 38.3 loop frame (= frame 1).
