@@ -64,7 +64,7 @@ Not Sci-Fi Sitcom Toon (no boiling outlines, no dialogue comedy, no portal), not
 **Reference grammar (from the pet explainers that perform):**
 - **Open on an extreme close-up of the behaviour** (the stare, the tilt, the chomp filling the frame), then pull back to the scene on line 2.
 - **Fewer cuts, more camera:** about one scene per idea; inside a scene the camera pushes and pulls. Never a cut away and back inside one line.
-- **Tags pinned to the animal:** small mono tags with a leader line and a dot on the body part or thing they name (EYES ON YOU, EXPOSED, PREDATOR), tracking the camera.
+- **Tags pinned to the animal:** small mono tags with a leader line and a dot on the body part or thing they name (EYES ON YOU, EXPOSED, PREDATOR), tracking the camera. **Only label what the picture can't say on its own**: a tag has to add something (a meaning, a reading, a myth, who someone is). Never name what is plainly visible: no `YAWN` on a yawning mouth, no `HEAD TILT` on a tilted head, no `DOG` on the dog.
 - **The myth strike:** when the topic has a common wrong answer, state it as a tag/caption, then strike it through in red with a red X.
 - **One evolving data card:** the scene drops to near-black and a single tall card takes over for two or three lines, revealing step by step (counter rolls, icons align, a second panel grows) instead of swapping several small cards.
 - **A persistent progress HUD:** numbered step dots on the left edge (1 · 2 · 3, short labels) light up as the film's thread advances, from line 2 to the end.
@@ -107,6 +107,7 @@ The CAM-feed card is in every film; the others are a menu.
 - An x-ray that doesn't match the character's pose → redraw the same pose and angle.
 - Caption words off the voice → captions come from the voice's word timestamps.
 - Text under the platform UI → keep to the safe area.
+- A tag that names what is already obvious (`YAWN` on a yawn) → cut it; label only what needs explaining.
 - Unsourced pet-health claims → every claim in `FACTS.md` with its source; prefer vets, veterinary schools and peer-reviewed studies.
 - Copying the reference characters (breeds, markings, poses) → original pets with their own marking.
 
