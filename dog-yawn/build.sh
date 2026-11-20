@@ -3,6 +3,7 @@
 #   sh build.sh            → dog-yawn.mp4, poster.jpg and subtitles_en.srt in this folder (work files in out/)
 # Voice (already generated in voice/; to redo it, needs the voice tier):
 #   $LIB/.venv/bin/python $LIB/core/tts/tts.py lines.json voice
+#   (from $LIB) .venv/bin/python <project>/tools/voice_stress.py <project>/lines.json <project>/voice   (l01 from phonemes: the stress on "you")
 #   HF_HUB_DISABLE_XET=1 $LIB/.venv/bin/python $LIB/core/tts/asr_check.py lines.json voice --lang en
 set -e
 LIB=${LIB:-/root/lemo-opuscar}

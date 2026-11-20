@@ -6,7 +6,7 @@ const { W, H, ACC } = A;
 
 // ---------- the script: caption cut (word counts) + the scene each line plays in ----------
 const LINES = [
-  { id: 'l01', lead: 4, key: 4, kind: 'ask', scene: 'home' },
+  { id: 'l01', lead: 4, key: 4, kind: 'ask', scene: 'home', display: 'Why does your dog yawn when YOU yawn?', emph: 'YOU' },
   { id: 'l02', lead: 5, key: 3, kind: 'bad', scene: 'home' },
   { id: 'l03', lead: 5, key: 4, kind: 'fact', scene: 'split', display: 'In one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
@@ -60,7 +60,7 @@ function build({ dur, words, script }) {
   SHOTS.slice(1).forEach(s => EV.push({ t: s.t0 - WHIP / 2, type: 'whoosh' }));
   EV.push({ t: CARD.t0, type: 'whoosh' }, { t: CARD.tB, type: 'swap' });
   STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
-  EV.push({ t: STRIKE(), type: 'strike' }, { t: L2.wt[5], type: 'pop' });
+  EV.push({ t: L1.wt[6] - .1, type: 'whoosh' }, { t: STRIKE(), type: 'strike' }, { t: L2.wt[5], type: 'pop' });
   for (const w of OWNER_TALLY()) EV.push({ t: w, type: 'tick' });
   EV.push({ t: L5.wt[2], type: 'pop' }, { t: L6.wt[4], type: 'strike' }, { t: L7.wt[6], type: 'pop' }, { t: L7.wt[12], type: 'chime' });
   EV.push({ t: L9.wt[6], type: 'pop' }, { t: L10.t0 + .1, type: 'pop' });
@@ -81,7 +81,7 @@ const breathAt = t => (Math.sin(t * 2.4) + 1) / 2;
 const talkAt = (t, a, b) => (t > a && t < b) ? Math.abs(Math.sin((t - a) * 17)) : 0;
 // the home dog: frame 1 is already mid-yawn (held, then closes), catches the owner's yawn on l02 and l09, and is mid-yawn again for the loop
 const homeDogYawn = t => Math.max(t < 1.6 ? (t < .9 ? 1 - .05 * Math.sin(t * 6) : ease((1.6 - t) / .7)) : 0, yawnAt(t, DOG_YAWNS()[0]), yawnAt(t, DOG_YAWNS()[1], 1.9), t > END - 1.25 ? ease((t - (END - 1.25)) / .55) : 0);
-const homeOwnerYawn = t => Math.max(yawnAt(t, L1.t1 - .1, 1.8), yawnAt(t, L9.wt[3] - .2, 2.2));
+const homeOwnerYawn = t => Math.max(yawnAt(t, L1.wt[6] - .45, 2.0), yawnAt(t, L9.wt[3] - .2, 2.2));
 
 // ---------- scenes (each draws a full frame on the current context) ----------
 let PIN = [];   // tags pinned to things in the current scene: [text, x, y, anchorX, anchorY, colour, size]
@@ -164,7 +164,7 @@ function split(g, t) {
 function drawScene(name, g, t, lt) {
   A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1; CAM = [1, 0, 0];
   if (name === 'home') {   // frame 1 is the extreme close-up mid-yawn → pull back on l02; l09 wide; push back in on l10 for the loop
-    const z = glide([[0, ZC], [L1.t1 - .05, ZC], [L2.t0 + .7, 1], [L10.t0, 1], [END - .4, ZC]], t);
+    const z = glide([[0, ZC], [L1.wt[6] - .1, ZC], [L1.wt[6] + .3, 1], [L10.t0, 1], [END - .4, ZC]], t);   // pulls back on "YOU" to reveal the owner mid-yawn
     CAM = camAt(z, ...HEADW); g.setTransform(CAM[0], 0, 0, CAM[0], CAM[1], CAM[2]); home(g, t); g.setTransform(1, 0, 0, 1, 0, 0);
   }
   else if (name === 'pov') pov(g, t, lt);
@@ -281,7 +281,7 @@ function captionLayer(t) {
   const shown = full ? L.text : L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
   const onCard = t >= CARD.t0 && t < CARD.t1;   // the card shows it and the voice says it: drop the third line
-  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22, full);
+  A.caption(lead, key, onCard ? '' : follow, L.kind, full ? 1 : (t - L.wt[L.lead]) / .22, full, L.emph);
 }
 function watermark() {
   A.setCtx(out);

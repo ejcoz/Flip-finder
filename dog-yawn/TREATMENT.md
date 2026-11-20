@@ -22,7 +22,7 @@ Learn from the pet explainers that perform: behaviour in extreme close-up on fra
 ## Shot list
 | # | Lines | Scene | Framing / move | Why |
 |---|---|---|---|---|
-| 1 | l01 | home | extreme close-up on the yawning mouth, locked, no tag (the yawn needs no label) | the behaviour stops the scroll |
+| 1 | l01 | home | extreme close-up on the yawning mouth, no tag (the yawn needs no label); on "YOU" a fast 0.4 s pull-back reveals the owner mid-yawn | the behaviour stops the scroll; the reveal puts the viewer ("you") in the picture |
 | 2 | l02 | home | pulls back to the wide room in 0.75 s: owner yawning, the dog catching it; `TIRED? STRESSED?` tag, struck + red X | show contagion while naming the myth |
 | 3 | l03–l05 | split | CAM 01 owner, CAM 02 stranger, then CAM 03 fake yawn; tallies, one tag `OWNER > STRANGER > FAKE` | the three conditions side by side |
 | 4 | l06–l07 | takeover card over home | heart cam (three steady traces, `NO CHANGE`, `STRESS?` struck) → inside the head (40–60 % crowd, brain glow, `MAY BE TUNED TO YOU`) | one evolving card carries the evidence |
@@ -45,7 +45,7 @@ Learn from the pet explainers that perform: behaviour in extreme close-up on fra
 | Dog's-eye view / home | — | whoosh on whips, pop on SAVE THIS and Follow, yawn whine | same, ends without a fade (loops) |
 
 ## Subtitles and titles
-The style's two-tier caption, word-synced to the voice: grey lead-in, key phrase in a selection box coloured by meaning (question amber, myth / fake red, facts blue, the answer green). Line 1 uses the big hook caption and is whole from frame 1. Digits on screen ("25", "40 to 60%"), spelled out in the voice. Burned in; `subtitles_en.srt` for upload.
+The style's two-tier caption, word-synced to the voice: grey lead-in, key phrase in a selection box coloured by meaning (question amber, myth / fake red, facts blue, the answer green). Line 1 uses the big hook caption and is whole from frame 1, with YOU in capitals and amber; the voice stresses "you" too (l01 is voiced from phonemes by tools/voice_stress.py). Digits on screen ("25", "40 to 60%"), spelled out in the voice. Burned in; `subtitles_en.srt` for upload.
 
 ## Compared with the style demo (head tilt)
 Different: the opening (an extreme close-up mid-behaviour vs a living-room wide), the signature shot (a three-way condition split with tallies vs three dogs tilting), the card (heart traces → brain vs x-ray → study icons), the score (80 BPM sleepy progression vs 90 BPM major), the ending (a push back into the opening close-up vs a ball rolling in). Shared: the camera grammar (locked scenes, whips) is the style itself.

@@ -239,7 +239,7 @@ export function xrayHead(cx, cy, tilt, wave = 0, glowK = 1, arcs = true) {
 
 // ---------- two-tier caption: lead words (grey), key phrase in a selection box, follow words (grey) ----------
 // lead/key/follow are already cut to what has been spoken; pop = 0..1 box entrance
-export function caption(lead, key, follow, kind, pop = 1, big = false) {
+export function caption(lead, key, follow, kind, pop = 1, big = false, emph = null) {   // emph: one word of the key phrase set in the meaning colour
   const col = ACC[kind], cx = 540;
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   // big: the hook (line 1). White bold lead-in, a huge key phrase: it has to stop the scroll on frame 1
@@ -259,7 +259,12 @@ export function caption(lead, key, follow, kind, pop = 1, big = false) {
     g.fillStyle = 'rgba(10,16,30,.55)'; g.fillRect(bx, by, bw, bh);
     g.strokeStyle = col; g.lineWidth = big ? 5 : 3; g.strokeRect(bx, by, bw, bh);
     for (const [hx, hy] of [[bx, by], [bx + bw, by], [bx, by + bh], [bx + bw, by + bh]]) { g.fillStyle = '#FFFFFF'; ell(hx, hy, big ? 12 : 9, big ? 12 : 9); g.fill(); g.strokeStyle = col; g.lineWidth = 3; g.stroke(); }
-    g.fillStyle = '#FFFFFF'; g.fillText(key, cx, by + bh / 2 + KS * .36);
+    const ty = by + bh / 2 + KS * .36;
+    if (emph && key.split(' ').includes(emph)) {   // draw word by word so the stressed word can carry the accent colour
+      const sp = g.measureText(' ').width; let x = cx - tw / 2; g.textAlign = 'left';
+      for (const w of key.split(' ')) { g.fillStyle = w === emph ? col : '#FFFFFF'; g.fillText(w, x, ty); x += g.measureText(w).width + sp; }
+      g.textAlign = 'center';
+    } else { g.fillStyle = '#FFFFFF'; g.fillText(key, cx, ty); }
     g.restore();
   }
   if (follow) { fitFont(follow, big ? 600 : 400, big ? 46 : 40, 800); g.fillStyle = big ? '#E6EAF4' : '#C3CAD9'; g.fillText(follow, cx, BY + BH + 54); }

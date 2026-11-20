@@ -3,7 +3,8 @@
   "id": "l01",
   "text": "Why does your dog yawn when you yawn?",
   "voice": "af_heart",
-  "speed": 0.95
+  "speed": 0.95,
+  "phonemes": "wˌaɪ dˈʌz jʊɹ dˈɑːɡ jˈɔːn, wɛn jˈuː jˌɔːn?"
  },
  {
   "id": "l02",
