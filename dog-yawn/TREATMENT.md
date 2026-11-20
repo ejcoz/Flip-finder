@@ -23,9 +23,10 @@ Learn from the pet explainers that perform: behaviour in extreme close-up on fra
 | # | Lines | Scene | Framing / move | Why |
 |---|---|---|---|---|
 | 1 | l01 | home | extreme close-up on the yawning mouth, no tag (the yawn needs no label); on "YOU" a fast 0.4 s pull-back reveals the owner mid-yawn | the behaviour stops the scroll; the reveal puts the viewer ("you") in the picture |
-| 2 | l02 | home | pulls back to the wide room in 0.75 s: owner yawning, the dog catching it; `TIRED? STRESSED?` tag, struck + red X | show contagion while naming the myth |
+| 2 | l02 | home | pulls back on "YOU" (end of l01) to the wide room: owner yawning, the dog catching it; `TIRED? STRESSED?` tag left as a question | name the myth; don't answer it yet |
 | 3 | l03–l05 | split | CAM 01 owner, CAM 02 stranger, then CAM 03 fake yawn; tallies, one tag `OWNER > STRANGER > FAKE` | the three conditions side by side |
-| 4 | l06–l07 | takeover card (its own scene: one whip in from the split, one whip out) | heart cam (three steady traces, `NO CHANGE`, `STRESS?` struck) → inside the head (a second study: 21 of 29 dogs light up, brain glow, `MAY BE TUNED TO YOU`) | one evolving card carries the evidence |
+| 4 | l06 | the heart-rate shot | three tall columns: the same dog in each condition, wearing a chest-strap monitor, steady traces; `HEART RATE: SAME`, then `STRESSED?` struck + red X on "unlikely" | the proof sits on the dogs, and the myth is struck when it's proven |
+| 4b | l07 | takeover card (its own scene) | inside the head: the second study (21 of 29 dogs light up), brain glow, `MAY BE TUNED TO YOU` | the evidence and the hedged mechanism |
 | 5 | l08 | the visit (bright daytime room) | wide: a stranger yawns, the dog glances and ignores it; the owner yawns, the dog catches it; tags `OWNER`, `STRANGER` | "mostly to the dog that knows you" shown as one moment |
 | 6 | l09 | home wide | the owner yawns slowly, the dog catches it; a large `SAVE THIS` button stays up through l10 | the test the viewer can try |
 | 7 | l10 + tail | home | slow push-in back to the shot-1 close-up as the dog yawns again | the loop |

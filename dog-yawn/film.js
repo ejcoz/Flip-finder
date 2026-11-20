@@ -1,5 +1,6 @@
 // Pet Cam: "Why does your dog yawn when you yawn?" — a shot list laid on the narration (voice/dur.json, voice/words.json).
-// Scenes: home (extreme close-up mid-yawn → pull back on "YOU") → owner / stranger / fake split → the takeover card (heart cam → brain)
+// Scenes: home (extreme close-up mid-yawn → pull back on "YOU"; the myth tag stays a question) → owner / stranger / fake split
+// → the heart-rate shot (the same dogs wearing monitors; STRESSED? struck on "unlikely") → the takeover card (the second study, the brain)
 // → the visit (a stranger yawns, the dog ignores it; the owner yawns, the dog catches it) → home (the try-it-tonight test) → loop.
 // Voice: the user's recording (voice_src/yawn-narration.mp3), cut into voice/l01–l10.wav; l04 and l05 are one sentence, butted together.
 import * as A from './art.js';
@@ -13,7 +14,7 @@ const LINES = [
   { id: 'l03', lead: 6, key: 4, kind: 'fact', scene: 'split', display: 'But in one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
   { id: 'l05', lead: 4, key: 5, kind: 'bad', scene: 'split' },
-  { id: 'l06', lead: 5, key: 4, kind: 'good', scene: 'card' },   // the box carries the conclusion: "so stress is unlikely."
+  { id: 'l06', lead: 5, key: 4, kind: 'good', scene: 'hearts' },   // the box carries the conclusion: "so stress is unlikely."
   { id: 'l07', lead: 3, key: 4, kind: 'fact', scene: 'card', display: L07_DISPLAY },
   { id: 'l08', lead: 7, key: 5, kind: 'good', scene: 'visit' },
   { id: 'l09', lead: 3, key: 2, kind: 'ask', scene: 'home' },
@@ -55,23 +56,20 @@ function build({ dur, words, script }) {
   SHOTS = [];
   LINES.forEach((L, i) => { if (!i || LINES[i - 1].scene !== L.scene) SHOTS.push({ scene: L.scene, t0: i ? L.t0 - .15 : 0 }); });
   SHOTS.forEach((s, i) => s.t1 = SHOTS[i + 1] ? SHOTS[i + 1].t0 : window.DUR);
-  // one takeover card, held for two lines and evolving: the heart cam (l06) → inside the head (l07). It is a scene of its own,
-  // so it comes in and goes out on a single whip
-  const cs = SHOTS.find(s => s.scene === 'card'); CARD = { t0: cs.t0, t1: cs.t1, tB: L7.t0 - .1 };
+  // one takeover card (l07: the second study, then the brain), a scene of its own, so it comes in and goes out on a single whip
+  const cs = SHOTS.find(s => s.scene === 'card'); CARD = { t0: cs.t0, t1: cs.t1 };
   const EV = [];
   LINES.forEach(L => { EV.push({ t: L.t0, type: 'vo', id: L.id }); EV.push({ t: L.wt[L.lead], type: 'cap', kind: L.kind }); });
   SHOTS.slice(1).forEach(s => EV.push({ t: s.t0 - WHIP / 2, type: 'whoosh' }));
-  EV.push({ t: CARD.tB, type: 'swap' });
   STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
-  EV.push({ t: L1.wt[6] - .1, type: 'whoosh' }, { t: STRIKE(), type: 'strike' }, { t: L2.wt[5], type: 'pop' });
+  EV.push({ t: L1.wt[6] - .1, type: 'whoosh' }, { t: L2.wt[3], type: 'pop' });
   for (const w of OWNER_TALLY()) EV.push({ t: w, type: 'tick' });
-  EV.push({ t: L5.wt[2], type: 'pop' }, { t: L6.wt[4], type: 'strike' }, { t: L7.wt[3], type: 'pop' }, { t: L7.wt[16], type: 'chime' });
+  EV.push({ t: L5.wt[2], type: 'pop' }, { t: L6.wt[3], type: 'pop' }, { t: L6.wt[6] - .1, type: 'pop' }, { t: L6.wt[8], type: 'strike' }, { t: L7.wt[3], type: 'pop' }, { t: L7.wt[16], type: 'chime' });
   EV.push({ t: CTA()[0], type: 'pop' }, { t: L8.wt[1], type: 'tick' });
   for (const y of DOG_YAWNS()) EV.push({ t: y, type: 'yawn' });
   EV.push({ t: END, type: 'loop' });
   window.EV = EV;
 }
-const STRIKE = () => L2.wt[7] + .1;                             // the myth tag is struck just after the line ends (slowly, then a red X)
 const CTA = () => [L9.wt[4] + 1.5, END - .9];                    // the SAVE THIS button: after the dog catches the yawn, through l10
 const OWNER_TALLY = () => [L4.wt[2], L4.wt[5], L4.t1 + .05];  // the owner panel dog yawns three times on l04 (illustrative)
 const DOG_YAWNS = () => [L1.t1 + 1.0, L9.wt[4] + .9, END - 1.25];
@@ -171,6 +169,41 @@ function split(g, t) {
   // one tag for the whole split
   if (t > L4.wt[5]) { const k = back((t - L4.wt[5]) / .25); g.save(); g.translate(530, 1515); g.scale(k, k); A.pill(t > L5.wt[7] ? 'OWNER > STRANGER > FAKE' : 'OWNER > STRANGER', 0, 0, ACC.good, 26); g.restore(); }
 }
+// the heart-rate shot: the same dogs from the panels, close, each wearing its monitor; the traces stay steady, and the myth is struck
+function hearts(g, t, lt) {
+  g.fillStyle = '#0B1224'; g.fillRect(0, 0, W, H);
+  [['owner', '#24304F'], ['stranger', '#2B2448'], ['fake yawn', '#1F3A3A']].forEach(([lab, bg], i) => {
+    const x0 = 140 + i * 265, w = 250, y0 = 600, h = 660, cx = x0 + w / 2, a = ease((lt - i * .12) / .3);
+    g.save(); g.globalAlpha = a;
+    g.save(); g.beginPath(); g.roundRect(x0, y0, w, h, 24); g.clip(); g.fillStyle = bg; g.fillRect(x0, y0, w, h);
+    const glow = g.createRadialGradient(cx, y0 + h, 10, cx, y0 + h, 380); glow.addColorStop(0, 'rgba(255,184,107,.16)'); glow.addColorStop(1, 'rgba(255,184,107,0)'); g.fillStyle = glow; g.fillRect(x0, y0, w, h);
+    // the star dog, sitting, with a chest strap and its monitor (same rig as everywhere else)
+    g.save(); g.translate(cx - 8, y0 + 530); g.scale(.5, .5);
+    A.dog(0, 0, { blink: blinkAt(t, i * 1.1), brow: .5, breath: breathAt(t + i), wag: Math.sin(t * 5 + i) * .08 });
+    g.fillStyle = '#2E3A55'; g.beginPath(); g.roundRect(-112, -262, 224, 44, 18); g.fill();
+    g.fillStyle = '#15151B'; g.beginPath(); g.roundRect(-44, -278, 88, 76, 14); g.fill();
+    g.fillStyle = Math.sin(t * 7.5 + i) > .6 ? ACC.good : '#1F5A44'; A.ell(22, -256, 8, 8); g.fill();
+    g.restore();
+    g.restore();
+    g.strokeStyle = 'rgba(120,150,210,.28)'; g.lineWidth = 2; g.beginPath(); g.roundRect(x0, y0, w, h, 24); g.stroke();
+    g.fillStyle = '#F2F5FF'; g.font = 'italic 700 28px Inter'; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillText(lab, x0 + 20, y0 + 18);
+    // the readout: a beating heart and a steady trace
+    const ry = y0 + h - 64;
+    g.fillStyle = 'rgba(8,14,28,.85)'; g.beginPath(); g.roundRect(x0 + 12, ry - 42, w - 24, 84, 18); g.fill();
+    g.fillStyle = ACC.bad; g.save(); g.translate(x0 + 46, ry + 2); const hb = 1.6 * (1 + .14 * Math.max(0, Math.sin(t * 7.5 + i))); g.scale(hb, hb);
+    g.beginPath(); g.moveTo(0, 8); g.bezierCurveTo(-16, -4, -10, -16, 0, -8); g.bezierCurveTo(10, -16, 16, -4, 0, 8); g.fill(); g.restore();
+    heartTrace(g, x0 + 78, ry + 10, w - 102, 30, t, ACC.fact, i * 41);
+    g.restore();
+  });
+  if (t > L6.wt[3]) { const k = back((t - L6.wt[3]) / .25); g.save(); g.translate(360, 1360); g.scale(k, k); A.pill('HEART RATE: SAME', 0, 0, ACC.good, 30); g.restore(); }
+  if (t > L6.wt[6] - .1) {
+    const p = back((t - L6.wt[6] + .1) / .25); g.save(); g.translate(745, 1360); g.scale(p, p); A.pill('STRESSED?', 0, 0, ACC.bad, 30); g.restore();
+    const sk = ease((t - L6.wt[8]) / .35);
+    if (sk > 0) { g.strokeStyle = ACC.bad; g.lineWidth = 8; g.lineCap = 'round'; g.beginPath(); g.moveTo(648, 1360); g.lineTo(648 + 194 * sk, 1360); g.stroke(); }
+    const xk = back((t - L6.wt[8] - .3) / .3);
+    if (xk > 0) { g.save(); g.translate(885, 1360); g.scale(xk, xk); g.strokeStyle = ACC.bad; g.lineWidth = 14; g.lineCap = 'round'; g.beginPath(); g.moveTo(-26, -26); g.lineTo(26, 26); g.moveTo(26, -26); g.lineTo(-26, 26); g.stroke(); g.restore(); }
+  }
+}
 function drawScene(name, g, t, lt) {
   A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1; CAM = [1, 0, 0];
   if (name === 'home') {   // frame 1 is the extreme close-up mid-yawn → pull back on l02; l09 wide; push back in on l10 for the loop
@@ -179,6 +212,7 @@ function drawScene(name, g, t, lt) {
   }
   else if (name === 'visit') visit(g, t);
   else if (name === 'card') cardScene(g, t);
+  else if (name === 'hearts') hearts(g, t, lt);
   else if (name === 'split') split(g, t);
 }
 
@@ -197,29 +231,13 @@ function heartTrace(out, x, y, w, h, t, col, ph) {   // a scrolling ECG line at 
 function cardScene(out, t) {   // the takeover card as its own scene (it whips in and out like any other shot)
   const c = CARD, lt = Math.max(0, t - c.t0), k = 1;
   out.fillStyle = '#060A15'; out.fillRect(0, 0, W, H);
-  const x = 60, y = 600, w = 860, h = 880, phaseB = t >= c.tB;
+  const x = 60, y = 600, w = 860, h = 880;
   out.save();
-  A.card(x, y, w, h, phaseB ? 'inside the head' : 'the heart cam', phaseB ? 'a second study, 2008 \u00B7 mechanism unknown' : '21 dogs wore monitors', phaseB ? 'CAM 05' : 'CAM 04', (lt / 6) % 1);
+  A.card(x, y, w, h, 'inside the head', 'a second study, 2008 \u00B7 mechanism unknown', 'CAM 05', (lt / 6) % 1);
   out.save(); out.beginPath(); out.roundRect(x, y, w, h, 28); out.clip(); out.textBaseline = 'middle';
-  if (!phaseB) {
-    // three steady heart traces, one per condition; then STRESS? is struck through
-    ['OWNER', 'STRANGER', 'FAKE'].forEach((lab, i) => {
-      const ry = 850 + i * 160, a = ease((lt - .15 - i * .18) / .3);
-      out.globalAlpha = k * a;
-      out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textAlign = 'left'; out.fillText(lab, 100, ry - 50);
-      out.fillStyle = 'rgba(120,150,210,.12)'; out.fillRect(100, ry - 30, 780, 60);
-      heartTrace(out, 100, ry + 10, 780, 46, t, ACC.fact, i * 37);
-      out.globalAlpha = k;
-    });
-    if (t > L6.wt[3]) { const p = back((t - L6.wt[3]) / .25); out.save(); out.translate(300, 1340); out.scale(p, p); A.pill('NO CHANGE', 0, 0, ACC.good, 28); out.restore(); }
-    if (t > L6.wt[6] - .1) {
-      const p = back((t - L6.wt[6] + .1) / .25); out.save(); out.translate(690, 1340); out.scale(p, p); A.pill('STRESS?', 0, 0, ACC.bad, 28); out.restore();
-      const sk = ease((t - L6.wt[6] - .15) / .25);
-      if (sk > 0) { out.strokeStyle = ACC.bad; out.lineWidth = 7; out.lineCap = 'round'; out.beginPath(); out.moveTo(600, 1340); out.lineTo(600 + 180 * sk, 1340); out.stroke(); }
-    }
-  } else {
+  {
     // the second study: 29 dogs, 21 of them catch a person's yawn (they light up one by one); then the x-ray brain glows — "may"
-    const b = ease((t - c.tB) / .35);
+    const b = ease((lt - .1) / .35);
     out.globalAlpha = k * b;
     out.fillStyle = '#C9D2E8'; out.font = '600 26px JetBrains Mono'; out.textAlign = 'left'; out.fillText('DOGS WHO CAUGHT A YAWN', 100, 740);
     const lit = Math.round(21 * ease((t - L7.wt[3]) / .9));
@@ -243,7 +261,7 @@ function pins(t, scene) {
   A.setCtx(out);
   const list = [...PIN];
   if (scene === 'home') {
-    if (t > L2.wt[3] && t < L3.t0 - .35) {   // the myth, pinned to the dog, then struck through
+    if (t > L2.wt[3] && t < L3.t0 - .35) {   // the myth, pinned to the dog as an open question (struck later, on l06)
       const [hx, hy] = toScreen(720, 1150), a = back((t - L2.wt[3]) / .25);
       out.save(); out.globalAlpha = clamp(a);
       const tag = 'TIRED? STRESSED?'; list.push([tag, 690, 860, hx, hy, ACC.bad, 32]);
@@ -255,19 +273,12 @@ function pins(t, scene) {
     out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 8, 0, Math.PI * 2); out.fill();
     A.pill(text, x, y, col, size);
   }
-  if (scene === 'home' && t > STRIKE() && t < L3.t0 - .35) {   // strike + red X
-    const k = ease((t - STRIKE()) / .35), w = 360;
-    out.strokeStyle = ACC.bad; out.lineWidth = 8; out.lineCap = 'round';
-    out.beginPath(); out.moveTo(690 - w / 2, 862); out.lineTo(690 - w / 2 + w * k, 862); out.stroke();
-    const xk = back((t - STRIKE() - .3) / .3);
-    if (xk > 0) { out.save(); out.translate(890, 790); out.scale(xk, xk); out.lineWidth = 16; out.beginPath(); out.moveTo(-34, -34); out.lineTo(34, 34); out.moveTo(34, -34); out.lineTo(-34, 34); out.stroke(); out.restore(); }
-  }
 }
 function hud(t, scene) {
   if (t < L2.t0 + .1) return;
   A.setCtx(out);
   const a = ease((t - L2.t0 - .1) / .3) * (t > END - .9 ? 1 - ease((t - (END - .9)) / .4) : 1);
-  const onCard = t >= CARD.t0 && t < CARD.t1, compact = scene === 'split';   // on the split only the dots stay (the panels need the width)
+  const onCard = t >= CARD.t0 && t < CARD.t1, compact = scene === 'split' || scene === 'hearts';   // on the split only the dots stay (the panels need the width)
   out.save(); out.globalAlpha = a * (onCard ? 0 : 1);
   out.fillStyle = 'rgba(8,14,28,.72)'; out.beginPath(); out.roundRect(52, 632, compact ? 72 : 290, 206, 22); out.fill();
   out.font = '600 24px JetBrains Mono'; out.textBaseline = 'middle'; out.textAlign = 'left';
@@ -340,7 +351,7 @@ load().then(data => {
   };
   window.TEXTS = (t) => {
     const T = [];
-    if (t >= CARD.t0 + WHIP / 2 && t < CARD.t1 - WHIP / 2) T.push({ id: 'card', text: t >= CARD.tB ? 'inside the head' : 'the heart cam', x0: 60, y0: 600, x1: 920, y1: 1480 });
+    if (t >= CARD.t0 + WHIP / 2 && t < CARD.t1 - WHIP / 2) T.push({ id: 'card', text: 'inside the head', x0: 60, y0: 600, x1: 920, y1: 1480 });
     const [a, b] = CTA(); if (t >= a + .2 && t < b) T.push({ id: 'cta', text: 'SAVE THIS', x0: 200, y0: 940, x1: 880, y1: 1060 });
     return T;
   };
