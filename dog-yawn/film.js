@@ -19,7 +19,7 @@ const LINES = [
   { id: 'l09', lead: 3, key: 2, kind: 'ask', scene: 'home' },
   { id: 'l10', lead: 0, key: 1, kind: 'good', scene: 'home' },
 ];
-const GAP = { l02: .35, l03: 1.0, l04: .45, l05: 0, l06: .7, l07: .45, l08: .7, l09: .5, l10: .4 };   // l03: time to read the strike; l05 follows l04 with no gap (one sentence)
+const GAP = { l02: .35, l03: .55, l04: .45, l05: 0, l06: .7, l07: .45, l08: .7, l09: .5, l10: .4 };   // l03: time to read the strike; l05 follows l04 with no gap (one sentence)
 const START = 0, TAIL = 1.6, LOOP = 0.8, WHIP = .4;
 const STEPS = [['OWNER WINS', 3], ['NO STRESS', 5], ['KNOWS YOU', 7]];   // the persistent progress HUD: [label, line index]
 const BRAND = '@pupexplained';
@@ -243,7 +243,7 @@ function pins(t, scene) {
   A.setCtx(out);
   const list = [...PIN];
   if (scene === 'home') {
-    if (t > L2.wt[3] && t < L3.t0 - .4) {   // the myth, pinned to the dog, then struck through
+    if (t > L2.wt[3] && t < L3.t0 - .35) {   // the myth, pinned to the dog, then struck through
       const [hx, hy] = toScreen(720, 1150), a = back((t - L2.wt[3]) / .25);
       out.save(); out.globalAlpha = clamp(a);
       const tag = 'TIRED? STRESSED?'; list.push([tag, 690, 860, hx, hy, ACC.bad, 32]);
@@ -255,7 +255,7 @@ function pins(t, scene) {
     out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 8, 0, Math.PI * 2); out.fill();
     A.pill(text, x, y, col, size);
   }
-  if (scene === 'home' && t > STRIKE() && t < L3.t0 - .4) {   // strike + red X
+  if (scene === 'home' && t > STRIKE() && t < L3.t0 - .35) {   // strike + red X
     const k = ease((t - STRIKE()) / .35), w = 360;
     out.strokeStyle = ACC.bad; out.lineWidth = 8; out.lineCap = 'round';
     out.beginPath(); out.moveTo(690 - w / 2, 862); out.lineTo(690 - w / 2 + w * k, 862); out.stroke();
