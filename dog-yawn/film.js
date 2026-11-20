@@ -10,7 +10,7 @@ const L07_DISPLAY = 'In another study, 21 of 29 dogs caught a person\u2019s yawn
 const LINES = [
   { id: 'l01', lead: 4, key: 4, kind: 'ask', scene: 'home', display: 'Why does your dog yawn when YOU yawn?', emph: 'YOU' },
   { id: 'l02', lead: 5, key: 3, kind: 'bad', scene: 'home' },
-  { id: 'l03', lead: 5, key: 4, kind: 'fact', scene: 'split', display: 'In one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
+  { id: 'l03', lead: 6, key: 4, kind: 'fact', scene: 'split', display: 'But in one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
   { id: 'l05', lead: 4, key: 5, kind: 'bad', scene: 'split' },
   { id: 'l06', lead: 5, key: 4, kind: 'good', scene: 'card' },   // the box carries the conclusion: "so stress is unlikely."
@@ -136,8 +136,8 @@ const PANELS = [
 ];
 function panelTimes() {
   return [
-    { in: L3.t0 - .1, yawns: [L3.wt[7], L4.wt[2] - .7, L4.wt[5] - .7], dog: [L3.wt[9], ...OWNER_TALLY()] },
-    { in: L3.wt[4], yawns: [L3.wt[11], L4.wt[3]], dog: [L4.t1 + .35] },
+    { in: L3.t0 - .1, yawns: [L3.wt[8], L4.wt[2] - .7, L4.wt[5] - .7], dog: [L3.wt[10], ...OWNER_TALLY()] },
+    { in: L3.wt[5], yawns: [L3.wt[12], L4.wt[3]], dog: [L4.t1 + .35] },
     { in: L5.wt[4] - .2, yawns: [L5.wt[6], L5.wt[8] + .3], dog: [] },
   ];
 }

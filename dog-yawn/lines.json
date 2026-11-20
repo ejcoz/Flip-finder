@@ -11,9 +11,9 @@
  },
  {
   "id": "l03",
-  "text": "In one study, twenty-five dogs saw their owner yawn, and a stranger yawn.",
+  "text": "But in one study, twenty-five dogs saw their owner yawn, and a stranger yawn.",
   "voice": "user recording (voice_src/yawn-narration.mp3)",
-  "asr": "In one study, 25 dogs saw their owner yawn and a stranger yawn."
+  "asr": "But in one study, 25 dogs saw their owner yawn and a stranger yawn."
  },
  {
   "id": "l04",
