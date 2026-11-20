@@ -10,7 +10,7 @@ const LINES = [
   { id: 'l02', lead: 5, key: 3, kind: 'bad', scene: 'home' },
   { id: 'l03', lead: 5, key: 4, kind: 'fact', scene: 'split', display: 'In one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
-  { id: 'l05', lead: 3, key: 5, kind: 'bad', scene: 'split' },
+  { id: 'l05', lead: 4, key: 5, kind: 'bad', scene: 'split' },
   { id: 'l06', lead: 3, key: 2, kind: 'good', scene: 'home' },
   { id: 'l07', lead: 5, key: 2, kind: 'fact', scene: 'home', display: '40 to 60% of adults catch yawns, and your dog’s brain may be tuned to you.' },
   { id: 'l08', lead: 7, key: 5, kind: 'good', scene: 'pov' },
@@ -128,7 +128,7 @@ function panelTimes() {
   return [
     { in: L3.t0 - .1, yawns: [L3.wt[7], L4.wt[2] - .7, L4.wt[5] - .7], dog: [L3.wt[9], ...OWNER_TALLY()] },
     { in: L3.wt[4], yawns: [L3.wt[11], L4.wt[3]], dog: [L4.t1 + .35] },
-    { in: L5.wt[6] - .3, yawns: [L5.wt[7] - .1, L5.wt[10]], dog: [] },
+    { in: L5.wt[4] - .2, yawns: [L5.wt[6], L5.wt[8] + .3], dog: [] },
   ];
 }
 function split(g, t) {
