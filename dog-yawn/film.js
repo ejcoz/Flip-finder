@@ -234,8 +234,6 @@ function pins(t, scene) {
   A.setCtx(out);
   const list = [...PIN];
   if (scene === 'home') {
-    const [mx, my] = toScreen(HEADW[0], HEADW[1] + 90);   // the open mouth
-    if (t < L1.t1 + .2 || t > END - .45) list.push(['YAWN', 230, 1430, mx - 90, my + 40, ACC.ask, 36]);
     if (t > L2.wt[3] && t < L3.t0 - .2) {   // the myth, pinned to the dog, then struck through
       const [hx, hy] = toScreen(720, 1150), a = back((t - L2.wt[3]) / .25);
       out.save(); out.globalAlpha = clamp(a);

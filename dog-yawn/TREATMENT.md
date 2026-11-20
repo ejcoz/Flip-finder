@@ -3,7 +3,7 @@
 Pet Cam · 1080×1920 · 30 fps · 39.1 s · loops · narrator Kokoro `af_heart` 0.95 · facts in FACTS.md
 
 ## Brief changes from the last post (low retention at the start)
-- Frame 1 is the dog **mid-yawn in an extreme close-up** (zoom 2.75 on the mouth), the question already whole on screen in the big hook caption, the `YAWN` tag pinned to the mouth. No build-in, no fade.
+- Frame 1 is the dog **mid-yawn in an extreme close-up** (zoom 2.75 on the mouth), the question already whole on screen in the big hook caption. No build-in, no fade.
 - The narrator speaks on frame 1: line 1 starts at 0.00 s (the clip's own lead-in is 0.03 s).
 - Scenes: home, the owner-vs-stranger CAM split, the dog's-eye view.
 
@@ -17,12 +17,12 @@ Your dog's yawn isn't tiredness or nerves: it catches yours, and mostly yours.
 Setup (the yawn + the myth) → turn (the owner > stranger > fake split; the flat heart rate) → ending (it's tuned to you; try it tonight; loop).
 
 ## Benchmark
-Learn from the pet explainers that perform: behaviour in extreme close-up on frame 1, one pinned tag, the myth struck in red, one evolving takeover card, a progress strip, a loop. Don't learn: their characters, wording or music.
+Learn from the pet explainers that perform: behaviour in extreme close-up on frame 1, tags only where the picture needs one, the myth struck in red, one evolving takeover card, a progress strip, a loop. Don't learn: their characters, wording or music.
 
 ## Shot list
 | # | Lines | Scene | Framing / move | Why |
 |---|---|---|---|---|
-| 1 | l01 | home | extreme close-up on the yawning mouth, locked; `YAWN` tag | the behaviour stops the scroll |
+| 1 | l01 | home | extreme close-up on the yawning mouth, locked, no tag (the yawn needs no label) | the behaviour stops the scroll |
 | 2 | l02 | home | pulls back to the wide room in 0.75 s: owner yawning, the dog catching it; `TIRED? STRESSED?` tag, struck + red X | show contagion while naming the myth |
 | 3 | l03–l05 | split | CAM 01 owner, CAM 02 stranger, then CAM 03 fake yawn; tallies, one tag `OWNER > STRANGER > FAKE` | the three conditions side by side |
 | 4 | l06–l07 | takeover card over home | heart cam (three steady traces, `NO CHANGE`, `STRESS?` struck) → inside the head (40–60 % crowd, brain glow, `MAY BE TUNED TO YOU`) | one evolving card carries the evidence |
