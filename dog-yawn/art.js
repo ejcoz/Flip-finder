@@ -239,6 +239,7 @@ export function xrayHead(cx, cy, tilt, wave = 0, glowK = 1, arcs = true) {
 
 // ---------- two-tier caption: lead words (grey), key phrase in a selection box, follow words (grey) ----------
 // lead/key/follow are already cut to what has been spoken; pop = 0..1 box entrance
+let PLATE = .6; export const setPlate = a => { PLATE = a; };
 export function caption(lead, key, follow, kind, pop = 1, big = false, emph = null) {   // emph: one word of the key phrase set in the meaning colour
   const col = ACC[kind], cx = 540;
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
@@ -246,7 +247,7 @@ export function caption(lead, key, follow, kind, pop = 1, big = false, emph = nu
   const LS = big ? 54 : 44, LW = big ? 700 : 400, LC = big ? '#FFFFFF' : '#C3CAD9', KS = big ? 116 : 84, BH = big ? 152 : 118, LY = big ? 330 : 318, BY = big ? 356 : 344;
   if (lead || key || follow) {
     const bottom = (follow ? BY + BH + 70 : key ? BY + BH + 14 : LY + 18);
-    g.save(); g.fillStyle = big ? 'rgba(6,10,22,.72)' : 'rgba(8,12,26,.6)'; g.filter = 'blur(18px)'; g.beginPath(); g.roundRect(100, 262, 880, bottom - 262, 40); g.fill(); g.restore();
+    g.save(); g.fillStyle = big ? 'rgba(6,10,22,.72)' : `rgba(8,12,26,${PLATE})`; g.filter = 'blur(18px)'; g.beginPath(); g.roundRect(100, 262, 880, bottom - 262, 40); g.fill(); g.restore();
   }
   const fitFont = (txt, weight, size, max) => { do { g.font = `${weight} ${size}px Inter`; size -= 2; } while (g.measureText(txt).width > max && size > 20); };
   if (lead) { fitFont(lead, LW, LS, 800); g.fillStyle = LC; g.fillText(lead, cx, LY); }

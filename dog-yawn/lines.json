@@ -2,64 +2,53 @@
  {
   "id": "l01",
   "text": "Why does your dog yawn when you yawn?",
-  "voice": "af_heart",
-  "speed": 0.95,
-  "phonemes": "wˌaɪ dˈʌz jʊɹ dˈɑːɡ jˈɔːn, wɛn jˈuː jˌɔːn?"
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l02",
   "text": "Most people think it's just tired or stressed.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l03",
   "text": "In one study, twenty-five dogs saw their owner yawn, and a stranger yawn.",
-  "voice": "af_heart",
-  "speed": 0.95,
-  "asr": "In one study, 25 dogs saw their owner yawn, and a stranger yawn."
+  "voice": "user recording (voice_src/yawn-narration.mp3)",
+  "asr": "In one study, 25 dogs saw their owner yawn and a stranger yawn."
  },
  {
   "id": "l04",
-  "text": "They yawned more at their owner's yawns.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "text": "They yawned more at their owner's yawns,",
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l05",
-  "text": "And they yawned less when the yawn was fake.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "text": "and they yawned less when the yawn was fake.",
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l06",
   "text": "Their heart rate didn't change, so stress is unlikely.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l07",
-  "text": "Forty to sixty percent of adults catch yawns, and your dog's brain may be tuned to you.",
-  "voice": "af_heart",
-  "speed": 0.95,
-  "asr": "40 to 60 percent of adults catch yawns, and your dog's brain may be tuned to you."
+  "text": "In another study, twenty-one of twenty-nine dogs caught a person's yawn, and your dog's brain may be tuned to you.",
+  "voice": "user recording (voice_src/yawn-narration.mp3)",
+  "asr": "In another study, 21 of 29 dogs caught a person's yawn, and your dog's brain may be tuned to you."
  },
  {
   "id": "l08",
   "text": "Your yawn is contagious, but mostly to the dog that knows you.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l09",
-  "text": "Try it tonight: yawn slowly, then save this and see if yours catches it.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "text": "Try it tonight: yawn slowly, and see if yours catches it.",
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  },
  {
   "id": "l10",
   "text": "Follow for why your dog does the next weird thing.",
-  "voice": "af_heart",
-  "speed": 0.95
+  "voice": "user recording (voice_src/yawn-narration.mp3)"
  }
 ]

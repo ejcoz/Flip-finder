@@ -1,8 +1,8 @@
 #!/bin/sh
 # Pet Cam: "Why does your dog yawn when you yawn?" One command rebuilds the film from the voice files.
 #   sh build.sh            → dog-yawn.mp4, poster.jpg and subtitles_en.srt in this folder (work files in out/)
-# Voice (already generated in voice/; to redo it, needs the voice tier):
-#   $LIB/.venv/bin/python $LIB/core/tts/tts.py lines.json voice
+# Voice: the user's recording voice_src/yawn-narration.mp3, cut into voice/l01–l10.wav (l07 is a placeholder until it is re-recorded).
+# Word timings after replacing a clip:
 #   (from $LIB) .venv/bin/python <project>/tools/voice_stress.py <project>/lines.json <project>/voice   (l01 from phonemes: the stress on "you")
 #   HF_HUB_DISABLE_XET=1 $LIB/.venv/bin/python $LIB/core/tts/asr_check.py lines.json voice --lang en
 set -e

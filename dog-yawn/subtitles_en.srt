@@ -1,39 +1,39 @@
 1
-00:00:00,000 --> 00:00:02,267
+00:00:00,000 --> 00:00:02,882
 Why does your dog yawn when you yawn?
 
 2
-00:00:02,317 --> 00:00:05,349
+00:00:02,932 --> 00:00:07,098
 Most people think it's just tired or stressed.
 
 3
-00:00:05,399 --> 00:00:10,198
+00:00:07,148 --> 00:00:12,252
 In one study, 25 dogs saw their owner yawn, and a stranger yawn.
 
 4
-00:00:10,248 --> 00:00:12,584
-They yawned more at their owner's yawns.
+00:00:12,302 --> 00:00:14,281
+They yawned more at their owner's yawns,
 
 5
-00:00:12,634 --> 00:00:15,301
-And they yawned less when the yawn was fake.
+00:00:14,331 --> 00:00:17,305
+and they yawned less when the yawn was fake.
 
 6
-00:00:15,351 --> 00:00:18,767
+00:00:17,355 --> 00:00:20,739
 Their heart rate didn't change, so stress is unlikely.
 
 7
-00:00:18,817 --> 00:00:24,114
-40 to 60% of adults catch yawns, and your dog’s brain may be tuned to you.
+00:00:20,789 --> 00:00:27,931
+In another study, 21 of 29 dogs caught a person’s yawn, and your dog’s brain may be tuned to you.
 
 8
-00:00:24,164 --> 00:00:28,243
+00:00:27,981 --> 00:00:32,090
 Your yawn is contagious, but mostly to the dog that knows you.
 
 9
-00:00:28,293 --> 00:00:33,094
-Try it tonight: yawn slowly, then save this and see if yours catches it.
+00:00:32,140 --> 00:00:36,407
+Try it tonight: yawn slowly, and see if yours catches it.
 
 10
-00:00:33,144 --> 00:00:37,208
+00:00:36,457 --> 00:00:40,515
 Follow for why your dog does the next weird thing.
