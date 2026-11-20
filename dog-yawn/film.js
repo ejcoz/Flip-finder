@@ -14,7 +14,7 @@ const LINES = [
   { id: 'l03', lead: 6, key: 4, kind: 'fact', scene: 'split', display: 'But in one study, 25 dogs saw their owner yawn, and a stranger yawn.' },
   { id: 'l04', lead: 4, key: 3, kind: 'good', scene: 'split' },
   { id: 'l05', lead: 4, key: 5, kind: 'bad', scene: 'split' },
-  { id: 'l06', lead: 5, key: 4, kind: 'good', scene: 'hearts' },   // the box carries the conclusion: "so stress is unlikely."
+  { id: 'l06', lead: 3, key: 2, kind: 'good', scene: 'hearts' },   // the box carries the answer to the myth: "wasn't stress:"
   { id: 'l07', lead: 3, key: 4, kind: 'fact', scene: 'card', display: L07_DISPLAY },
   { id: 'l08', lead: 7, key: 5, kind: 'good', scene: 'visit' },
   { id: 'l09', lead: 3, key: 2, kind: 'ask', scene: 'home' },
@@ -64,7 +64,7 @@ function build({ dur, words, script }) {
   STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
   EV.push({ t: L1.wt[6] - .1, type: 'whoosh' }, { t: L2.wt[3], type: 'pop' });
   for (const w of OWNER_TALLY()) EV.push({ t: w, type: 'tick' });
-  EV.push({ t: L5.wt[2], type: 'pop' }, { t: L6.wt[3], type: 'pop' }, { t: L6.wt[6] - .1, type: 'pop' }, { t: L6.wt[8], type: 'strike' }, { t: L7.wt[3], type: 'pop' }, { t: L7.wt[16], type: 'chime' });
+  EV.push({ t: L5.wt[2], type: 'pop' }, { t: L6.wt[1], type: 'pop' }, { t: L6.wt[4], type: 'strike' }, { t: L6.wt[10], type: 'pop' }, { t: L7.wt[3], type: 'pop' }, { t: L7.wt[16], type: 'chime' });
   EV.push({ t: CTA()[0], type: 'pop' }, { t: L8.wt[1], type: 'tick' });
   for (const y of DOG_YAWNS()) EV.push({ t: y, type: 'yawn' });
   EV.push({ t: END, type: 'loop' });
@@ -195,14 +195,15 @@ function hearts(g, t, lt) {
     heartTrace(g, x0 + 78, ry + 10, w - 102, 30, t, ACC.fact, i * 41);
     g.restore();
   });
-  if (t > L6.wt[3]) { const k = back((t - L6.wt[3]) / .25); g.save(); g.translate(360, 1360); g.scale(k, k); A.pill('HEART RATE: SAME', 0, 0, ACC.good, 30); g.restore(); }
-  if (t > L6.wt[6] - .1) {
-    const p = back((t - L6.wt[6] + .1) / .25); g.save(); g.translate(745, 1360); g.scale(p, p); A.pill('STRESSED?', 0, 0, ACC.bad, 30); g.restore();
-    const sk = ease((t - L6.wt[8]) / .35);
-    if (sk > 0) { g.strokeStyle = ACC.bad; g.lineWidth = 8; g.lineCap = 'round'; g.beginPath(); g.moveTo(648, 1360); g.lineTo(648 + 194 * sk, 1360); g.stroke(); }
-    const xk = back((t - L6.wt[8] - .3) / .3);
-    if (xk > 0) { g.save(); g.translate(885, 1360); g.scale(xk, xk); g.strokeStyle = ACC.bad; g.lineWidth = 14; g.lineCap = 'round'; g.beginPath(); g.moveTo(-26, -26); g.lineTo(26, 26); g.moveTo(26, -26); g.lineTo(-26, 26); g.stroke(); g.restore(); }
+  // the claim first ("it probably wasn't stress": STRESSED? struck), then the evidence ("stayed the same": HEART RATE: SAME)
+  if (t > L6.wt[1]) {
+    const p = back((t - L6.wt[1]) / .25); g.save(); g.translate(330, 1360); g.scale(p, p); A.pill('STRESSED?', 0, 0, ACC.bad, 30); g.restore();
+    const sk = ease((t - L6.wt[4]) / .35);
+    if (sk > 0) { g.strokeStyle = ACC.bad; g.lineWidth = 8; g.lineCap = 'round'; g.beginPath(); g.moveTo(233, 1360); g.lineTo(233 + 194 * sk, 1360); g.stroke(); }
+    const xk = back((t - L6.wt[4] - .3) / .3);
+    if (xk > 0) { g.save(); g.translate(472, 1360); g.scale(xk, xk); g.strokeStyle = ACC.bad; g.lineWidth = 14; g.lineCap = 'round'; g.beginPath(); g.moveTo(-26, -26); g.lineTo(26, 26); g.moveTo(26, -26); g.lineTo(-26, 26); g.stroke(); g.restore(); }
   }
+  if (t > L6.wt[10]) { const k = back((t - L6.wt[10]) / .25); g.save(); g.translate(735, 1360); g.scale(k, k); A.pill('HEART RATE: SAME', 0, 0, ACC.good, 30); g.restore(); }
 }
 function drawScene(name, g, t, lt) {
   A.setCtx(g); g.setTransform(1, 0, 0, 1, 0, 0); g.filter = 'none'; g.globalAlpha = 1; CAM = [1, 0, 0];
