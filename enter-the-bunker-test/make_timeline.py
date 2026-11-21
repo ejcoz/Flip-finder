@@ -2,7 +2,7 @@
 import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
-START = {'l01': .35, 'l02': 3.6, 'l03': 7.35, 'l04': 10.0, 'l05': 11.75, 'l06': 12.6, 'l07': 16.5,
+START = {'l01': 0.0, 'l02': 3.6, 'l03': 7.35, 'l04': 10.0, 'l05': 11.75, 'l06': 12.6, 'l07': 16.5,
          'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.2, 'l13': 36.1, 'l14': 42.9}
 DUR = 47.4
 DISP = {
