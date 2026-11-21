@@ -72,17 +72,17 @@
  },
  {
   "id": "l12",
-  "text": "Bed six six six was already locked from the inside when we dug it out.",
+  "text": "Bed four oh four was already locked from the inside when we dug it out.",
   "voice": "am_michael",
   "speed": 1.0,
-  "asr": "Bed 666 was already locked from the inside when we dug it out."
+  "asr": "Bed 404 was already locked from the inside when we dug it out."
  },
  {
   "id": "l13",
-  "text": "Pick your spot in the comments. By the pantry, next to the generators, or right beside six six six.",
+  "text": "Pick your spot in the comments. By the pantry, next to the generators, or right beside four oh four.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "Pick your spot in the comments by the pantry next to the generators or right beside 666."
+  "asr": "Pick your spot in the comments by the pantry next to the generators or right beside 404."
  },
  {
   "id": "l14",
