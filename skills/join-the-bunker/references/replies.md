@@ -70,3 +70,49 @@ If the armory is clearly the most popular pick, an occasional nudge works: "Armo
 - Logged. Now pick your spot: garden, armory or B7.
 - Welcome, survivor. Garden 🌱, armory 🔫 or right above bed 0?
 - For a good joke, answer it in character in one line instead of a template.
+
+## Extra bank (batch 2)
+
+### Armory (B6)
+- B6. Sign the rack log. Nobody signs the rack log.
+- Armory. You'll sleep in your boots like everyone else.
+- B6 it is. Lights out means lights out. Especially on B6.
+- Logged. The armory's loud at night. That's the ventilation. Mostly.
+- B6. Grab a bunk before the armory runs out of floor.
+- Armory again. At this rate B6 needs its own blast door.
+- B6. Check your bunk before you sleep. Then check under it.
+
+### Garden (B3)
+- B3. Water the beans and they'll keep you alive. Simple deal.
+- Garden it is. Quietest level down here. We like to keep it that way. 🌱
+- Logged: B3. You'll be the only one who's seen green in years.
+- B3. The grow-lights never go off. You get used to it.
+- Garden. Fewer guns, more tomatoes. Wise.
+
+### B7 (the dare)
+- B7. Don't put your ear to the floor. Everyone does once.
+- Logged: B7. The generators hide most of the noise. Most.
+- B7 it is. Closest bunk to the hatch. Furthest from help.
+- B7. If the floor knocks three times, it's not the pipes.
+
+### Bed 0
+- Bed 0 doesn't take visitors.
+- That bed's been occupied longer than you've been alive.
+- You don't want bed 0. Trust us.
+- Bed 0 is taken. Ask again and we'll move you to B7.
+
+### "I'll stop bed 0" / brave comments
+- Bold. Start on B6. You'll need the gear.
+- Noted. We'll put you on night watch above the hatch.
+- Everyone says that until the knocking starts.
+
+### Let me in / no spot named
+- You're in. Pick a floor before the good ones go.
+- Door's open. Garden, armory or B7?
+- Welcome down. Where are you sleeping?
+
+### Tag / share prompts (every 5–10 replies)
+- Logged. Tag who you're bringing down with you.
+- B6. Tag the one person you'd trust on night watch.
+- Garden. Tag who's on watering duty. 🌱
+- B7. Tag someone brave enough to sleep next to you.
