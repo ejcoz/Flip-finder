@@ -1,0 +1,85 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: 'Anton'; src: url(fonts/Anton-Regular.ttf) format('truetype'); font-display: block; }
+html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}
+</style></head><body><canvas id="c"></canvas>
+<script type="module">
+// Profile pictures for @jointhebunker, in the Enter the Bunker style. ?v=a|b|c. Square; keep content inside the circle.
+const W = innerWidth, H = innerHeight, S = W / 1080, TAU = Math.PI * 2;
+const cv = document.getElementById('c'); cv.width = W; cv.height = H; const c = cv.getContext('2d');
+const V = new URLSearchParams(location.search).get('v') || 'a';
+const P = { amber: '#F2C230', concrete: '#A9A48C', shade: '#6C6855', red: '#FF2A2A', cream: '#E6E0C6' };
+const hash = n => { n = Math.sin(n * 127.1 + 311.7) * 43758.5453; return n - Math.floor(n); };
+const glow = (x, y, r, col, a = 1) => { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); c.globalAlpha = 1; };
+function smog() {
+  const g = c.createLinearGradient(0, 0, 0, 1080); g.addColorStop(0, '#160F0A'); g.addColorStop(.55, '#4A2A14'); g.addColorStop(1, '#1A120C'); c.fillStyle = g; c.fillRect(0, 0, 1080, 1080);
+  c.filter = 'blur(50px)'; for (let i = 0; i < 18; i++) { c.fillStyle = `rgba(${130 + hash(i) * 60},${60 + hash(i * 2) * 30},25,${.15 + hash(i * 3) * .2})`; c.beginPath(); c.ellipse(hash(i * 5) * 1080, hash(i * 7) * 1080, 160 + hash(i * 9) * 200, 80 + hash(i * 11) * 100, 0, 0, TAU); c.fill(); } c.filter = 'none';
+  for (let i = 0; i < 140; i++) { c.fillStyle = `rgba(215,200,175,${.2 + hash(i * 4.1) * .35})`; c.beginPath(); c.ellipse(hash(i * 3.1) * 1080, hash(i * 5.3) * 1080, 1.2 + hash(i * 9.1) * 2.8, 1 + hash(i * 2.3) * 1.6, i, 0, TAU); c.fill(); }
+}
+function hazardRing(r0, r1) {
+  c.save(); c.beginPath(); c.arc(540, 540, r1, 0, TAU); c.arc(540, 540, r0, 0, TAU, true); c.clip();
+  c.fillStyle = '#16140D'; c.fillRect(0, 0, 1080, 1080); c.fillStyle = P.amber;
+  for (let k = 0; k < 40; k++) { const a = k / 40 * TAU; c.beginPath(); c.moveTo(540 + Math.cos(a) * (r0 - 5), 540 + Math.sin(a) * (r0 - 5)); c.lineTo(540 + Math.cos(a + .08) * (r0 - 5), 540 + Math.sin(a + .08) * (r0 - 5)); c.lineTo(540 + Math.cos(a + .14) * (r1 + 5), 540 + Math.sin(a + .14) * (r1 + 5)); c.lineTo(540 + Math.cos(a + .06) * (r1 + 5), 540 + Math.sin(a + .06) * (r1 + 5)); c.fill(); }
+  c.restore();
+}
+function trefoil(x, y, R) {
+  c.fillStyle = P.amber; c.beginPath(); c.arc(x, y, R, 0, TAU); c.fill(); c.fillStyle = '#1A1810';
+  for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + k * TAU / 3; c.beginPath(); c.moveTo(x, y); c.arc(x, y, R * .86, a - .52, a + .52); c.closePath(); c.fill(); }
+  c.fillStyle = P.amber; c.beginPath(); c.arc(x, y, R * .24, 0, TAU); c.fill(); c.fillStyle = '#1A1810'; c.beginPath(); c.arc(x, y, R * .15, 0, TAU); c.fill();
+}
+function doorA() {
+  smog();
+  glow(540, 540, 470, 'rgba(255,170,70,.35)');
+  hazardRing(430, 470);
+  const R = 360;
+  c.fillStyle = '#0B0B07'; c.beginPath(); c.arc(540, 540, R + 18, 0, TAU); c.fill();
+  c.fillStyle = P.shade; c.beginPath(); c.arc(540, 540, R, 0, TAU); c.fill();
+  c.fillStyle = P.concrete; c.beginPath(); c.arc(524, 520, R - 24, 0, TAU); c.fill();
+  for (let k = 0; k < 30; k++) { c.fillStyle = `rgba(60,52,36,${.15 + hash(k) * .2})`; c.beginPath(); c.ellipse(540 + (hash(k * 3) - .5) * 520, 540 + (hash(k * 5) - .5) * 520, 10 + hash(k * 7) * 30, 6 + hash(k * 9) * 20, 0, 0, TAU); c.fill(); }
+  c.setLineDash([22, 16]); c.strokeStyle = P.amber; c.lineWidth = 9; c.beginPath(); c.arc(540, 540, R * .8, 0, TAU); c.stroke(); c.setLineDash([]);
+  for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + .2; c.fillStyle = '#4E4B3C'; c.beginPath(); c.arc(540 + Math.cos(a) * R * .8, 540 + Math.sin(a) * R * .8, 15, 0, TAU); c.fill(); c.fillStyle = '#7A7560'; c.beginPath(); c.arc(536 + Math.cos(a) * R * .8, 536 + Math.sin(a) * R * .8, 6, 0, TAU); c.fill(); }
+  trefoil(540, 540, R * .58);
+}
+function bunkerB() {
+  smog();
+  const cx = 540, r = 230, ry = 26, top = 330, NL = 5, LH = 82;
+  // surface + ruins
+  c.fillStyle = '#1C140D'; for (let i = 0; i < 10; i++) { const x = 120 + i * 90 + hash(i) * 30, h = 40 + hash(i * 3) * 90; c.fillRect(x, 250 - h, 40 + hash(i * 5) * 40, h); }
+  const eg = c.createLinearGradient(0, 250, 0, 1080); eg.addColorStop(0, '#2C2A1C'); eg.addColorStop(1, '#0E0E09'); c.fillStyle = eg; c.fillRect(0, 250, 1080, 830);
+  c.fillStyle = '#6E5A3A'; c.fillRect(0, 248, 1080, 5);
+  c.fillStyle = P.shade; c.fillRect(cx - 16, 250, 32, top - 250);
+  // drum
+  c.fillStyle = P.shade; c.fillRect(cx - r - 22, top, 2 * r + 44, NL * LH + 20); c.fillStyle = P.concrete; c.beginPath(); c.ellipse(cx, top, r + 22, ry + 6, 0, 0, TAU); c.fill();
+  c.fillStyle = '#12150D'; c.fillRect(cx - r, top + ry, 2 * r, NL * LH - ry);
+  for (let k = 0; k < NL; k++) {
+    const yF = top + (k + 1) * LH;
+    for (let row = 0; row < 3; row++) for (let a = 0; a < 16; a++) {
+      const a0 = -1.35 + a * 2.7 / 16, a1 = a0 + 2.7 / 16 - .03, x0 = cx + r * Math.sin(a0), x1 = cx + r * Math.sin(a1), y = yF - ry * Math.cos((a0 + a1) / 2) - 10 - row * 16;
+      c.fillStyle = hash(k * 99 + row * 16 + a) < .55 ? '#FFD27A' : '#C9A35A'; c.fillRect(x0, y - 11, x1 - x0, 11);
+    }
+    c.fillStyle = P.concrete; c.beginPath(); c.ellipse(cx, yF, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, yF + 10); c.ellipse(cx, yF + 10, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
+  }
+  glow(cx, top + NL * LH / 2, 330, 'rgba(255,200,110,.35)');
+  // footing + hazard stripe, then B8 below
+  const fy = top + NL * LH + 24; c.fillStyle = P.concrete; c.fillRect(cx - r - 60, fy, 2 * r + 120, 22);
+  c.save(); c.beginPath(); c.rect(cx - r - 60, fy + 22, 2 * r + 120, 14); c.clip(); c.fillStyle = '#1A1810'; c.fillRect(0, fy + 22, 1080, 14); c.fillStyle = P.amber; for (let x = cx - r - 80; x < cx + r + 80; x += 22) { c.beginPath(); c.moveTo(x, fy + 36); c.lineTo(x + 11, fy + 36); c.lineTo(x + 25, fy + 22); c.lineTo(x + 14, fy + 22); c.fill(); } c.restore();
+  const b8 = fy + 60; c.fillStyle = '#4A4636'; c.fillRect(cx - r - 22, b8, 2 * r + 44, 92); c.fillStyle = '#0A0807'; c.fillRect(cx - r, b8 + 10, 2 * r, 76);
+  glow(cx + 70, b8 + 52, 150, 'rgba(255,30,30,.9)'); c.fillStyle = P.red; c.fillRect(cx + 52, b8 + 42, 36, 20);
+}
+function door000() {
+  smog();
+  c.fillStyle = 'rgba(10,8,6,.55)'; c.fillRect(0, 0, 1080, 1080);
+  const cg = c.createLinearGradient(0, 0, 0, 1080); cg.addColorStop(0, '#2E2B22'); cg.addColorStop(1, '#1A1812'); c.fillStyle = cg; c.beginPath(); c.arc(540, 540, 470, 0, TAU); c.fill();
+  c.strokeStyle = 'rgba(120,100,80,.35)'; c.lineWidth = 3; for (let k = 0; k < 30; k++) { const x = 160 + hash(k * 7.3) * 760, y = 200 + hash(k * 3.9) * 680; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 10 + hash(k) * 16, y + 30 + hash(k * 2) * 30); c.stroke(); }
+  glow(540, 590, 420, 'rgba(255,30,30,.55)');
+  c.fillStyle = '#86826A'; c.fillRect(380, 360, 320, 470); c.fillStyle = '#5E5A48'; c.fillRect(404, 384, 272, 422);
+  const dg = c.createRadialGradient(540, 590, 20, 540, 600, 300); dg.addColorStop(0, '#FF8A8A'); dg.addColorStop(1, '#C81010'); c.fillStyle = dg; c.fillRect(420, 400, 240, 390);
+  c.fillStyle = '#C3CAD6'; c.fillRect(392, 570, 296, 54); c.fillStyle = '#E8EDF4'; c.fillRect(392, 570, 296, 14); c.fillStyle = '#E02020'; c.fillRect(430, 582, 30, 30);
+  c.font = '150px Anton'; c.textAlign = 'center'; c.fillStyle = '#FF3B3B'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 30; c.fillText('000', 540, 330); c.shadowBlur = 0;
+}
+window.DUR = 1;
+window.render = () => { c.setTransform(S, 0, 0, S, 0, 0); c.clearRect(0, 0, 1080, 1080); ({ a: doorA, b: bunkerB, c: door000 })[V](); };
+await document.fonts.load('80px Anton');
+window.READY = true;
+</script></body></html>
