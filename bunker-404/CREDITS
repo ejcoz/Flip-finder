@@ -1,0 +1,10 @@
+Bunker 404 — credits and licences
+
+Picture, music and sound effects: generated in code for this film (index.html, mix.py). No samples, stock footage or images.
+Design: based on the user's own thumbnail (100,000 EMPTY BUNKS / DO NOT PICK 404).
+Voice: Kokoro TTS v1.0 (voice am_michael), Apache-2.0 — https://github.com/thewh1teagle/kokoro-onnx ; https://huggingface.co/hexgrad/Kokoro-82M
+Voice check: faster-whisper (MIT) with OpenAI Whisper base.en (MIT).
+Font: Anton by Vernon Adams, SIL Open Font License 1.1 — https://fonts.google.com/specimen/Anton (fonts/Anton-Regular.ttf)
+Emoji: Noto Color Emoji (system font), SIL Open Font License 1.1.
+Tools: Lemo-Opuscar core render/mix tools, MIT licence — https://github.com/lemomo-ai/lemo-opuscar
+The handle on screen (@YOUR_NAME) is a placeholder.

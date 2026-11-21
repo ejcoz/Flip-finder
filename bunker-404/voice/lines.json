@@ -1,0 +1,59 @@
+[
+ {
+  "id": "l01",
+  "text": "One hundred thousand empty bunks.",
+  "voice": "am_michael",
+  "speed": 1.0,
+  "asr": "100,000 empty bunks."
+ },
+ {
+  "id": "l02",
+  "text": "Hidden deep underground, waiting for the day everything ends.",
+  "voice": "am_michael",
+  "speed": 1.05
+ },
+ {
+  "id": "l03",
+  "text": "Every bunk has a number. Comment yours, and it's reserved under your name.",
+  "voice": "am_michael",
+  "speed": 1.08
+ },
+ {
+  "id": "l04",
+  "text": "Right now, not a single one is taken.",
+  "voice": "am_michael",
+  "speed": 1.05
+ },
+ {
+  "id": "l05",
+  "text": "All but one.",
+  "voice": "am_michael",
+  "speed": 0.95
+ },
+ {
+  "id": "l06",
+  "text": "Bunk four oh four.",
+  "voice": "am_michael",
+  "speed": 0.95,
+  "asr": "Bunk 404"
+ },
+ {
+  "id": "l07",
+  "text": "It was sealed before we ever opened the bunker. And when we knocked, something knocked back.",
+  "voice": "am_michael",
+  "speed": 1.0
+ },
+ {
+  "id": "l08",
+  "text": "So comment your bunk number below.",
+  "voice": "am_michael",
+  "speed": 1.05
+ },
+ {
+  "id": "l09",
+  "text": "Just don't pick four oh four.",
+  "voice": "am_michael",
+  "speed": 0.95,
+  "asr": "Just don't pick 404."
+ }
+]
