@@ -214,7 +214,8 @@ function captionLayer(t) {
   if (t >= END || !L || L === L1) { A.hookCaption(HOOK, 'BUTT'); return; }   // the hook is whole from frame 1 and returns for the loop
   const shown = L.text.slice(0, L.wt.filter(w => w <= t + .02).length);
   const lead = shown.slice(0, L.lead).join(' '), key = shown.length > L.lead ? L.text.slice(L.lead, L.lead + L.key).join(' ') : '', follow = shown.slice(L.lead + L.key).join(' ');
-  A.caption(lead, key, follow, L.kind, (t - L.wt[L.lead]) / .22, false);
+  const nc = s => s.replace(/,/g, '');   // no commas on screen (the user's call: they look out of place); subtitles keep them
+  A.caption(nc(lead), nc(key), nc(follow), L.kind, (t - L.wt[L.lead]) / .22, false);
 }
 function ctaLayer(t) {   // the one call to action (IG/TikTok cut): a big SEND THIS button with a paper plane
   if (!L8) return; const [a, b] = CTA(); if (t < a || t > b) return;
