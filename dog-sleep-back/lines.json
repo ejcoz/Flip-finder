@@ -1,0 +1,43 @@
+[
+ {
+  "id": "l01",
+  "text": "Why does your dog sleep with its butt facing you?",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l02",
+  "text": "You'd think it's rude. Or that your dog is gassy.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l03",
+  "text": "Vets say it may be the opposite.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l04",
+  "text": "Turning its back to you may signal trust.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l05",
+  "text": "In packs, dogs may sleep back-to-back so someone's always watching.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l06",
+  "text": "A UK study found over eighty-six percent of dogs near people at night chose to be close.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)",
+  "asr": "A UK study found over 86% of dogs near people at night chose to be close."
+ },
+ {
+  "id": "l07",
+  "text": "So that butt may be saying: I feel safe with you.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ },
+ {
+  "id": "l08",
+  "text": "Send this to someone whose dog gives them the butt every night.",
+  "voice": "user recording (voice_src/butt-dog-narration.mp3)"
+ }
+]
