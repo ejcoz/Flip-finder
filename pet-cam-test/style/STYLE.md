@@ -85,7 +85,8 @@ A locked camera inside each scene; the film moves by changing scenes (whip-pan w
 
 ## 7. Sound palette
 
-- **Narrator voice**: calm, curious, clear (generated with Kokoro by default; the user's recordings swap in). Checked line by line with whisper; word timestamps drive the captions.
+- **Narrator voice**: calm, curious, clear. The user records it (ElevenLabs) and sends one file; Kokoro only for a stand-in while waiting. Checked line by line with whisper; word timestamps drive the captions.
+- **The audio file wins over the script.** Captions, subtitles, `lines.json` and `FACTS.md` follow what the recording actually says. Mention a difference, but don't ask for a re-record unless the spoken words change a fact.
 - **Underscore**: soft and curious (plucked strings, warm pads, light percussion), ducked ~10 dB under the voice.
 - **Foley**: a whoosh on every card cut, a soft tick per checklist item, a gentle stinger on the answer, small cartoon sounds for the pet (a sniff, a tag jingle).
 - Master −14 LUFS.
@@ -108,7 +109,7 @@ The CAM-feed card is in every film; the others are a menu.
 - Caption words off the voice → captions come from the voice's word timestamps.
 - Text under the platform UI → keep to the safe area.
 - A tag that names what is already obvious (`YAWN` on a yawn) → cut it; label only what needs explaining.
-- Unsourced pet-health claims → every claim in `FACTS.md` with its source; prefer vets, veterinary schools and peer-reviewed studies.
+- Unsourced pet-health claims → every claim in `FACTS.md` with its source, labelled [STUDY], [VET] or [PET SITE]. **This is entertainment, not a scientific course:** a popular explanation from pet-care or vet-quoted articles is fine when it's hedged ("may") and logged in `FACTS.md`. Numbers and "a study found" lines need the actual study. Never state something false (e.g. a human figure presented as a dog figure).
 - Copying the reference characters (breeds, markings, poses) → original pets with their own marking.
 
 ## 10. Engine
