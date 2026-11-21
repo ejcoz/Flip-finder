@@ -239,6 +239,29 @@ const LEVELS=[
   "Bed 0 isn't on the list. It never was.",
   "Pick another bed. That one already answered.",
   "The hatch stays welded. Bed 0 stays taken."]},
+ {id:"items",lv:"",name:"Personal items",range:"one each",note:"Soccer ball first, then anything else they want to bring.",r:[
+  "Soccer ball approved. B4 commons has the only open floor. Kickoff after curfew.",
+  "Bring the ball. We'll paint goals on the B4 walls.",
+  "Approved. Just don't kick it down the stairwell. Nobody's going to fetch it from B7.",
+  "Soccer ball logged. First bunker match: B6 vs the garden.",
+  "Approved. If it rolls toward the hatch, let it go.",
+  "Ball approved. Keep it pumped. We've only got one pump.",
+  "Logged. One soccer ball. B4 is officially the stadium now.",
+  "Approved. One personal item per survivor. Choose well.",
+  "Item logged. It goes in the locker at the foot of your bunk.",
+  "Approved. Label it. Things go missing down here.",
+  "Bring it. Anything that reminds you of the surface helps.",
+  "Logged. Decontamination on B1 first. Then it's yours again.",
+  "Approved. If it needs batteries, bring your own.",
+  "Guitar approved. Play quietly after 22:00. Some floors are listening.",
+  "Phone approved. No signal. But the photos still work.",
+  "Games console approved. Engineering on B7 will want a turn on the generator.",
+  "Approved. Books go to the B4 library when you're done.",
+  "Teddy bear approved. More survivors brought one than you'd think.",
+  "Logged. Weapons stay on B6. Everything else, keep it close.",
+  "Approved. Snacks get shared. Bunker rule.",
+  "Item approved. Don't leave it near the stairs to B7. Things move at night.",
+  "Logged. Tag who you'd trust to look after it."]},
  {id:"pets",lv:"",name:"Pets",range:"approved",note:"Dogs, cats and anything else they want to bring.",r:[
   "Approved. Dogs are allowed. They hear things before we do.",
   "The dog can come. Your floor has a new night watch now.",
@@ -343,7 +366,7 @@ for(const L of LEVELS.filter(l=>l.lv)){
   c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(L.id).scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});
   chips.appendChild(c);
 }
-for(const [id,label] of [["pets","Pets"],["brave","Brave"],["qs","Questions"],["fix","Fixes"],["tag","Tags"]]){
+for(const [id,label] of [["items","Items"],["pets","Pets"],["brave","Brave"],["qs","Questions"],["fix","Fixes"],["tag","Tags"]]){
   const c=document.createElement("button");c.type="button";c.className="chip";c.textContent=label;
   c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(id).scrollIntoView()});
   chips.appendChild(c);
