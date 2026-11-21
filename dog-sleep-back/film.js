@@ -61,6 +61,7 @@ function build({ dur, words, off, script }) {
   EV.push({ t: L1.wt[7], type: 'pop' }, { t: L2.wt[4], type: 'pop' }, { t: L2.wt[10], type: 'puff' }, { t: STRIKE(), type: 'strike' });
   EV.push({ t: L4.wt[6], type: 'pop' }, { t: L5.wt[6], type: 'tick' }, { t: L5.wt[8], type: 'tick' }, { t: L5.wt[4], type: 'pop' });
   for (let i = 0; i < 19; i += 3) EV.push({ t: HOP() + i * .045, type: 'tick' });
+  EV.push({ t: L6.wt[1], type: 'tick' }, { t: L6.wt[5], type: 'pop' }, { t: L6.wt[8] + .1, type: 'tick' });
   EV.push({ t: L7.wt[8], type: 'chime' });
   if (L8) EV.push({ t: CTA()[0], type: 'pop' });
   EV.push({ t: END, type: 'loop' });
@@ -152,12 +153,22 @@ const ICONS = Array.from({ length: 22 }, (_, i) => {
   return { fx: 110 + (i % 5) * 92 + (Math.floor(i / 5) % 2) * 40, fy: 1440 + Math.floor(i / 5) * 70, tx: 590 + c * 62 + (r % 2) * 31, ty: 1430 + r * 64 };
 });
 function night(g, t) {
-  A.bedroom(t, ease((t - L6.wt[8]) / .5));
+  // something changes about every 1–1.5 s, all tied to words, no extra text:
+  // "UK study": a slow push toward the bed starts and dogs turn their heads to it · "86%": the 19 that will go light up
+  // "near people": the bed glows and the sleeper stirs · "chose to be close": the lit dogs hop over
+  const z = 1 + .08 * ease((t - L6.wt[1]) / 3.2), fx = 760, fy = 1320;
+  g.setTransform(z, 0, 0, z, fx - fx * z, fy - fy * z);
+  A.bedroom(t, ease((t - L6.wt[8]) / .5), bump(t, L6.wt[8] + .1, .9));
+  const lit = ease((t - L6.wt[5]) / .5);
   ICONS.forEach((ic, i) => {
     const goes = i < 19, k = goes ? ease((t - HOP() - i * .045) / .45) : 0;
     const x = ic.fx + (ic.tx - ic.fx) * k, y = ic.fy + (ic.ty - ic.fy) * k - Math.sin(k * Math.PI) * 120;
-    A.dogIcon(x, y, 1.7, { col: k >= 1 ? '#F1E4CF' : '#B8AC98' });
+    const look = goes ? .28 * ease((t - L6.wt[1] - (i % 6) * .08) / .3) * (1 - k) : 0;   // heads turn toward the bed
+    if (goes && lit > 0 && k < 1) { const gl = g.createRadialGradient(x, y, 4, x, y, 46); gl.addColorStop(0, `rgba(255,201,77,${.35 * lit})`); gl.addColorStop(1, 'rgba(255,201,77,0)'); g.fillStyle = gl; g.fillRect(x - 46, y - 46, 92, 92); }
+    const col = !goes ? (lit > 0 ? '#8E8478' : '#B8AC98') : (k >= 1 || lit > .5 ? '#F1E4CF' : '#B8AC98');
+    A.dogIcon(x, y, 1.7 * (goes ? 1 + .1 * bump(t, L6.wt[5] + (i % 7) * .03, .35) : 1), { col, tilt: look });
   });
+  g.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function drawScene(name, g, t, lt) {

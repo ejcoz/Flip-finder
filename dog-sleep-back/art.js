@@ -522,7 +522,7 @@ export function forestNight(t) {
   grass(1350, 1460, 80, '#1E3A26', 9, Math.sin(t));
 }
 // a night bedroom: a person asleep in bed on the right
-export function bedroom(t, glowK = 0) {
+export function bedroom(t, glowK = 0, stir = 0) {   // stir 0..1: the sleeper shifts and settles, smiling
   const wall = g.createLinearGradient(0, 0, 0, 1300); wall.addColorStop(0, '#0E1530'); wall.addColorStop(1, '#1C2446'); g.fillStyle = wall; g.fillRect(0, 0, W, H);
   g.fillStyle = '#0A1022'; g.beginPath(); g.roundRect(110, 600, 280, 340, 16); g.fill();
   g.fillStyle = 'rgba(220,230,255,.25)'; ell(300, 700, 34, 34); g.fill(); g.fillStyle = '#2A3358'; g.fillRect(244, 600, 10, 340); g.fillRect(110, 766, 280, 10);
@@ -533,7 +533,7 @@ export function bedroom(t, glowK = 0) {
   g.fillStyle = '#3A2E50'; g.beginPath(); g.roundRect(560, 980, 520, 120, 20); g.fill();   // headboard
   g.fillStyle = shade(1080, 1420, ['#5E6EA0', '#45548A', '#2E3A66']); g.beginPath(); g.roundRect(560, 1080, 560, 300, 30); g.fill();   // mattress + duvet
   g.fillStyle = '#EDE6F5'; g.beginPath(); g.roundRect(600, 1060, 200, 70, 30); g.fill();   // pillow
-  ownerFace(700, 1070, 52, { blink: 1 });                                                  // asleep
+  g.save(); g.translate(700 + 10 * stir, 1070 - 4 * stir); g.rotate(.14 * stir); ownerFace(0, 0, 52, { blink: 1 }); g.restore();   // asleep; stirs on "near people"
   g.fillStyle = shade(1100, 1380, ['#7E8EC4', '#62729E', '#46547E']); g.beginPath(); g.moveTo(640, 1120); g.bezierCurveTo(800, 1090, 1000, 1100, 1100, 1130); g.lineTo(1100, 1380); g.lineTo(560, 1380); g.lineTo(560, 1140); g.closePath(); g.fill();
   // "z"s
   g.fillStyle = 'rgba(201,210,232,.55)'; g.font = '700 40px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle';
