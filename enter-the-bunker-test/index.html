@@ -17,12 +17,12 @@ const [corC, corX] = mk(W, H), [corGC, corG] = mk(W * G, H * G);
 const [tmpC, tmpX] = mk(W * G, H * G);
 
 const TL = await (await fetch('timeline.json')).json();
-window.DUR = TL.DUR;
+window.DUR = new URLSearchParams(location.search).has('story') ? 12 : TL.DUR;
 const L = Object.fromEntries(TL.lines.map(l => [l.id, l]));
 const wt = (id, word) => { const w = L[id].w.find(x => x[0].toLowerCase().startsWith(word.toLowerCase())); return w ? w[1] : L[id].t; };
 const lineEnd = id => L[id].t + L[id].d;
 
-const CYL = new URLSearchParams(location.search).get('shape') !== 'box', COVER = new URLSearchParams(location.search).has('cover');
+const CYL = new URLSearchParams(location.search).get('shape') !== 'box', COVER = new URLSearchParams(location.search).has('cover'), STORY = new URLSearchParams(location.search).has('story');
 // ---------- palette ----------
 const P = {
   sky0: '#140E0A', sky1: '#5A3417', shell: '#A9A48C', shellS: '#6C6855', inner: '#1C2016', cell: '#2E3625', slab: '#12140D',
@@ -115,6 +115,7 @@ const D1 = { ...(() => { const c = cellCenter(DIVE1); return { x: c[0], y: c[1] 
 const D2 = { ...(() => { const c = cellCenter(DIVE2); return { x: c[0], y: c[1] }; })(), z: 290, r: 0 };
 const breathe = t => ({ dr: Math.sin(t * .45) * .012, dy: Math.sin(t * .7) * 6 });
 function camAt(t) {
+  if (STORY) { const u = ss(seg(t, 0, 12)); return { x: 540, y: lerp(1090, 1120, u), z: lerp(.84, .93, u), r: Math.sin(t * .35) * .008 }; }
   const b = breathe(t);
   const wide = (r) => ({ x: WIDE.x, y: WIDE.y + b.dy, z: WIDE.z, r: r + b.dr });
   if (t < T.pullEnd) { const u = eio(seg(t, .08, T.pullEnd)); return mixCam(ECU, wide(-.035), u, u); }
@@ -169,6 +170,12 @@ function state(t) {
   S.sixTag = ss(seg(t, T.beside - .05, T.beside + .35)) * (1 - ss(seg(t, T.push0, T.push0 + .6)));
   S.yours = seg(t, T.follow - .05, T.follow + .5) * (1 - ss(seg(t, T.push0 + .4, T.end - .4)));
   S.doorPing = t > T.doorPing && t < T.doorPing + 1.6 ? 1 - seg(t, T.doorPing, T.doorPing + 1.6) : 0;
+  if (STORY) {
+    const g = t > 7.1 && t < 7.95;
+    Object.assign(S, { lights: .12, air: 0, door: 0, world: 0, redTint: 0, sweep: 0, yours: 0, doorPing: 0, sixTag: 0,
+      pantry: 1, gens: 1, six: 1, power: g ? (Math.sin(t * 61) > .2 ? .35 : .9) : 1,
+      b8: g ? (Math.sin(t * 47) > -.3 ? 1.9 : .3) : 1 + .25 * Math.sin(t * 2.2) });
+  }
   return S;
 }
 function counterAt(t) {
@@ -463,7 +470,7 @@ function drawCutaway(t, cam, S) {
     glowDot(g, x, y, 46 * a, 'rgba(255,220,120,1)', pul); c.fillStyle = '#FFF2C4'; c.beginPath(); c.arc(x, y, 10 * a, 0, TAU); c.fill();
   }
   // counter plate (world-attached)
-  const K = COVER ? { show: 0 } : counterAt(t);
+  const K = (COVER || STORY) ? { show: 0 } : counterAt(t);
   if (K.show > 0.01) {
     c.save(); c.translate(540, 1395); c.scale(K.show * (1 + K.pop * .08), K.show * (1 + K.pop * .08));
     c.font = '700 44px Fredoka'; const w = Math.max(220, c.measureText(K.txt).width + 56);
@@ -742,6 +749,7 @@ window.render = (t) => {
     }
   }
   atmosphere(t, cor && full);
+  if (STORY) { storyOverlay(t); return; }
   if (COVER) return;
   if (!full) labels.forEach(f => f());
   commentCard(t);
@@ -750,6 +758,21 @@ window.render = (t) => {
   // loop seam: a 2-frame dip at the very end
   if (t > T.end - .07) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 0, W, H); }
 };
+function storyOverlay(t) {
+  const glitch = t > 7.1 && t < 7.95, jit = glitch ? (Math.sin(t * 97) * 10) : 0, in1 = back(seg(t, .1, .5)), in2 = back(seg(t, .35, .75)), twist = ss(seg(t, 8.1, 8.7));
+  const line = (txt, y, size, fill, opt = {}) => { ctx.save(); ctx.globalAlpha = opt.a ?? 1; ctx.translate(540 + (opt.dx || 0), y); if (opt.s) ctx.scale(opt.s, opt.s); ctx.font = `${size}px Anton`; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+    ctx.lineWidth = Math.max(8, size * .06); ctx.strokeStyle = 'rgba(0,0,0,.88)'; ctx.strokeText(txt, 0, 0); if (opt.glow) { ctx.shadowColor = opt.glow; ctx.shadowBlur = 30 } ctx.fillStyle = fill; ctx.fillText(txt, 0, 0); ctx.restore(); };
+  const tg = ctx.createLinearGradient(0, 0, 0, 820); tg.addColorStop(0, 'rgba(8,6,4,.85)'); tg.addColorStop(1, 'rgba(8,6,4,0)'); ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 820);
+  const bgr = ctx.createLinearGradient(0, 1560, 0, H); bgr.addColorStop(0, 'rgba(8,6,4,0)'); bgr.addColorStop(1, 'rgba(8,6,4,.9)'); ctx.fillStyle = bgr; ctx.fillRect(0, 1560, W, H - 1560);
+  line('JOIN THE BUNKER · TRANSMISSION', 262, 36, '#F2C230', { a: Math.min(1, in1 * 2) });
+  const n = glitch && !(t > 7.32 && t < 7.4) && !(t > 7.62 && t < 7.67) ? '101' : '100';
+  line(n, 545, 250, n === '101' ? '#FF3B3B' : '#F5A82A', { s: lerp(1.4, 1, Math.min(1, in1)) * (in1 > 1 ? in1 : 1), a: Math.min(1, in1 * 2), dx: jit, glow: n === '101' ? 'rgba(255,40,40,.8)' : 'rgba(245,168,42,.5)' });
+  line('SURVIVORS INSIDE', 640, 90, '#FFFFFF', { a: Math.min(1, in2 * 2), dx: jit * .5 });
+  line(n + ' / 100,000', 700, 48, n === '101' ? '#FF3B3B' : '#F2C230', { a: Math.min(1, in2 * 2) });
+  line('THE DOOR IS STILL OPEN.', 1660, 64, '#FFFFFF', { a: ss(seg(t, 1.2, 1.8)) });
+  if (twist > 0) line('…but the counter on B8 says 101.', 1728, 42, '#FF3B3B', { a: twist, glow: 'rgba(255,40,40,.7)' });
+  if (glitch) { ctx.save(); ctx.globalAlpha = .18; for (let k = 0; k < 14; k++) { const y = (hash(Math.floor(t * 30) + k * 7.7) * H) | 0; ctx.fillStyle = k % 2 ? '#FF3B3B' : '#FFFFFF'; ctx.fillRect(0, y, W, 2 + (hash(k + t) * 8 | 0)); } ctx.restore(); }
+}
 function atmosphere(t, inside) {
   // warm smog vignette
   const vg = ctx.createRadialGradient(W / 2, H * .55, H * .25, W / 2, H * .55, H * .8); vg.addColorStop(0, 'rgba(40,25,10,0)'); vg.addColorStop(1, inside ? 'rgba(10,8,4,.55)' : 'rgba(30,18,6,.6)');
