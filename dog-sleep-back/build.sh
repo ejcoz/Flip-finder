@@ -3,7 +3,7 @@
 #   sh build.sh  → dog-sleep-back.mp4 (Instagram/TikTok, 8 lines) + subtitles_en.srt
 #                  dog-sleep-back-yt.mp4 (YouTube Shorts, ends after line 7) + subtitles_en_yt.srt
 #                  poster.jpg (frame 1)                                    work files in out/
-# Voice: the user's recording voice_src/butt-dog-narration.mp3, cut into voice/l01–l08.wav at its own pauses;
+# Voice: the user's recording voice_src/butt-dog-narration.mp3, cut into voice/l01–l08.wav at its own pauses (re-takes: voice_src/line-2.mp3, line-3.mp3);
 #        voice/offsets.json = where each line starts in the recording. After replacing a clip, refresh the word timings:
 #        HF_HUB_DISABLE_XET=1 $LIB/.venv/bin/python $LIB/core/tts/asr_check.py lines.json voice --lang en
 set -e

@@ -10,8 +10,8 @@ if (Q.get('cover')) window.COVER = true;   // ?cover=1: the scene only, no text 
 // ---------- the script: caption cut (word counts) + the scene each line plays in ----------
 const ALL = [
   { id: 'l01', lead: 0, key: 0, kind: 'ask', scene: 'home' },
-  { id: 'l02', lead: 0, key: 4, kind: 'bad', scene: 'home' },
-  { id: 'l03', lead: 4, key: 3, kind: 'good', scene: 'home' },
+  { id: 'l02', lead: 0, key: 5, kind: 'bad', scene: 'home' },
+  { id: 'l03', lead: 5, key: 3, kind: 'good', scene: 'home' },
   { id: 'l04', lead: 6, key: 2, kind: 'good', scene: 'home' },
   { id: 'l05', lead: 5, key: 1, kind: 'fact', scene: 'wild' },
   { id: 'l06', lead: 5, key: 1, kind: 'fact', scene: 'night', display: 'A UK study found over 86% of dogs near people at night chose to be close.' },
@@ -21,7 +21,7 @@ const ALL = [
 const LINES = CUT === 'yt' ? ALL.slice(0, 7) : ALL;
 const HOOK = [['Why does your', 112], ['dog sleep with its', 112], ['BUTT', 240], ['facing you?', 112]];
 const TAIL = CUT === 'yt' ? 1.3 : 1.1, LOOP = 0.6, WHIP = .4;
-const STEPS = [['TRUST', 3], ['PACK', 4], ['86% CLOSE', 5]];
+const STEPS = [['TRUST', 3], ['PACK', 4], ['CLOSE', 5]];
 const BRAND = '@pupexplained';
 
 const cv = document.getElementById('c'), out = cv.getContext('2d');
@@ -58,9 +58,8 @@ function build({ dur, words, off, script }) {
   LINES.forEach(L => { EV.push({ t: L.t0, type: 'vo', id: L.id }); if (L !== L1) EV.push({ t: L.wt[L.lead], type: 'cap', kind: L.kind }); });
   SHOTS.slice(1).forEach(s => EV.push({ t: s.t0 - WHIP / 2, type: 'whoosh' }));
   STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
-  EV.push({ t: L1.wt[7], type: 'pop' }, { t: L2.wt[3], type: 'pop' }, { t: L2.wt[9], type: 'puff' }, { t: STRIKE(), type: 'strike' });
-  EV.push({ t: L4.wt[6], type: 'pop' }, { t: L5.wt[6], type: 'tick' }, { t: L5.wt[8], type: 'tick' }, { t: L5.wt[9], type: 'pop' });
-  EV.push({ t: L6.wt[1], type: 'pop' }, { t: L6.wt[5], type: 'pop' });
+  EV.push({ t: L1.wt[7], type: 'pop' }, { t: L2.wt[4], type: 'pop' }, { t: L2.wt[10], type: 'puff' }, { t: STRIKE(), type: 'strike' });
+  EV.push({ t: L4.wt[6], type: 'pop' }, { t: L5.wt[6], type: 'tick' }, { t: L5.wt[8], type: 'tick' }, { t: L5.wt[4], type: 'pop' });
   for (let i = 0; i < 19; i += 3) EV.push({ t: HOP() + i * .045, type: 'tick' });
   EV.push({ t: L7.wt[8], type: 'chime' });
   if (L8) EV.push({ t: CTA()[0], type: 'pop' });
@@ -88,7 +87,7 @@ const toScreen = (x, y) => [x * CAM[0] + CAM[1], y * CAM[0] + CAM[2]];
 function homeCam(t) {
   const K = [[0, ...F1], [.9, F1[0] * 1.05, F1[1] + 20, F1[2] + 30],                 // a slow push while the question lands
     [L2.t0 + .05, F1[0] * 1.05, F1[1] + 20, F1[2] + 30], [L2.t0 + .75, 1, 540, 960], // pull back to the whole couch
-    [L2.wt[8], 1, 540, 960], [L2.wt[9] + .3, 1.12, 600, 1420],                        // nudge in on the butt for "gassy"
+    [L2.wt[9], 1, 540, 960], [L2.wt[10] + .3, 1.12, 600, 1420],                        // nudge in on the butt for "gassy"
     [L3.t0 + .1, 1.12, 600, 1420], [L3.t0 + .7, 1.18, 800, 1150],                    // toward the face: "the opposite"
     [L4.t0, 1.18, 800, 1150], [L4.t0 + .8, 1.3, 646, 1350],                          // into the contact point: trust
     [L4.t1 + .5, 1.3, 646, 1350]];
@@ -98,7 +97,7 @@ function homeCam(t) {
   return keyed([[L7.t0 - .2, 1, 540, 960], [L7.wt[6], 1.06, 640, 1080], [land, ...F1], [END + 5, ...F1]], t);
 }
 function handPos(t) {   // [x, y, angle, visible 0..1]
-  const fanT = L2.wt[9] - .15, pat3 = [L3.t0 + .25, L3.t1 + .4], pat7 = [L7.t0 + .1, L7.wt[8] + .2];
+  const fanT = L2.wt[10] - .15, pat3 = [L3.t0 + .25, L3.t1 + .4], pat7 = [L7.t0 + .1, L7.wt[8] + .2];
   if (t > fanT - .3 && t < fanT + 1.3) { const k = Math.min(ease((t - fanT + .3) / .3), ease((fanT + 1.3 - t) / .3)); return [200 + 40 * Math.sin(t * 16), 1380 + (1 - k) * 700, .35 + .35 * Math.sin(t * 16), k]; }
   for (const [a, b] of [pat3, pat7]) if (t > a - .3 && t < b + .3) { const k = Math.min(ease((t - a + .3) / .3), ease((b + .3 - t) / .3)); return [720, 1320 + 26 * Math.abs(Math.sin((t - a) * 6)) + (1 - k) * 700, .25, k]; }
   return null;
@@ -107,12 +106,12 @@ function home(g, t) {
   A.couchPOV(t);
   A.legsPOV();
   // the dog: looks back over its shoulder; turns away on "gassy", back toward you on "the opposite", eyes close happily on "safe"
-  const turn = t > L2.wt[8] && t < L3.t0 + .2 ? 1 - .55 * Math.min(ease((t - L2.wt[8]) / .25), ease((L3.t0 + .2 - t) / .3)) : 1;
+  const turn = t > L2.wt[9] && t < L3.t0 + .2 ? 1 - .55 * Math.min(ease((t - L2.wt[9]) / .25), ease((L3.t0 + .2 - t) / .3)) : 1;
   const happy = L7 && t > L7.wt[8] - .1 && t < L7.wt[8] + 1.3 ? Math.min(ease((t - L7.wt[8] + .1) / .2), ease((L7.wt[8] + 1.3 - t) / .3)) : 0;
   const pats = handPos(t) && t > L2.t1 ? 1 : 0;
   A.rearDog(RUMP[0], RUMP[1], {
     turn, blink: Math.max(blinkAt(t), happy), breath: breathAt(t),
-    brow: .5 + .9 * bump(t, L3.wt[5], 1.1) + .6 * happy,
+    brow: .5 + .9 * bump(t, L3.wt[6], 1.1) + .6 * happy,
     perk: Math.max(bump(t, L1.wt[7], .5), bump(t, L4.wt[6], .5), bump(t, L8 ? L8.t0 + .4 : 1e9, .5)),
     wag: (pats || (L8 && t > L8.t0)) ? Math.sin(t * 11) * .3 : Math.sin(t * 3) * .06,
   });
@@ -120,7 +119,7 @@ function home(g, t) {
   const gk = L4 ? Math.min(ease((t - L4.wt[5]) / .3), ease((L5.t0 - .2 - t) / .3)) : 0;
   if (gk > 0) { const p = .8 + .2 * Math.sin(t * 6), gr = g.createRadialGradient(...CONTACT, 10, ...CONTACT, 170); gr.addColorStop(0, `rgba(61,220,151,${.55 * gk * p})`); gr.addColorStop(1, 'rgba(61,220,151,0)'); g.fillStyle = gr; g.fillRect(CONTACT[0] - 200, CONTACT[1] - 200, 400, 400); }
   // gas puffs on "gassy"
-  for (const d of [0, .22, .45]) A.puff(RUMP[0] + (d - .22) * 260, RUMP[1] - 40, (t - L2.wt[9] - d) / 1.1);
+  for (const d of [0, .22, .45]) A.puff(RUMP[0] + (d - .22) * 260, RUMP[1] - 40, (t - L2.wt[10] - d) / 1.1);
   const hp = handPos(t); if (hp) A.ownerHand(hp[0], hp[1], { a: hp[2] });
   // the heart on "safe"
   if (L7 && t > L7.wt[8] && t < L7.t1 + .6) { const k = back((t - L7.wt[8]) / .35), f = 1 - ease((t - L7.t1) / .6); g.save(); g.globalAlpha = f; g.translate(HEAD[0] - 120, HEAD[1] - 110 - 40 * clamp(t - L7.wt[8])); g.scale(k * 1.6, k * 1.6); g.fillStyle = ACC.bad; g.beginPath(); g.moveTo(0, 14); g.bezierCurveTo(-28, -6, -18, -28, 0, -14); g.bezierCurveTo(18, -28, 28, -6, 0, 14); g.fill(); g.restore(); }
@@ -143,27 +142,22 @@ function wild(g, t, lt) {
   g.save(); g.translate(LX, gy); g.scale(s, s); A.sphinxDog(0, 0, -1, { eye: Math.max(eL, both * .9), breath: breathAt(t), earTwitch: bump(t, L5.wt[4], .4) }); g.restore();
   g.save(); g.translate(RX, gy); g.scale(s, s); A.sphinxDog(0, 0, 1, { eye: Math.max(eR, both), breath: breathAt(t + 1.3), earTwitch: bump(t, L5.wt[2], .4), coat: ['#D9C3A4', '#A88A64', '#735C40'], dark: ['#7E654A', '#5C4834', '#3E3022'] }); g.restore();   // a warmer coat, so the two read as two
   g.restore();
-  if (t > L5.wt[9]) { const k = back((t - L5.wt[9]) / .3); g.save(); g.translate(490, 800); g.scale(k, k); A.pill('360° COVERED', 0, 0, ACC.fact, 30); g.restore(); }
+  if (t > L5.wt[4]) { const k = back((t - L5.wt[4]) / .3); g.save(); g.translate(490, 800); g.scale(k, k); A.pill('360° COVERED', 0, 0, ACC.fact, 30); g.restore(); }
 }
 
 // ---------- night bedroom: the 86 % ----------
-const ICONS = Array.from({ length: 22 }, (_, i) => ({ fx: 130 + (i % 6) * 76, fy: 1450 + Math.floor(i / 6) * 62, tx: 640 + (i % 7) * 62 + (Math.floor(i / 7) % 2) * 30, ty: 1430 + Math.floor(i / 7) * 54 }));
+// 22 dogs on the floor; 19 of them (over 86 %) hop over to the bed and settle in neat rows
+const ICONS = Array.from({ length: 22 }, (_, i) => {
+  const r = Math.floor(i / 7), c = i % 7;
+  return { fx: 110 + (i % 5) * 92 + (Math.floor(i / 5) % 2) * 40, fy: 1440 + Math.floor(i / 5) * 70, tx: 590 + c * 62 + (r % 2) * 31, ty: 1430 + r * 64 };
+});
 function night(g, t) {
   A.bedroom(t, ease((t - L6.wt[8]) / .5));
   ICONS.forEach((ic, i) => {
     const goes = i < 19, k = goes ? ease((t - HOP() - i * .045) / .45) : 0;
     const x = ic.fx + (ic.tx - ic.fx) * k, y = ic.fy + (ic.ty - ic.fy) * k - Math.sin(k * Math.PI) * 120;
-    A.dogIcon(x, y, 1.35, { col: k >= 1 ? '#F1E4CF' : '#B8AC98' });
+    A.dogIcon(x, y, 1.7, { col: k >= 1 ? '#F1E4CF' : '#B8AC98' });
   });
-  if (t > L6.wt[1]) { const k = back((t - L6.wt[1]) / .3); g.save(); g.translate(540, 1010); g.scale(k, k); A.pill('UK STUDY · DOGS TRUST', 0, 0, ACC.fact, 28); g.restore(); }
-  if (t > L6.wt[5] - .05) {   // the counter rolls to 86 % on "eighty-six"
-    const n = Math.round(86 * ease((t - L6.wt[5] + .05) / .6)), k = back((t - L6.wt[5] + .05) / .3);
-    g.save(); g.translate(620, 760); g.scale(k, k);
-    g.fillStyle = 'rgba(8,14,28,.8)'; g.beginPath(); g.roundRect(-250, -110, 500, 200, 30); g.fill(); g.strokeStyle = ACC.fact; g.lineWidth = 4; g.stroke();
-    g.fillStyle = ACC.fact; g.font = '800 150px Inter'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText((n >= 86 ? '86' : n) + '%', 0, -12);
-    g.fillStyle = '#C9D2E8'; g.font = '600 24px JetBrains Mono'; g.fillText('CHOSE TO BE CLOSE', 0, 66);
-    g.restore(); g.textAlign = 'left'; g.textBaseline = 'top';
-  }
 }
 
 function drawScene(name, g, t, lt) {
@@ -181,12 +175,12 @@ function pins(t, scene) {
   const [bx, by] = toScreen(RUMP[0] + 30, RUMP[1] + 50),   // the butt
         [cx, cy] = toScreen(...CONTACT);
   if (t > L1.wt[7] && t < L2.t0 + .1) list.push(['ON PURPOSE?', 300, 1260, bx, by, ACC.ask, 32]);   // on "butt"; gone before the loop frame
-  if (t > L2.wt[3] && t < L3.t0 + .5) list.push(['RUDE? GASSY?', MYTH[0], MYTH[1], bx, by, ACC.bad, 34]);
+  if (t > L2.wt[4] && t < L3.t0 + .5) list.push(['RUDE? GASSY?', MYTH[0], MYTH[1], bx, by, ACC.bad, 34]);
   if (L4 && t > L4.wt[6] && t < L5.t0 - .3) list.push(['BACK TO YOU = TRUST', 560, 1120, cx, cy, ACC.good, 32]);
   for (const [text, x, y, ax, ay, col, size] of list) {
     out.strokeStyle = col; out.lineWidth = 3; out.beginPath(); out.moveTo(x, y); out.lineTo(ax, ay); out.stroke();
     out.fillStyle = col; out.beginPath(); out.arc(ax, ay, 9, 0, Math.PI * 2); out.fill();
-    const k = back((t - (text === 'ON PURPOSE?' ? L1.wt[7] : text === 'RUDE? GASSY?' ? L2.wt[3] : L4.wt[6])) / .25);
+    const k = back((t - (text === 'ON PURPOSE?' ? L1.wt[7] : text === 'RUDE? GASSY?' ? L2.wt[4] : L4.wt[6])) / .25);
     out.save(); out.translate(x, y); out.scale(k, k); A.pill(text, 0, 0, col, size); out.restore();
   }
   if (t > STRIKE() && t < L3.t0 + .5) {   // strike + red X on the myth
@@ -270,7 +264,7 @@ load().then(data => {
   };
   window.TEXTS = (t) => {
     const T = [];
-    if (L6 && t > L6.wt[5] + .3 && t < L7.t0 - .3) T.push({ id: 'n86', text: '86% CHOSE TO BE CLOSE', x0: 370, y0: 650, x1: 870, y1: 850 });
+    const w = SHOTS.find(s => s.scene === 'wild'); if (t > L5.wt[4] + .2 && t < w.t1 - .05) T.push({ id: 'w360', text: '360\u00B0 COVERED', x0: 340, y0: 770, x1: 640, y1: 830 });
     if (L8) { const [a, b] = CTA(); if (t >= a + .2 && t < b) T.push({ id: 'cta', text: 'SEND THIS', x0: 200, y0: 940, x1: 880, y1: 1060 }); }
     return T;
   };
