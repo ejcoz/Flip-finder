@@ -5,7 +5,7 @@ This is the canon for the bunker. Future videos should stay consistent with it. 
 ## The bunker
 
 - **What it is:** a cylindrical concrete silo buried under a ruined city, built to wait out a nuclear war. It has seven levels, **B1 at the top to B7 at the bottom (on screen)**, with a stair and lift core down the centre **(on screen)**.
-- **Capacity:** 100,000 beds, about 14,300 per level. Every bed has a number, and you reserve one by commenting. Bed numbers restart on each level, so a bed's full name is `level-number`: your bed is `B5-0143`, the forbidden one is `B8-0404`, on a floor that doesn't exist.
+- **Capacity:** 100,000 beds, about 14,300 per level. Every bed has a number. **Following** gets you a bed (the counter is the follower count); **commenting** picks where your bed is. Bed numbers restart on each level, so a bed's full name is `level-number`: your bed is `B5-0143`, the forbidden one is `B8-0404`, on a floor that doesn't exist.
 - **Who runs it:** the narrator ("we"). They found the bunker, dug it out and are filling it, but they didn't build it. Who did is unknown; that's an open question to use later.
 - **Getting in:** a hatch and shaft from the surface **(on screen)**, plus a sloped tunnel that ends at the round **blast door with the radiation symbol (on screen)**. Two vent stacks with mushroom caps rise to the surface **(on screen)**.
 - **The surface:** a ruined skyline under a rust-coloured smog sky, with ash always falling **(on screen)**. When the door seals, a mushroom cloud rises on the horizon **(on screen)**.

@@ -11,7 +11,7 @@ For recording a better voiceover. Each line is timed to the picture; the **slot*
 | l03 | 7.3 s | 2.7 s | The blast door won't seal until it's full. | Matter-of-fact rule. |
 | l04 | 10.0 s | 1.8 s | So who sleeps down here? | Lean in, conspiratorial. |
 | l05 | 11.8 s | 0.8 s | You. | One word. Point at the viewer. Beat after it. |
-| l06 | 12.6 s | 3.9 s | Everyone who comments gets a bed, with their name on the door. | Warm, inviting: this is the offer. |
+| l06 | 12.6 s | 3.9 s | Everyone who follows gets a bed, with their name on the door. | Warm, inviting: this is the offer. |
 | l07 | 16.5 s | 2.3 s | Right now, there's nobody inside. | Flat. Nobody is here yet. |
 | l08 | 18.8 s | 2.2 s | At one thousand, the lights come on. | Building energy. |
 | l09 | 21.0 s | 2.4 s | At ten thousand, the air starts flowing. | Building energy. |
@@ -31,7 +31,7 @@ One hundred thousand beds, and every single one is empty.
 The blast door won't seal until it's full.
 So who sleeps down here?
 You.
-Everyone who comments gets a bed, with their name on the door.
+Everyone who follows gets a bed, with their name on the door.
 Right now, there's nobody inside.
 At one thousand, the lights come on.
 At ten thousand, the air starts flowing.

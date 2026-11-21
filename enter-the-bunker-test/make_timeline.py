@@ -11,7 +11,7 @@ DISP = {
  'l03': "The blast door won't seal | until it's full.",
  'l04': 'So who sleeps down here?',
  'l05': 'You.',
- 'l06': 'Everyone who comments | gets a bed, | with their name on the door.',
+ 'l06': 'Everyone who follows | gets a bed, | with their name on the door.',
  'l07': "Right now, | there's nobody inside.",
  'l08': 'At 1,000, | the lights come on.',
  'l09': 'At 10,000, | the air starts flowing.',
