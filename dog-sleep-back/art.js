@@ -407,56 +407,59 @@ export function puff(x, y, k) {
   const r = 30 + 60 * k; for (const [dx, dy, s] of [[0, 0, 1], [-.7, .3, .7], [.7, .35, .75], [.2, -.5, .65]]) { ell(x + dx * r, y - 160 * k + dy * r, r * s, r * s * .85); g.fill(); }
   g.restore();
 }
-// the star dog lying stretched out on the couch, seen from above (after the user's reference: a long dog lying on a
-// diagonal, back leg splayed behind with the pad showing). Drawn along a local axis (rump at 0, head end at +x, back edge
-// at -y) and rotated by `ang`, so its butt is nearest the camera and its head at the far end, turned back to look at you.
-// (x, y) = the middle of the rump. o = { ang, blink, brow, perk, wag, breath, turn (0..1: 1 = looking back at you) }
+// the star dog lying stretched out on its side on the couch, its BACK toward the camera (after the user's reference:
+// a long dog on a diagonal). Drawn along a local axis (rump at 0, head end at +x, the back along +y = the side nearest
+// you) and rotated by `ang`: the butt is nearest you, the spine and saddle face you, the legs fall away on the far side
+// with only the paws peeking, and the head at the far end looks back over its shoulder.
+// (x, y) = the middle of the rump. o = { ang, sc, blink, brow, perk, wag, breath, turn (0..1: 1 = looking back at you) }
 export function rearDog(x, y, o = {}) {
-  const { ang = -.62, sc = .86, blink = 0, brow = .5, perk = 0, wag = 0, breath = 0, turn = 1 } = o;
+  const { ang = -.62, sc = .88, blink = 0, brow = .5, perk = 0, wag = 0, breath = 0, turn = 1 } = o;
   const B = BREEDS.cream, k = 1 + breath * .02;
-  const padSole = (px, py, s, rot) => {   // a paw with its sole toward you
+  const paw = (px, py, rot, s = 1) => {   // a paw peeking out beyond the far side of the body
     g.save(); g.translate(px, py); g.rotate(rot); g.scale(s, s);
-    g.fillStyle = shade(-36, 36, ['#FFFDF6', '#F4E9D6', '#D9C6A6']); ell(0, 0, 50, 40); g.fill();
-    g.fillStyle = '#E89AA0'; ell(0, 9, 20, 15); g.fill();
-    for (const [dx, dy] of [[-24, -14], [-8, -24], [8, -24], [24, -14]]) { ell(dx, dy, 8, 7.5); g.fill(); }
+    g.fillStyle = shade(40, -40, ['#FFFDF6', '#F1E4CF', '#D3BF9F']); g.beginPath(); g.roundRect(-26, -10, 52, 70, 22); g.fill();   // the lower leg
+    g.fillStyle = shade(-60, 0, ['#FFFDF6', '#F4E9D6', '#D9C6A6']); ell(0, -30, 40, 36); g.fill();                           // the paw
+    g.strokeStyle = 'rgba(120,90,60,.4)'; g.lineWidth = 4; g.lineCap = 'round';
+    for (const d of [-14, 0, 14]) { g.beginPath(); g.moveTo(d, -64); g.lineTo(d * 1.1, -48); g.stroke(); }
     g.restore();
   };
   g.save(); g.translate(x, y); g.rotate(ang); g.scale(sc, sc);
-  // soft shadow along the underside, where the body presses into the cushion
-  const sh = g.createLinearGradient(0, 40, 0, 170); sh.addColorStop(0, 'rgba(10,14,40,.4)'); sh.addColorStop(1, 'rgba(10,14,40,0)');
-  g.fillStyle = sh; g.beginPath(); g.roundRect(-180, 40, 680, 140, 70); g.fill();
-  // far hind leg, mostly behind the rump
-  g.fillStyle = shade(-20, 120, B.coat); g.beginPath(); g.moveTo(-40, 20); g.quadraticCurveTo(-150, 0, -200, 50); g.quadraticCurveTo(-160, 80, -40, 70); g.closePath(); g.fill();
-  padSole(-196, 44, .7, 1.2);
-  // the tail: a short brown curl off the back of the rump
-  g.save(); g.translate(-112, -56); g.rotate(-.5 + wag);
-  g.fillStyle = shade(-60, 20, B.patch); g.beginPath(); g.moveTo(10, 10); g.bezierCurveTo(-30, 0, -60, -30, -50, -70); g.bezierCurveTo(-30, -60, -10, -30, 30, -10); g.closePath(); g.fill();
-  g.restore();
-  // the body: a long rounded loaf, rump end and chest end, breathing
-  g.save(); g.scale(1, k);
-  const body = () => { g.beginPath(); g.moveTo(-128, 0); g.bezierCurveTo(-132, -100, -60, -126, 30, -120); g.lineTo(300, -112); g.bezierCurveTo(380, -110, 436, -70, 430, -6); g.bezierCurveTo(426, 60, 380, 100, 300, 106); g.lineTo(20, 112); g.bezierCurveTo(-70, 116, -126, 80, -128, 0); g.closePath(); };
-  g.fillStyle = shade(-120, 112, B.coat); body(); g.fill();
-  g.save(); body(); g.clip();
-  const hl = g.createLinearGradient(0, -120, 0, 30); hl.addColorStop(0, 'rgba(255,255,255,.3)'); hl.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = hl; g.fillRect(-140, -130, 580, 160);
-  // the brown saddle along the back
-  g.fillStyle = shade(-120, 0, B.patch);
-  g.beginPath(); g.moveTo(40, -124); g.lineTo(300, -116); g.bezierCurveTo(330, -80, 300, -40, 250, -36); g.bezierCurveTo(190, -30, 150, -60, 100, -44); g.bezierCurveTo(60, -32, 30, -60, 40, -124); g.closePath(); g.fill();
-  // lighter, fluffy "trousers" at the back of the rump
-  const tr = g.createRadialGradient(-96, 64, 6, -96, 64, 110); tr.addColorStop(0, 'rgba(255,253,246,.9)'); tr.addColorStop(1, 'rgba(255,253,246,0)'); g.fillStyle = tr; g.fillRect(-140, -40, 220, 160);
-  g.restore();
-  g.restore();
-  // near hind leg, splayed straight back toward the camera, sole up
-  g.fillStyle = shade(-10, 140, B.coat); g.beginPath(); g.moveTo(-60, 40); g.quadraticCurveTo(-150, 70, -230, 122); g.quadraticCurveTo(-190, 158, -120, 140); g.quadraticCurveTo(-40, 120, 10, 100); g.closePath(); g.fill();
-  padSole(-226, 132, .95, 1.25);
-  // near front leg, reaching forward under the chest
-  g.fillStyle = shade(40, 220, B.coat); g.beginPath(); g.moveTo(300, 60); g.quadraticCurveTo(360, 120, 392, 196); g.quadraticCurveTo(380, 226, 350, 214); g.quadraticCurveTo(320, 150, 262, 100); g.closePath(); g.fill();
-  g.fillStyle = shade(190, 240, B.coat); ell(380, 214, 32, 26, 1.1); g.fill();
-  g.fillStyle = 'rgba(60,40,30,.28)'; for (const d of [-12, 0, 12]) { ell(394 + d * .8, 232 - d * .3, 4, 3); g.fill(); }
-  // the collar at the neck
-  g.fillStyle = shade(-80, 80, ['#3DD6C6', '#21B3A6', '#178A80']); g.beginPath(); g.roundRect(396, -70, 26, 120, 13); g.fill();
-  // the head at the far end, counter-rotated so the face stays upright, turned back to look at you
-  g.save(); g.translate(452, -62); g.rotate(-ang - .2 + .35 * (1 - turn)); g.scale(.86, .86);
+  // contact shadow along the near side, where the back presses into the cushion
+  const sh = g.createLinearGradient(0, 80, 0, 180); sh.addColorStop(0, 'rgba(10,14,40,.28)'); sh.addColorStop(1, 'rgba(10,14,40,0)');
+  g.fillStyle = sh; g.beginPath(); g.roundRect(-60, 80, 520, 100, 50); g.fill();
+  // the legs fall away on the far side: the paws peek out in pairs beyond the belly
+  paw(-80, -112, Math.PI + .5, 1.1); paw(-10, -124, Math.PI + .3, 1.05);    // hind paws
+  paw(296, -110, Math.PI - .15, 1); paw(358, -100, Math.PI - .4, .98);     // front paws
+  // the head first, at the far end, looking back at you; the body's shoulder will overlap its cheek
+  g.fillStyle = shade(-80, 80, ['#3DD6C6', '#21B3A6', '#178A80']); g.beginPath(); g.roundRect(426, -96, 28, 120, 14); g.fill();   // collar
+  g.save(); g.translate(530, -74); g.rotate(-ang - .25 + .35 * (1 - turn)); g.scale(.86, .86);
   frontHead('cream', { blink, perk, brow });
+  g.restore();
+  // the tail, curled from the end of the rump toward you
+  g.save(); g.translate(-128, 26); g.rotate(wag * .6);
+  g.fillStyle = shade(-20, 90, B.patch); g.beginPath(); g.moveTo(16, -20); g.bezierCurveTo(-40, -14, -88, 26, -86, 84); g.bezierCurveTo(-66, 92, -56, 76, -52, 60); g.bezierCurveTo(-46, 28, -14, 16, 16, 20); g.closePath(); g.fill();
+  g.restore();
+  // the body seen from its back: a round hip, a gentle waist, the rib cage and the shoulder (which overlaps the cheek)
+  g.save(); g.scale(1, k);
+  const body = () => { g.beginPath(); g.moveTo(-140, 0);
+    g.bezierCurveTo(-144, 96, -70, 132, 10, 124);       // hip, near side
+    g.bezierCurveTo(90, 116, 150, 104, 210, 108);        // waist dip along the spine
+    g.bezierCurveTo(300, 116, 390, 120, 440, 70);        // rib cage up to the shoulder
+    g.bezierCurveTo(472, 36, 470, -10, 446, -40);        // shoulder round the front
+    g.bezierCurveTo(420, -80, 370, -100, 300, -100);     // chest, far side
+    g.bezierCurveTo(220, -100, 140, -92, 60, -104);      // belly
+    g.bezierCurveTo(-40, -118, -136, -90, -140, 0); g.closePath(); };
+  g.fillStyle = shade(-110, 130, ['#D9C6A6', '#F1E4CF', '#FBF3E6']); body(); g.fill();
+  g.save(); body(); g.clip();
+  // round forms: light on the hip and the rib cage, shadow toward the belly
+  for (const [cx, cy, r] of [[-40, 40, 150], [320, 40, 140]]) { const gr = g.createRadialGradient(cx, cy, 10, cx, cy, r); gr.addColorStop(0, 'rgba(255,255,255,.34)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(cx - r, cy - r, r * 2, r * 2); }
+  // the brown saddle, centred across the spine
+  g.fillStyle = shade(-40, 130, ['#B98058', '#9C6A46', '#7A4E30']);
+  g.beginPath(); g.moveTo(70, 132); g.bezierCurveTo(50, 80, 60, 10, 110, -20); g.bezierCurveTo(170, -50, 260, -40, 300, -4); g.bezierCurveTo(340, 32, 336, 96, 310, 132); g.closePath(); g.fill();
+  const sg = g.createRadialGradient(200, 60, 10, 200, 60, 150); sg.addColorStop(0, 'rgba(255,255,255,.18)'); sg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = sg; g.fillRect(40, -60, 320, 200);
+  // the top thigh: a soft crease where the hip meets the flank
+  g.strokeStyle = 'rgba(140,105,70,.26)'; g.lineWidth = 6; g.lineCap = 'round'; g.beginPath(); g.moveTo(34, -96); g.quadraticCurveTo(70, 0, 30, 96); g.stroke();
+  g.restore();
   g.restore();
   g.restore();
 }

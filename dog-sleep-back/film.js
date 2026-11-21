@@ -80,7 +80,7 @@ const breathAt = t => (Math.sin(t * 2.2) + 1) / 2;
 // ---------- the home scene (the owner's seat on the couch) ----------
 let PIN = [];
 const MYTH = [320, 1180];   // where the myth tag sits on screen (left, over your legs, clear of the dog's face)
-const RUMP = [610, 1410], CONTACT = [532, 1470], HEAD = [892, 1142];
+const RUMP = [580, 1440], CONTACT = [500, 1500], HEAD = [921, 1116];
 const F1 = [1.02, 600, 1300];   // the frame-1 shot: the rump against your leg, the face looking back, below the hook
 let CAM = [1, 0, 0];
 const camAt = (z, fx, fy) => [z, Math.min(0, Math.max(W - W * z, W / 2 - fx * z)), Math.min(0, Math.max(H - H * z, fy - fy * z))];
