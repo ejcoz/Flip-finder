@@ -4,7 +4,7 @@ set -e
 LIB=${LIB:-/root/lemo-opuscar}
 export LIB
 HERE=$(cd "$(dirname "$0")" && pwd)
-OUT=${OUT:-/tmp/enter-the-bunker-build}; export OUT
+OUT=${OUT:-$HERE/out}; export OUT
 [ -f "$LIB/core/render/video.mjs" ] || { echo "set LIB to the library folder"; exit 1; }
 mkdir -p "$OUT"
 python3 "$HERE/make_timeline.py"

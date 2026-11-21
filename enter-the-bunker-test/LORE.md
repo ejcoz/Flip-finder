@@ -5,7 +5,7 @@ This is the canon for the bunker. Future videos should stay consistent with it. 
 ## The bunker
 
 - **What it is:** a cylindrical concrete silo buried under a ruined city, built to wait out a nuclear war. It has seven levels, **B1 at the top to B7 at the bottom (on screen)**, with a stair and lift core down the centre **(on screen)**.
-- **Capacity:** 100,000 beds, about 14,300 per level. Every bed has a number, and you reserve one by commenting. Bed numbers restart on each level, so a bed's full name is `level-number`: your bed is `B5-0143`, the forbidden one is `B1-0404`.
+- **Capacity:** 100,000 beds, about 14,300 per level. Every bed has a number, and you reserve one by commenting. Bed numbers restart on each level, so a bed's full name is `level-number`: your bed is `B5-0143`, the forbidden one is `B8-0404`, on a floor that doesn't exist.
 - **Who runs it:** the narrator ("we"). They found the bunker, dug it out and are filling it, but they didn't build it. Who did is unknown; that's an open question to use later.
 - **Getting in:** a hatch and shaft from the surface **(on screen)**, plus a sloped tunnel that ends at the round **blast door with the radiation symbol (on screen)**. Two vent stacks with mushroom caps rise to the surface **(on screen)**.
 - **The surface:** a ruined skyline under a rust-coloured smog sky, with ash always falling **(on screen)**. When the door seals, a mushroom cloud rises on the horizon **(on screen)**.
@@ -24,8 +24,7 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 
 ### B1 — Entry and decontamination
 - The airlock behind the blast door, the decontamination showers and quarantine bunks for new arrivals.
-- **Bed 404 (on screen).** The first bed the diggers reached. It was already **locked from the inside**: welded seams, a bar across it, glowing red. When they knocked, something knocked back. Nobody has opened it, and its number appears on no list.
-- The corridor lights on B1 run red now, and nobody remembers changing them.
+- The first level the diggers reached. Everything here was empty and unlocked, which is what made B8 so frightening later.
 
 ### B2 — Command, comms and medical
 - The radio room (listening for other survivors), the periscope to the surface, and the master copy of the counter.
@@ -55,14 +54,17 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 - It's loud and hot, and the workers who live here like the noise.
 - A maintenance hatch in the floor is welded shut. It's not on any current map.
 
-### B8 — Doesn't exist
-- Officially there are seven levels. The original blueprints in the B2 archives show eight.
-- The B7 hatch, the red lights on B1 and bed 404 may all be connected. Keep this as the long-running mystery.
+### B8 — The floor that doesn't exist (on screen)
+- Officially there are seven levels **(on screen: "This bunker only has seven levels")**. B8 lies *below the foundation*, under the hazard-striped footing **(on screen)**. It only appears when the power fails and the red emergency lights come on.
+- It's older and dirtier than the rest: darker concrete, cracked ceiling, every bunk dark and dusty except one.
+- **Bed 404 (on screen).** The only bed on B8 that's lit, glowing red. Its door is latched **from the inside** **(on screen)**, and after the latch slams, three knocks come back **(on screen)**. Nobody has opened it, and its number appears on no list.
+- The original blueprints in the B2 archives show eight levels. The welded hatch in the B7 floor is the only known way down.
 
 ## Story threads to use later
 - **Who is in bed 404**, and why the knocks come in threes.
+- **How B8 got there**: built first and hidden, or dug by whoever is inside it?
 - **Who built the bunker**, and why for exactly 100,000 people.
-- **What's on B8.**
+- **What else is on B8.**
 - **The counter:** does anything happen at numbers other than the milestones? (For example, comments going quiet at 404.)
 - **Picking your spot:** each new video can offer two attractive rooms and one forbidden one, as this film does with the garden, the armory and 404.
 

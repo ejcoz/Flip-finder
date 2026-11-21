@@ -72,10 +72,22 @@
  },
  {
   "id": "l12",
-  "text": "Bed four oh four was already locked from the inside when we dug it out.",
+  "text": "This bunker only has seven levels.",
   "voice": "am_michael",
-  "speed": 1.0,
-  "asr": "Bed 404 was already locked from the inside when we dug it out."
+  "speed": 0.98
+ },
+ {
+  "id": "l12b",
+  "text": "Bed four oh four is on the eighth.",
+  "voice": "am_michael",
+  "speed": 0.95,
+  "asr": "Bed 404 is on the 8th."
+ },
+ {
+  "id": "l12c",
+  "text": "And it's locked from the inside.",
+  "voice": "am_michael",
+  "speed": 0.95
  },
  {
   "id": "l13",

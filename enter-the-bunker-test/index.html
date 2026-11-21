@@ -34,9 +34,10 @@ const T = {
   dive0: 10.0, dive1: 11.0, you: wt('l05', 'You'), name: wt('l06', 'name'), handle: wt('l06', 'with'), back0: 16.35, back1: 17.4,
   k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: 28.0, red: 28.85,
-  dive2a: 29.2, dive2b: 30.3, six: wt('l12', '404'), lock: wt('l12', 'locked'), back2a: 35.95, back2b: 37.1,
+  b8show: L.l12b.t - .05, levels: wt('l12', 'seven'), six: wt('l12b', '404'), dive2a: wt('l12b', 'eighth') - .05, dive2b: wt('l12b', 'eighth') + 1.05,
+  lock: wt('l12c', 'locked'), arrive: wt('l12c', 'locked') - .1, back2a: L.l12c.t + L.l12c.d + 1.75, back2b: L.l12c.t + L.l12c.d + 2.9,
   card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', '404'),
-  follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: 45.45, end: TL.DUR
+  follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + 2.55, end: TL.DUR
 };
 
 // ---------- world geometry (cutaway) ----------
@@ -57,12 +58,12 @@ const CY = { cx: 540, R: 345, r: 312, ry: 30, top: 620, bot: 1460, NL: 7, NA: 30
 CY.LH = (CY.bot - CY.top) / CY.NL;
 // a cylinder cell is [level, row, column]: on the back wall of a level, rising from its floor
 function cylCellRect(lv, row, a) {
-  const a0 = -1.42 + a * 2.84 / CY.NA, a1 = a0 + 2.84 / CY.NA - .012, am = (a0 + a1) / 2, yF = CY.top + (lv + 1) * CY.LH;
+  const a0 = -1.42 + a * 2.84 / CY.NA, a1 = a0 + 2.84 / CY.NA - .012, am = (a0 + a1) / 2, yF = CY.top + (lv + 1) * CY.LH + (lv >= 7 ? 95 : 0);
   const x0 = CY.cx + CY.r * Math.sin(a0), x1 = CY.cx + CY.r * Math.sin(a1), yb = yF - CY.ry * Math.cos(am) - 6 - row * 12.5;
   return [x0, yb - 9.5, x1 - x0, 9.5];
 }
 const cellRect = cell => cell.length === 3 ? cylCellRect(...cell) : (([x, y]) => [x, y, 11, 7])(cellXY(cell[0], cell[1]));
-const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [1, 2, 15] : [SPINE + 1, 10], YOURBED = CYL ? [4, 1, 18] : [8, 63], SIXC = CYL ? [0, 2, 16] : [SPINE, 3];
+const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [7, 2, 16] : [SPINE + 1, 10], YOURBED = CYL ? [4, 1, 18] : [8, 63], SIXC = CYL ? [7, 2, 16] : [SPINE, 3];
 const cellCenter = cell => { const [x, y, w, h] = cellRect(cell); return [x + w / 2, y + h / 2]; };
 const rnd = mulberry(7); const LIT = Array.from({ length: NCOL * NROW }, () => rnd());
 
@@ -121,10 +122,13 @@ function camAt(t) {
   if (t < 23.3) return wide(lerp(0, -.045, ss(seg(t, 18.6, 23.3))));
   if (t < 25.9) { const u = eio(seg(t, 23.3, 25.0)); return mixCam(wide(-.045), { x: 430, y: 930, z: 1.22, r: -.02 }, u); }
   if (t < T.cut) { const u = eio(seg(t, 25.9, 27.9)); return mixCam({ x: 430, y: 930, z: 1.22, r: -.02 }, { x: 540, y: 520, z: .55, r: 0 }, u); }
-  if (t < T.dive2a) return { x: 540, y: 520, z: .55, r: 0 };
-  if (t < T.back2a) { const u = ei(seg(t, T.dive2a, T.dive2b + .05)); return mixCam({ x: 540, y: 520, z: .55, r: 0 }, D2, ss(seg(t, T.dive2a, T.dive2a + .7)), u); }
-  if (t < 42.0) { const u = eo(seg(t, T.back2a, T.back2b + .4)); return mixCam(D2, wide(.0), ss(seg(t, T.back2a + .3, T.back2b + .4)), u); }
-  if (t < T.push0) return wide(lerp(0, .03, ss(seg(t, 42, 45.4))));
+  const UPV = { x: 540, y: 520, z: .55, r: 0 }, B8V = { x: 540, y: 1520, z: 1.25, r: 0 };
+  if (t < T.red) return UPV;
+  if (t < T.b8show) return mixCam(UPV, B8V, eio(seg(t, T.red + .4, T.b8show - .2)));
+  if (t < T.dive2a) return { ...B8V, y: B8V.y + (t - T.b8show) * 30, z: B8V.z * (1 + (t - T.b8show) * .06) };
+  if (t < T.back2a) { const S0 = { ...B8V, y: B8V.y + (T.dive2a - T.b8show) * 30, z: B8V.z * (1 + (T.dive2a - T.b8show) * .06) }; const u = ei(seg(t, T.dive2a, T.dive2b + .05)); return mixCam(S0, D2, ss(seg(t, T.dive2a, T.dive2a + .7)), u); }
+  if (t < T.back2b + 4.0) { const u = eo(seg(t, T.back2a, T.back2b + .4)); return mixCam(D2, wide(.0), ss(seg(t, T.back2a + .3, T.back2b + .4)), u); }
+  if (t < T.push0) return wide(lerp(0, .03, ss(seg(t, T.back2b + 4.0, T.push0 - .05))));
   const u = eio(seg(t, T.push0, T.end)); return mixCam(wide(.03), ECU, u, u);
 }
 // world → screen for the cutaway
@@ -141,9 +145,11 @@ function state(t) {
   if (t > T.closes) S.door = eio(seg(t, T.closes, T.end + 2.5)) * .55;
   S.world = reset ? 0 : ss(seg(t, T.world - .3, T.world + 1.2));
   S.power = t < T.cut ? 1 : t < T.red ? .05 + (t > 28.7 && t < 28.76 ? .4 : 0) : 1;
+  S.b8 = t < T.b8show ? 0 : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
+  S.lv = t;
   S.redTint = t < T.red ? 0 : t < T.back2a ? ss(seg(t, T.red, T.red + .35)) : 1 - ss(seg(t, T.back2a + .2, T.back2b));
   S.sweep = seg(t, T.sweep0, T.sweep1);
-  S.six = t > T.back2a ? ss(seg(t, T.back2a, T.back2b)) * (1 - ss(seg(t, T.push0 + .6, T.end - .3))) : 0;
+  S.six = t > T.six - .1 ? ss(seg(t, T.six - .1, T.six + .3)) * (1 - ss(seg(t, T.push0 + .6, T.end - .3))) : 0;
   S.pantry = ss(seg(t, T.pantry - .1, T.pantry + .4)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
   S.gens = ss(seg(t, T.gens - .1, T.gens + .4)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
   S.sixTag = ss(seg(t, T.beside - .05, T.beside + .35)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
@@ -230,7 +236,7 @@ function drawCyl(c, g, t, cam, S) {
     const yC = fy(k);
     c.fillStyle = P.shellS; c.beginPath(); c.ellipse(cx, yC, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, yC + 12); c.ellipse(cx, yC + 12, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
     c.fillStyle = P.shell; c.beginPath(); c.ellipse(cx, yC + 12, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, yC + 15); c.ellipse(cx, yC + 15, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
-    c.save(); c.font = '700 14px Fredoka'; c.fillStyle = P.amber; c.textAlign = 'center'; c.fillText('B' + (k + 1), cx, yC + ry + 30); c.restore();
+    { const fl = Math.max(0, 1 - Math.abs(t - (T.levels - .9 + k * .2)) / .25); c.save(); c.font = `700 ${14 + fl * 22}px Fredoka`; c.fillStyle = P.amber; c.textAlign = 'center'; c.fillText('B' + (k + 1), cx, yC + ry + 30 + fl * 8); c.restore(); if (fl > 0) glowDot(g, cx, yC + ry + 24, 40, 'rgba(242,194,48,1)', fl); }
   }
   // scanner sweep and filtered air
   if (S.sweep > 0 && S.sweep < 1) { const y = lerp(top - 40, bot + 40, S.sweep); c.fillStyle = 'rgba(166,255,77,.35)'; c.fillRect(cx - r, y - 30, 2 * r, 30); c.fillStyle = 'rgba(220,255,170,.9)'; c.fillRect(cx - r, y, 2 * r, 3); g.fillStyle = 'rgba(166,255,77,.8)'; g.fillRect(cx - r, y - 8, 2 * r, 12); }
@@ -240,6 +246,29 @@ function drawCyl(c, g, t, cam, S) {
   // cut faces of the wall (left and right), concrete with a hazard-yellow dashed edge
   for (const sgn of [-1, 1]) { const xa = cx + sgn * r, xb = cx + sgn * R; c.fillStyle = P.shell; c.fillRect(Math.min(xa, xb), top, Math.abs(xb - xa), bot - top + 14); c.fillStyle = 'rgba(60,52,36,.25)'; for (let y = top + 10; y < bot; y += 28) c.fillRect(Math.min(xa, xb), y, Math.abs(xb - xa), 2); }
   c.save(); c.setLineDash([12, 9]); c.lineWidth = 3; c.strokeStyle = P.amber; for (const sgn of [-1, 1]) { c.beginPath(); c.moveTo(cx + sgn * (r + 16), top + 10); c.lineTo(cx + sgn * (r + 16), bot + 6); c.stroke(); } c.restore();
+}
+
+function drawB8(c, g, t, S) {
+  const { cx, R, r, ry } = CY, top = CY.top + 7 * CY.LH + 95, yF = top + CY.LH, NA = CY.NA;
+  c.save(); c.globalAlpha = S.b8;
+  // a dark drum below the footing, older and dirtier than the rest
+  c.fillStyle = '#6A6450'; c.fillRect(cx - R, top - 12, 2 * R, CY.LH + 30); c.beginPath(); c.ellipse(cx, yF + 18, R, ry + 8, 0, 0, Math.PI); c.fill();
+  const gr = c.createLinearGradient(cx - r, 0, cx + r, 0); gr.addColorStop(0, '#0A0807'); gr.addColorStop(.5, '#2A2219'); gr.addColorStop(1, '#0A0807');
+  c.fillStyle = gr; c.fillRect(cx - r, top, 2 * r, CY.LH);
+  c.fillStyle = '#1A1712'; c.beginPath(); c.ellipse(cx, yF, r, ry, 0, 0, TAU); c.fill();
+  for (let row = 0; row < CY.ROWS; row++) for (let a = 0; a < NA; a++) {
+    const [x, y, w, h] = cylCellRect(7, row, a); if (w < 2) continue;
+    const isX = row === SIXC[1] && a === SIXC[2];
+    c.fillStyle = isX ? '#FF2A2A' : '#3A3328'; rr(c, x, y, w, h, 1.5); c.fill();
+    if (!isX) { c.fillStyle = '#0D0B08'; c.fillRect(x + w * .1, y + 1.5, w * .8, 5); }
+  }
+  // the ceiling lip: the underside of the footing, cracked
+  c.fillStyle = '#77715A'; c.beginPath(); c.ellipse(cx, top, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, top + 12); c.ellipse(cx, top + 12, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
+  c.strokeStyle = '#1A170F'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx - 120, top + 20); c.lineTo(cx - 90, top + 34); c.lineTo(cx - 100, top + 44); c.moveTo(cx + 60, top + 22); c.lineTo(cx + 85, top + 38); c.stroke();
+  for (const sgn of [-1, 1]) { c.fillStyle = '#77715A'; c.fillRect(Math.min(cx + sgn * r, cx + sgn * R), top - 12, Math.abs(R - r), CY.LH + 30); }
+  c.font = '700 30px Fredoka'; c.fillStyle = '#FF4040'; c.textAlign = 'center'; c.fillText('B8', cx - r + 40, top + 40);
+  c.restore();
+  const [x, y, w, h] = cellRect(SIXC); glowDot(g, x + w / 2, y + h / 2, 120, 'rgba(255,30,30,1)', S.b8 * (.8 + .2 * Math.sin(t * 6)));
 }
 
 // ---------- the cutaway ----------
@@ -337,7 +366,7 @@ function drawCutaway(t, cam, S) {
   c.restore();
   // amber dashed inner outline
   c.save(); vaultPath(c, 16); c.setLineDash([12, 9]); c.lineWidth = 3; c.strokeStyle = P.amber; c.stroke(); c.restore();
-  } else drawCyl(c, g, t, cam, S);
+  } else { drawCyl(c, g, t, cam, S); if (S.b8 > 0) drawB8(c, g, t, S); }
   // corner beacons
   const blink = k => .55 + .45 * Math.max(0, Math.sin(t * 2.2 - k * 1.3));
   for (const [x, y, k] of [[VX0 - 56, VBOT + 6, 0], [VX1 + 56, VBOT + 6, 1], [540, VTOP + 10, 2]]) { c.fillStyle = k === 2 ? '#FFD0B0' : '#FFF0C0'; c.beginPath(); c.arc(x, y, 6, 0, TAU); c.fill(); glowDot(g, x, y, 30, k === 2 ? 'rgba(255,80,30,1)' : 'rgba(255,190,60,1)', blink(k)); }
@@ -423,8 +452,8 @@ function corridorScene(t, red) {
     const u = eo(seg(t, T.dive1 - .5, T.you + .05)), v = ss(seg(t, T.you - .45, T.you + .1)), dr = Math.sin(t * .8) * .02;
     cam = { x: lerp(0, .32, v), y: .12, z: lerp(-2.5, youZ - .72, u) + seg(t, T.you, T.back0) * .18, yaw: lerp(0, -1.22, eio(seg(t, T.you - .7, T.you + .15))) + dr };
   } else {
-    const u = eio(seg(t, T.dive2b - .6, T.six + .2)), v = ss(seg(t, T.six - .6, T.six + .2)), sh = t > T.lock && t < T.lock + .3 ? Math.sin(t * 90) * .02 * (1 - seg(t, T.lock, T.lock + .3)) : 0;
-    cam = { x: lerp(0, -.3, v), y: .12 + sh, z: lerp(-1.5, sixZ - .72, u) + seg(t, T.six, T.back2a) * .15, yaw: lerp(0, 1.22, eio(seg(t, T.six - .8, T.six + .2))) };
+    const u = eio(seg(t, T.dive2b - .6, T.arrive + .2)), v = ss(seg(t, T.arrive - .6, T.arrive + .2)), sh = t > T.lock && t < T.lock + .3 ? Math.sin(t * 90) * .02 * (1 - seg(t, T.lock, T.lock + .3)) : 0;
+    cam = { x: lerp(0, -.3, v), y: .12 + sh, z: lerp(-1.5, sixZ - .72, u) + seg(t, T.arrive, T.back2a) * .15, yaw: lerp(0, 1.22, eio(seg(t, T.arrive - .8, T.arrive + .2))) };
   }
   const accent = red ? [255, 59, 59] : [176, 255, 92];
   const quads = [];
@@ -632,7 +661,7 @@ for (const k of [T.k1, T.k10, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ?
 ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); ev(T.air, 'air', { d: T.cut - T.air });
 ev(T.seal - .35, 'roll', { d: .9 }); ev(T.seal + .55, 'slam'); ev(T.world, 'rumble', { d: T.cut - T.world });
 ev(T.cut, 'powerdown'); ev(T.red, 'hit'); ev(T.dive2a, 'dive', { d: 1.1, v: .7 }); ev(T.red + .2, 'redhum', { d: T.back2a - T.red });
-ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
+ev(T.b8show, 'lowping'); ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); for (let j = 0; j < 3; j++) ev(T.lock + 1.45 + j * .24, 'knock', { v: 1 }); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
 ev(T.pantry, 'ping', { v: .5 }); ev(T.gens, 'ping', { v: .5, p: 1.25 }); ev(T.beside, 'lowping'); ev(T.follow, 'chime', { v: .6 });
 ev(T.closes, 'roll', { d: 3.0, v: .5 }); ev(T.push0 - .5, 'riser', { d: T.end - T.push0 + .5 });
 window.EV = EV;

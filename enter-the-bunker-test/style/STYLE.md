@@ -8,31 +8,31 @@ Default size: 1080×1920, 30 fps.
 
 ## 1. Essence, and what it is not
 
-- **One structure, cut open.** A bunker, ship, tower, ark or vault drawn as a single flat silhouette: a silver shell with one shade step, an amber dashed inner outline, a soft cyan rim glow, small glowing lights at its corners, and inside, a dark navy field gridded into thousands of tiny cells.
-- **The viewer is a cell.** Every film offers one cell to "you": gold, with a faceless silhouette and the word YOU, then a handle tag (`@YOUR_NAME`).
-- **A counter is the promise.** A dark plate with a small-caps tag and a big amber number (`0 / 100,000`) sits on the structure; milestones roll it up and change the structure (lights, air, engines, a door).
-- **One cell is wrong.** The twist is always a single cell in red, already taken, reached by the same corridor turned red.
-- **Into the hull.** The camera dives from the cutaway into one cell and comes out in a 3D corridor of cells, and pulls back the same way.
+- **One bunker, cut open.** A buried cylindrical concrete silo seen in a front cutaway: stacked levels (B1–B7), each a concrete floor ringed with rows of bunks on the curved back wall, a stair/lift core down the middle, vent stacks and a hatch shaft rising to a ruined surface, a round blast door with a radiation trefoil at the end of a tunnel.
+- **The viewer is a bed.** Every film offers one bed to "you": gold, with a faceless silhouette and the word YOU, then a handle tag (`@YOUR_NAME`).
+- **A counter is the promise.** A dark plate with a small-caps tag and a big hazard-yellow number (`0 / 100,000`); milestones roll it up and change the bunker (lights, air, the door seals).
+- **One floor shouldn't exist.** The twist is always a hidden level revealed under red emergency light, with one red bed on it that is already taken (bed 404 on B8). Reached by the same corridor, turned red.
+- **Into the bunk.** The camera dives from the cutaway into one bed and comes out in a 3D corridor of beds, and pulls back the same way.
 
-Not Scale Zoom Explainer (no guide character, no scale ribbon, no hard-ring glows), not Sci-fi Hologram HUD (the structure is solid and filled, not a wireframe), not a 3D product render (the cutaway is flat; only the corridor has depth).
+Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines), not Sci-fi Hologram HUD (solid concrete, not wireframe), not a 3D product render (the cutaway is drawn flat; only the corridor has depth).
 
 ## 2. Materials & rendering
 
 - **Canvas 2D, rebuilt every frame** from a pure function of time; seeded randomness only.
-- **Cutaway**: flat fills, one shade step on the shell (a lighter face upper left, a darker band lower right). The cell grid is drawn as rows of tiny rounded rectangles one step lighter than the navy interior, with floor slabs every few rows and a vertical spine.
-- **Glow is soft**: a blurred copy (canvas `filter: blur`) of the rim, lights, cells and counter, added on top (`lighter`). Glow belongs to light sources only.
-- **Ground**: a soft gradient with blurred cloudy blotches and fixed star dots (sky), or soft strata (earth). Never a flat colour.
+- **Cutaway**: a cylinder seen slightly from above, front half removed. Painter's order per level: back wall (dark, shaded darker toward the sides for curvature), floor disc, bunks on the back arc (rows of small rounded beds with a recess, pillow, blanket and light strip, foreshortened by cos of their angle), the central core, then the front lip of the floor above drawn over them. Cut wall faces left and right in concrete with a hazard-yellow dashed edge. Footing slab with hazard stripes; vent stacks and hatch shaft to the surface.
+- **Glow is soft and only from lights**: a blurred copy (canvas `filter: blur`) of lit bunks, beacons, the scanner, the garden and red beds, added on top (`lighter`). Concrete never glows.
+- **Atmosphere**: falling ash in screen space (deterministic), a warm smog vignette, concrete stains and formwork lines, a ruined skyline on the surface.
+- **Ground**: a rust smog sky with blurred blotches and ash specks; olive-brown strata with flat rocks underground. Never a flat colour.
 - **Corridor**: a hand-projected 3D tunnel (perspective, yaw, near-plane clipping) of thick grey cell frames on both walls, ceiling light panels, a dashed floor line in the accent, numbers on the frames, fog to black. Every cell frame is a real quad, so parallax is physical.
 - **One camera function** for the cutaway: screen = (p − C)·z, rotated by r, plus the frame centre. Labels, the counter and highlights go through it.
 
 ## 3. Colour logic
 
-- Ground deep blue (#0E1838 → #1D2C66 in the sky; navy-violet strata underground).
-- Shell silver-cream (#DCE3EE / shade #9AA6BC), interior navy (#1A2647) with cells #26345C.
-- **Amber** (#FFB52E) is the structure's own line and every number: the dashed outline, the counter.
-- **Cyan** (#7FE3FF) is rim light, air and neutral labels.
-- **Gold** (#FFC23A → #FF8A00) means *you*. **Red** (#FF3B3B) means *the wrong cell*. Never both in one cell, and red appears only after the twist.
-- No pure white text except captions; no pure black except the corridor's far fog.
+- **Fallout world:** rust smog sky (#140E0A → #5A3417) over black ruins, olive-brown earth strata (#2C2A1C → #0E0E09), falling ash everywhere, a mushroom cloud only when the world ends.
+- **Concrete** (#A9A48C / shade #6C6855) with stains and formwork lines; interiors near-black olive (#1C2016), bunks #2E3625 with a toxic-green light strip (#9CF04A).
+- **Hazard yellow** (#F2C230) is the bunker's own mark: dashed edges, stripes on the footing, the trefoil, level labels, every number.
+- **Only lights glow:** lit bunks (warm #FFD27A), beacons, the scanner and the garden (toxic green). The structure itself never glows.
+- **Gold** (#FFC23A) means *you*. **Red** (#FF3B3B) means *the forbidden*: bed 404, B8, the red corridor. Never both in one bed.
 
 ## 4. Type & subtitles
 
@@ -63,10 +63,10 @@ Not Scale Zoom Explainer (no guide character, no scale ribbon, no hard-ring glow
 
 ## 8. Native moves
 
-- **Into the hull.** Dive into one cell; the corridor grows from it. *Fits:* showing who lives inside; finding one seat in a stadium.
+- **Into the bunk.** Dive into one bed; the corridor grows from it. *Fits:* showing who lives inside; finding one seat in a stadium.
 - **The counter climbs.** The plate rolls through milestones while the structure changes with each one. *Fits:* launches, doors, unlocks, goals.
-- **The red cell.** The corridor turns red; one cell glows red, numbered, and something inside locks it. *Fits:* any twist where one place is already taken.
-- **Pick your spot.** Zones of the structure light up with tags as a comment card names them. *Fits:* the call to comment.
+- **The floor that doesn't exist.** The power cuts, red light comes on, the camera tilts below the lowest level and a hidden floor flickers in; one bed on it glows red, and the corridor behind it ends at a latched door that knocks back. *Fits:* any twist where one place is already taken.
+- **Pick your spot.** Rooms light up with tags as a comment card names them (two attractive ones, then the forbidden one: e.g. the garden, the armory, 404). *Fits:* the call to comment.
 
 ## 9. Pitfalls
 
@@ -78,7 +78,7 @@ Not Scale Zoom Explainer (no guide character, no scale ribbon, no hard-ring glow
 
 ## 10. Engine
 
-- `demo/index.html`: everything: cutaway (`drawBunker`), ground (`drawEarth`, `drawSky`), corridor (`drawCorridor` with `proj`, `clipNear`), counter (`counterPlate`), captions (`captions`), camera (`camAt`), events (`window.EV`).
+- `demo/index.html`: everything: the silo (`drawCyl`, cells via `cylCellRect`), the hidden floor (`drawB8`), background (`buildBG`), door (`drawDoor`), corridor (`corridorScene`/`drawCorridor` with `proj`, `clipNear`, `texTri`), counter (`counterAt`), captions (`captions`), atmosphere (`atmosphere`), camera (`camAt`), events (`window.EV`). `?shape=box` draws the older box cutaway.
 - `demo/timeline.json`: built by `demo/make_timeline.py` from the voice durations and word timings.
 - Technique base: `$LIB/styles/flat-space-explainer/STYLE.md`.
 

@@ -2,11 +2,11 @@
 
 One example among many. Don't reuse its story, arc, shots, props or timings.
 
-**Story.** A bunker cut into the earth has 100,000 empty beds; the blast door seals when it's full. The viewer's bed glows gold in a corridor; the counter promises lights (1,000), air (10,000) and the seal (100,000). Silence, power cut, red corridor: bed 666 was locked from the inside. Pick your spot in the comments; the camera pushes back into the grid, ending on its first frame (loop).
+**Story.** A cylindrical silo bunker under a nuclear wasteland has 100,000 empty beds; the blast door seals when it's full. The viewer's bed glows gold in a corridor on B5; the counter promises lights (1,000), air (10,000) and the seal (100,000, with a mushroom cloud on the horizon). Power cut, red light: "This bunker only has seven levels." A hidden eighth level flickers in below the foundation; bed 404 glows red; the corridor ends at a door latched from the inside, which knocks back. Pick your spot (the garden, the armory, or beside 404); the camera pushes back into the bunks, ending on its first frame (loop). Canon in `demo/LORE.md`, narration in `demo/SCRIPT.md`.
 
 **Shots.** ECU grid → pull back · wide with light sweep · push to the door, counter springs in · dive into a cell → corridor → gold bed (YOU → @YOUR_NAME) · pull back · counter climbs (lights, air) · door rolls shut, pull out to the burning horizon · power cut · red dive → bed 0666, latch · pull back, comment card, zones (PANTRY, GENERATORS, 666), YOUR BED · push into the grid.
 
-**Palette.** Sky #081130→#1B2A66, earth strata navy-violet, shell #DCE3EE/#9AA6BC, interior #1A2647, cells #27365F, amber #FFB52E, cyan #7FE3FF, gold #FFC23A, red #FF3B3B.
+**Palette.** Smog sky #140E0A→#5A3417, olive strata, concrete #A9A48C/#6C6855, interior #1C2016, bunks #2E3625, hazard yellow #F2C230, toxic green #9CF04A, gold #FFC23A, red #FF3B3B.
 
 **Score.** 100 bpm grid; D drone; Dm/B♭ saw pad; a D2 pluck pulse that doubles at each milestone and stops on the slam; 0.9 s silence; low hit into a D–E♭–A cluster; pulse returns half-time, doubles at "Follow me", riser, hard stop on the loop.
 
