@@ -57,8 +57,8 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 
 ### B8 — The floor that doesn't exist (on screen)
 - Officially there are seven levels **(on screen: "This bunker only has seven levels")**. B8 lies *below the foundation*, under the hazard-striped footing **(on screen)**. It only appears when the power fails and the red emergency lights come on.
-- It's older and dirtier than the rest: darker concrete, cracked ceiling, every bunk dark and dusty except one.
-- **Bed 000 (on screen).** The only bed on B8 that's lit, glowing red. Every other door on B8 has its number scratched off; only 0000 is still labelled **(on screen)**. Its door is latched **from the inside** **(on screen)**, and after the latch slams, three knocks come back **(on screen)**. Nobody has opened it, and bed numbers start at 1, so its number shouldn't exist.
+- It's older than the rest and almost empty: a dark drum of cracked, stained concrete with scratch marks on the walls. **There is only one bed down there (on screen).**
+- **Bed 000 (on screen).** The only bed on B8, glowing red, at the dead end of a long bare corridor with no other doors **(on screen)**. Its door is latched **from the inside** **(on screen)**, and after the latch slams, three knocks come back **(on screen)**. Nobody has opened it, and bed numbers start at 1, so its number shouldn't exist.
 - **How anyone knows (on screen):** when the narrator's group first dug the bunker out, the hatch in B7's floor was **open**. They went down once, found B8 and bed 000 latched from the inside, and knocked. Something knocked back. They came up and **welded the hatch shut** ("So we welded the hatch shut."). Nobody has been down since.
 - That's the narrator's guilty secret: they're filling the bunker with 100,000 people, knowing it isn't empty.
 - The original blueprints in the B2 archives show eight levels.

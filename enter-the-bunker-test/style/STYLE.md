@@ -65,7 +65,7 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 
 - **Into the bunk.** Dive into one bed; the corridor grows from it. *Fits:* showing who lives inside; finding one seat in a stadium.
 - **The counter climbs.** The plate rolls through milestones while the structure changes with each one. *Fits:* launches, doors, unlocks, goals.
-- **The floor that doesn't exist.** The power cuts, red light comes on, the camera tilts below the lowest level and a hidden floor flickers in; one bed on it glows red, and the corridor behind it ends at a latched door that knocks back. *Fits:* any twist where one place is already taken.
+- **The floor that doesn't exist.** The power cuts, red light comes on, the camera tilts below the lowest level and a hidden floor flickers in; the floor is empty except for one red bed, and a bare corridor dead-ends at its single latched door, which knocks back. *Fits:* any twist where one place is already taken.
 - **Pick your spot.** Rooms light up with tags as a comment card names them (two attractive ones, then the forbidden one: e.g. the garden, the armory, or the B7 bed right above bed 000: the closest anyone is allowed). *Fits:* the call to comment.
 
 ## 9. Pitfalls
