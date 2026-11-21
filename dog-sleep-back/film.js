@@ -88,10 +88,10 @@ const toScreen = (x, y) => [x * CAM[0] + CAM[1], y * CAM[0] + CAM[2]];
 function homeCam(t) {
   const K = [[0, ...F1], [.9, F1[0] * 1.05, F1[1] + 20, F1[2] + 30],                 // a slow push while the question lands
     [L2.t0 + .05, F1[0] * 1.05, F1[1] + 20, F1[2] + 30], [L2.t0 + .75, 1, 540, 960], // pull back to the whole couch
-    [L2.wt[8], 1, 540, 960], [L2.wt[9] + .3, 1.12, 700, 1380],                        // nudge in on the butt for "gassy"
-    [L3.t0 + .1, 1.12, 700, 1380], [L3.t0 + .7, 1.18, 820, 1200],                    // toward the face: "the opposite"
-    [L4.t0, 1.18, 820, 1200], [L4.t0 + .8, 1.42, 600, 1480],                          // into the contact point: trust
-    [L4.t1 + .5, 1.42, 600, 1480]];
+    [L2.wt[8], 1, 540, 960], [L2.wt[9] + .3, 1.12, 600, 1420],                        // nudge in on the butt for "gassy"
+    [L3.t0 + .1, 1.12, 600, 1420], [L3.t0 + .7, 1.18, 800, 1150],                    // toward the face: "the opposite"
+    [L4.t0, 1.18, 800, 1150], [L4.t0 + .8, 1.3, 646, 1350],                          // into the contact point: trust
+    [L4.t1 + .5, 1.3, 646, 1350]];
   if (t < L4.t1 + 1) return keyed(K, t);
   // l07 (and l08): from wide, push back into the frame-1 shot for the loop
   const land = L8 ? L8.t0 - .1 : END - .35;
@@ -99,8 +99,8 @@ function homeCam(t) {
 }
 function handPos(t) {   // [x, y, angle, visible 0..1]
   const fanT = L2.wt[9] - .15, pat3 = [L3.t0 + .25, L3.t1 + .4], pat7 = [L7.t0 + .1, L7.wt[8] + .2];
-  if (t > fanT - .3 && t < fanT + 1.3) { const k = Math.min(ease((t - fanT + .3) / .3), ease((fanT + 1.3 - t) / .3)); return [330 + 40 * Math.sin(t * 16), 1330 + (1 - k) * 700, .35 + .35 * Math.sin(t * 16), k]; }
-  for (const [a, b] of [pat3, pat7]) if (t > a - .3 && t < b + .3) { const k = Math.min(ease((t - a + .3) / .3), ease((b + .3 - t) / .3)); return [700, 1400 + 26 * Math.abs(Math.sin((t - a) * 6)) + (1 - k) * 700, .25, k]; }
+  if (t > fanT - .3 && t < fanT + 1.3) { const k = Math.min(ease((t - fanT + .3) / .3), ease((fanT + 1.3 - t) / .3)); return [200 + 40 * Math.sin(t * 16), 1380 + (1 - k) * 700, .35 + .35 * Math.sin(t * 16), k]; }
+  for (const [a, b] of [pat3, pat7]) if (t > a - .3 && t < b + .3) { const k = Math.min(ease((t - a + .3) / .3), ease((b + .3 - t) / .3)); return [720, 1320 + 26 * Math.abs(Math.sin((t - a) * 6)) + (1 - k) * 700, .25, k]; }
   return null;
 }
 function home(g, t) {
