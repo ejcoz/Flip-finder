@@ -2,10 +2,8 @@
 import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
-START = {'l01': 0.0, 'l02': 3.75, 'l03': 9.15, 'l04': 11.85, 'l05': 14.0, 'l06': 14.95, 'l07': 18.75,
-         'l08': 21.15, 'l09': 23.6, 'l10': 26.35, 'l11': 32.9, 'l12': 35.35, 'l12b': 38.1, 'l12c': 40.35, 'l12d': 44.0, 'l12e': 47.4,
-         'l13': 50.3, 'l13b': 52.3, 'l13c': 54.4, 'l13d': 56.5, 'l14': 60.0}
-DUR = 64.5
+START = {'l01': 0.0, 'l02': 3.66, 'l03': 9.91, 'l04': 12.48, 'l05': 14.57, 'l06': 15.38, 'l07': 18.92, 'l08': 21.11, 'l09': 23.39, 'l10': 25.91, 'l11': 32.49, 'l12': 34.76, 'l12b': 37.39, 'l12c': 39.48, 'l12d': 42.98, 'l12e': 46.44, 'l13': 49.92, 'l13b': 51.55, 'l13c': 53.65, 'l13d': 55.75, 'l14': 59.12}
+DUR = 63.35
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': '100,000 beds, | and every single one | is empty.',
@@ -50,6 +48,9 @@ for lid, t0 in START.items():
 for i, c in enumerate(caps):
     nxt = caps[i + 1]['t0'] if i + 1 < len(caps) else DUR
     c['t1'] = min(nxt - .02, c['t1'] + .9)
+for c in caps:
+    if c['w'][-1][0] == 'empty.':
+        te = c['w'][-1][2]; c['w'].append(['…almost.', te + .35, te + .9]); c['t1'] = max(c['t1'], te + 1.6)
 json.dump({'DUR': DUR, 'lines': lines, 'caps': caps}, open(f'{H}/timeline.json', 'w'), indent=1)
 json.dump([{'t0': c['t0'], 't1': c['t1'], 'text': ' '.join(x[0] for x in c['w'])} for c in caps], open(os.path.join(os.environ.get('OUT', f'{H}/out'), 'cues.json'), 'w'), indent=1)
 print(len(caps), 'captions; last line ends', max(l['t'] + l['d'] for l in lines))

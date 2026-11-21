@@ -30,12 +30,12 @@ const P = {
 
 // ---------- key times ----------
 const T = {
-  pullEnd: 1.45, sweep0: wt('l02', 'and') - .2, sweep1: wt('l02', 'and') + 2.4, w1: L.l03.t - .25, w2: L.l03.t + 2.2, doorPing: wt('l03', 'blast'), counterIn: wt('l03', 'until'),
+  pullEnd: 1.45, pulse: 1.75, tease: L.l02.w[L.l02.w.length - 1][2] + .3, sweep0: wt('l02', 'and') - .2, sweep1: wt('l02', 'and') + 2.4, w1: L.l03.t - .25, w2: L.l03.t + 2.2, doorPing: wt('l03', 'blast'), counterIn: wt('l03', 'until'),
   dive0: L.l04.t, dive1: L.l04.t + 1.0, you: wt('l05', 'You'), name: wt('l06', 'name'), handle: wt('l06', 'with'), back0: L.l07.t - .15, back1: L.l07.t + .9, m0: L.l07.t + 2.1, m1: L.l10.t - .1,
   k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: L.l10.t + L.l10.d + .45, red: L.l10.t + L.l10.d + 1.3,
   b8show: wt('l12b', 'eighth') - .05, levels: wt('l12', 'seven'), six: wt('l12c', '000'), dive2a: wt('l12c', '000') + .15, dive2b: wt('l12c', '000') + 1.25,
-  lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d + .3, back2b: L.l12e.t + L.l12e.d + 1.45, weld: wt('l12e', 'welded'),
+  lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d + .1, back2b: L.l12e.t + L.l12e.d + 1.2, weld: wt('l12e', 'welded'),
   card: L.l13.t - .05, pantry: wt('l13b', 'garden'), gens: wt('l13c', 'armory'), beside: wt('l13d', 'B7'),
   g0: L.l13b.t - .3, a0: L.l13c.t - .3, d0: L.l13d.t - .2,
   follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + 2.55, end: TL.DUR
@@ -106,7 +106,7 @@ const [bgC, bgX] = mk(BG.w * BG.s, BG.h * BG.s);
 
 // ---------- camera ----------
 const LCX = cellCenter(LOOPC);
-const WIDE = { x: 540, y: 960, z: 0.92, r: 0 };
+const WIDE = { x: 540, y: 1060, z: 0.86, r: 0 };
 function logz(a, b, u) { return Math.exp(lerp(Math.log(a), Math.log(b), u)); }
 function mixCam(a, b, u, uz = u) { return { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), z: logz(a.z, b.z, uz), r: lerp(a.r, b.r, u) }; }
 const ECU = { x: LCX[0], y: LCX[1], z: 9, r: 0 };
@@ -154,8 +154,10 @@ function state(t) {
   S.door = reset ? 0 : eio(seg(t, T.seal - .35, T.seal + .55));
   if (t > T.closes) S.door = eio(seg(t, T.closes, T.end + 2.5)) * .55;
   S.world = reset ? 0 : ss(seg(t, T.world - .3, T.world + 1.2));
-  S.power = t < T.cut ? 1 : t < T.red ? .05 + (t > 28.7 && t < 28.76 ? .4 : 0) : 1;
-  S.b8 = t < T.b8show ? 0 : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
+  S.power = t > T.tease - .05 && t < T.tease + .75 ? (Math.sin((t - T.tease) * 38) > 0 ? .3 : .55) : t < T.cut ? 1 : t < T.red ? .05 + (t > 28.7 && t < 28.76 ? .4 : 0) : 1;
+  const pulse = t > T.pulse && t < T.pulse + .9 ? Math.sin(seg(t, T.pulse, T.pulse + .9) * Math.PI) * .55 : 0;
+  const tease = t > T.tease && t < T.tease + .75 ? (Math.sin((t - T.tease) * 38) > -.3 ? 1 : .2) : 0;
+  S.b8 = t < T.b8show ? Math.max(pulse, tease) : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
   S.lv = t;
   S.redTint = t < T.red ? 0 : t < T.back2a ? ss(seg(t, T.red, T.red + .35)) : 1 - ss(seg(t, T.back2a + .2, T.back2b));
   S.sweep = seg(t, T.sweep0, T.sweep1);
@@ -172,7 +174,7 @@ function counterAt(t) {
   let show = (t > T.counterIn ? back(seg(t, T.counterIn, T.counterIn + .45)) : 0);
   if (t > T.cut) show = 0;
   if (t > T.back2b - .3) show = back(seg(t, T.back2b - .3, T.back2b + .15)) * (1 - ss(seg(t, T.push0 + .3, T.push0 + 1)));
-  if (t > T.g0) show *= 1 - ss(seg(t, T.g0, T.g0 + .3)) * (1 - ss(seg(t, T.d0 + .2, T.d0 + .6)));
+  if (t > T.g0) show *= 1 - ss(seg(t, T.g0, T.g0 + .3));
   if (t < T.k1 || t > T.cut) return { show, tag: 'SURVIVORS INSIDE', txt: '0 / 100,000', pop: 0, roll: false };
   let v, roll = false, pop = 0;
   const r1 = [T.k1 - .1, T.k1 + .55], r2 = [T.k10 - .1, T.k10 + .55], r3 = [T.k100 - .1, T.k100 + .9];
@@ -474,8 +476,8 @@ function drawCutaway(t, cam, S) {
   labels.length = 0;
   labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 2 * CY.LH + CY.ry + 46, 'B3 · THE GARDEN', '#9CF04A', S.pantry, 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
   labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 5 * CY.LH + CY.ry + 46, 'B6 · THE ARMORY', P.amber, S.gens, 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
-  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x + 110, y + 34, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
-  if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(VX1 + 20, y + 4, 'B7 · ABOVE BED 000', P.amber, S.sixTag, 'dare')); }
+  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x - 170, y + 8, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
+  if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(x - 175, y - 4, 'B7 · ABOVE BED 000', P.amber, S.sixTag, 'dare')); }
   { const [x, y] = cellCenter(YOURBED); labels.push(() => lab(x + 100, y - 40, 'YOUR BED', P.gold, S.yours > 0 ? Math.min(1, S.yours * 2) : 0, 'yours')); }
   if (S.doorPing > 0) { labels.push(() => { const [sx, sy] = w2s(cam, DOOR.x, DOOR.y); ctxLabels.save(); ctxLabels.globalAlpha = S.doorPing; ctxLabels.strokeStyle = P.amber; ctxLabels.lineWidth = 4; ctxLabels.beginPath(); ctxLabels.arc(sx, sy, (DOOR.r + 20 + (1 - S.doorPing) * 70) * cam.z, 0, TAU); ctxLabels.stroke(); ctxLabels.restore(); }); }
   // composite glow onto cutaway
@@ -667,19 +669,22 @@ function texTri(c, img, s, d) {
 // ---------- overlays ----------
 function captions(t) {
   const cap = TL.caps.find(c => t >= c.t0 - .02 && t < c.t1); if (!cap) return;
-  ctx.save(); ctx.font = '700 60px Fredoka'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px';
+  ctx.save(); ctx.font = '700 78px Fredoka'; ctx.textBaseline = 'alphabetic'; ctx.letterSpacing = '0px'; ctx.lineJoin = 'round';
   const words = cap.w.filter(w => t >= w[1] - .02);
   // lay out the full chunk so words don't shift as they appear
-  const sp = ctx.measureText(' ').width, maxW = 920, rows = [[]]; let rowW = 0;
+  const sp = ctx.measureText(' ').width, maxW = 960, rows = [[]]; let rowW = 0;
   for (const w of cap.w) { const ww = ctx.measureText(w[0]).width; if (rowW + ww > maxW && rows[rows.length - 1].length) { rows.push([]); rowW = 0; } rows[rows.length - 1].push({ w, ww }); rowW += ww + sp; }
   rows.forEach((row, ri) => {
-    const tw = row.reduce((s, x) => s + x.ww, 0) + sp * (row.length - 1); let x = W / 2 - tw / 2; const y = 170 + ri * 70;
+    const tw = row.reduce((s, x) => s + x.ww, 0) + sp * (row.length - 1); let x = W / 2 - tw / 2; const y = 330 + ri * 92;
     for (const { w, ww } of row) {
       if (words.includes(w)) {
         const u = w[1] < .05 ? 1 : seg(t, w[1] - .02, w[1] + .14);
         ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 14; ctx.shadowOffsetY = 3;
         ctx.fillStyle = u < 1 ? `rgb(${Math.round(lerp(154, 255, u))},${Math.round(lerp(160, 255, u))},${Math.round(lerp(184, 255, u))})` : '#FFFFFF';
-        ctx.fillText(w[0], x, y - (1 - eo(u)) * 8);
+        const yy = y - (1 - eo(u)) * 8, warn = w[0].startsWith('…');
+        ctx.save(); ctx.shadowColor = 'transparent'; ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText(w[0], x, yy); ctx.restore();
+        if (warn) ctx.fillStyle = '#FF3B3B';
+        ctx.fillText(w[0], x, yy);
       }
       x += ww + sp;
     }
@@ -689,13 +694,13 @@ function captions(t) {
 function commentCard(t) {
   const a = back(seg(t, T.card - .05, T.card + .35)), out = ss(seg(t, T.a0 - .1, T.a0 + .3));
   if (a <= .001 || out >= 1) return;
-  ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(540 - out * 200, 1560); ctx.scale(a, a);
+  ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(540 - out * 200, 540); ctx.scale(a, a);
   rr(ctx, -290, -54, 580, 108, 22); ctx.fillStyle = '#F7F8FB'; ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.fill(); ctx.shadowBlur = 0;
   ctx.fillStyle = '#E8455A'; ctx.beginPath(); ctx.arc(-230, 0, 26, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 26px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Y', -230, 2);
   ctx.textAlign = 'left'; ctx.fillStyle = '#8A90A0'; ctx.font = '500 22px Fredoka'; ctx.fillText('your_user', -186, -18);
   ctx.fillStyle = '#12151E'; ctx.font = '700 30px Fredoka'; ctx.fillText('Me by the garden!', -186, 16);
   ctx.restore();
-  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 1506, x1: 830, y1: 1614 });
+  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 486, x1: 830, y1: 594 });
 }
 
 // ---------- frame ----------
@@ -744,7 +749,7 @@ window.TEXTS = (t) => { window.render(t); return TEXTS.slice(); };
 // ---------- sound events ----------
 const EV = [];
 const ev = (t, type, o = {}) => EV.push({ t: +t.toFixed(3), type, ...o });
-ev(.05, 'whoosh', { d: 1.45, v: .7 }); ev(T.sweep0, 'sweep', { d: T.sweep1 - T.sweep0 }); ev(T.doorPing, 'ping', { v: .6 }); ev(T.counterIn, 'pop');
+ev(.05, 'whoosh', { d: 1.45, v: .7 }); ev(T.pulse + .1, 'knock', { v: .35 }); ev(T.tease, 'powerdown'); ev(T.tease + .2, 'knock', { v: .8 }); ev(T.tease + .05, 'lowping'); ev(T.sweep0, 'sweep', { d: T.sweep1 - T.sweep0 }); ev(T.doorPing, 'ping', { v: .6 }); ev(T.counterIn, 'pop');
 ev(T.dive0, 'dive', { d: 1.1 }); ev(T.you, 'chime'); ev(T.handle, 'pop'); ev(T.back0, 'whoosh', { d: 1.2, v: .6, rev: 1 });
 for (const k of [T.k1, T.k10, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ? 1.0 : .65 }); }
 ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); ev(T.air, 'air', { d: T.cut - T.air });
