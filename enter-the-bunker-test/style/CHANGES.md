@@ -19,3 +19,12 @@
 | §3 Colour | blue night, silver shell, cyan rim glow | rust smog sky, ruins, ash, concrete, hazard yellow, toxic green; only lights glow | nuclear-apocalypse theme |
 | §8 Native moves | the red cell | the floor that doesn't exist (B8 reveal under red light) | a stronger twist than a top-floor bed |
 | Opening | ECU held 0.55 s, pull back to 3.3 s | narration from 0 s, pull back done by ~1.5 s, detailed bunks | matches the reference's hook speed |
+
+## Revision 3 (lessons from ep. 1, after posting)
+
+| Section | Before | Now | Why |
+|---|---|---|---|
+| §4 Type | 58 px captions at y 150; 18–22 px tags | 78 px outlined captions at y 330, no punctuation commas; tags ≥ 40 px on screen; Anton title card | phone readability, app safe zones |
+| §5 Motion | no length or hook rules | ≤ 50 s, twist promised by ~8 s, mid-video recurrence | retention review against the reference |
+| §6 Camera | wide = 70 % of frame height | bunker ≥ 70–75 % of width, rim light, room swoops, end push toward the threat | the reference wins on subject size and contrast |
+| §9 Pitfalls | — | app safe zones, small subjects, consistent numbers, explained lore | ep. 1 review notes |

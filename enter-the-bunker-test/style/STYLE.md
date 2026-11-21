@@ -3,13 +3,13 @@
 Made from a blank page; techniques from Scale Zoom Explainer (flat-space-explainer) in Lemo-Opuscar.
 Default size: 1080×1920, 30 fps.
 
-> A vertical short built around one huge structure seen as a glowing cutaway, its inside packed with thousands of tiny cells. The narrator offers the viewer a cell ("comment to claim yours"), a counter promises what happens as it fills, and a dive into a 3D corridor of cells finds the viewer's own cell glowing gold, and then one cell glowing red that is already taken.
+> A vertical short built around one huge structure seen as a glowing cutaway, its inside packed with thousands of tiny cells. The narrator offers the viewer a bed ("follow to claim yours"; comment to pick your spot), a counter promises what happens as it fills, and a dive into a 3D corridor of cells finds the viewer's own cell glowing gold, and then one cell glowing red that is already taken.
 > References (grammar only): vertical "claim your spot" interactive shorts (a hook in the first line, a counter, a twist, a call to comment); technical cutaway posters (one section through a whole structure); corridor fly-throughs from sci-fi title cards. Copy none of their designs, voices, music or text.
 
 ## 1. Essence, and what it is not
 
 - **One bunker, cut open.** A buried cylindrical concrete silo seen in a front cutaway: stacked levels (B1–B7), each a concrete floor ringed with rows of bunks on the curved back wall, a stair/lift core down the middle, vent stacks and a hatch shaft rising to a ruined surface, a round blast door with a radiation trefoil at the end of a tunnel.
-- **The viewer is a bed.** Every film offers one bed to "you": gold, with a faceless silhouette and the word YOU, then a handle tag (`@YOUR_NAME`).
+- **The viewer is a bed.** Every film offers one bed to "you": gold, with a faceless silhouette and the word YOU, then the account's handle tag (`@jointhebunker`) under it.
 - **A counter is the promise.** A dark plate with a small-caps tag and a big hazard-yellow number (`0 / 100,000`); milestones roll it up and change the bunker (lights, air, the door seals).
 - **One floor shouldn't exist.** The twist is always a hidden level revealed under red emergency light, with one red bed on it that is already taken (bed 0 on B8). Reached by the same corridor, turned red.
 - **Into the bunk.** The camera dives from the cutaway into one bed and comes out in a 3D corridor of beds, and pulls back the same way.
@@ -36,24 +36,30 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 
 ## 4. Type & subtitles
 
-- **Captions are the subtitles**: Fredoka 700, 58 px, white with a soft dark shadow, centred at the top (y ≈ 150), max two lines. Words appear one by one as they are spoken; the newest word fades from mist grey to white. Each caption is a short chunk (≤ 5 words) that clears when its line ends.
-- **Tags**: Fredoka 600, 18–22 px, small caps, letter-spaced, in cyan or amber on a dark rounded plate with a 2 px border.
+- **Captions are the subtitles**: Fredoka 700, **78 px**, white with a **12 px black outline** and a soft shadow, centred near the top (**first line at y ≈ 330**, below the apps' top tabs), max two lines. Words appear one by one as they are spoken; the newest word fades from grey to white. Each caption is a short chunk (≤ 5 words) that clears when its line ends. **No punctuation commas** (keep them inside numbers: 100,000). Teaser words in red (e.g. "…almost.").
+- **Title card**: Anton, the hook number in amber (~210 px) over a white line (~100 px), heavy black outline, slammed in over the first 0–3 s ("100,000 / EMPTY BEDS").
+- **Tags**: Fredoka 600, **at least 40 px on screen at the shot's final size** (judge them at phone size, not in the source), small caps, on a dark rounded plate with a 2–3 px border. Short words: GARDEN, ARMORY, BED 0. If a tag can't be that big, say it in the caption instead.
 - **Counter**: a dark rounded plate (border amber at 35 %), a 16 px small-caps tag above, a 44 px amber number with a soft glow. Numbers roll through values, never jump.
-- **Comment card**: a white rounded card, an avatar dot, a grey user line and a bold black comment. Fictional handles only.
+- **Comment card**: a white rounded card, an avatar dot, a grey user line and a bold black comment. Fictional handles only (e.g. `survivor_77`). Placed high (y ≈ 540), never in the bottom third.
+- **Bed numbers**: plain numbers 1–100,000, levels as number ranges (see the film's `LORE.md`); door plates show them with a thousands comma (48,143). The forbidden bed is **Bed 0** in voice, captions and on its door alike.
 
 ## 5. Motion
 
 - Constant slow life: the structure breathes (scale ±1 %), tilts a few degrees between shots, lights blink in a slow sequence.
 - Moves ease in and out; hits (YOU, the counter landing, the latch) spring with one small overshoot.
 - One cut per narrated line at most; most changes happen inside the shot (a tilt, a push, a light change).
+- **Pacing for short-form**: target **≤ 50 s**. Gaps between lines ~0.06–0.2 s; real silences only at the power cut (~0.8 s) and after the knocks. A recorded narrator may be played up to ~7 % faster (pitch kept) to tighten it.
+- **Hooks**: something must promise the twist **by ~8 s** (a red pulse under the bunker at ~2 s, a power flicker with B8 flashing and a red "…almost." on the first beat that says "empty"), and the mystery must reappear once in the middle (a B8 flicker as the door seals).
 
 ## 6. Camera grammar
 
-- **Wide**: the whole structure fills ~70 % of the frame height, slightly tilted.
+- **Wide**: the bunker fills **at least 70–75 % of the frame width** (crop the surface strip rather than shrink the bunker); slightly tilted. The hidden level, when it is in play, stays in frame above the bottom safe zone.
+- **Contrast**: the bunker must separate from the ground at a glance on a dim phone: a bright rim of light on the concrete edges (light, not a glow), lit bunks bright enough to read as lights, and the background kept darker than the structure.
 - **Dive**: a log-space zoom into one cell until it fills the frame; the corridor grows from that cell.
 - **Corridor push**: a fast dolly down the corridor that eases into a yaw toward one cell.
 - **Pull-out**: the reverse of the dive, or a wide pull back to show the world around the structure.
-- **Final push**: back into the grid, ending on the frame the film opened on (the short loops).
+- **Room swoops**: when the call to comment names a room, the camera swoops into that level (~1.5 s each), detailed props on the floor ring (planters, racks, crates), then pulls back for the dare.
+- **Final push**: first toward the threat as the last line names it (the red glow swells and grows in frame), then back into the grid, ending on the frame the film opened on (the short loops).
 
 ## 7. Sound palette
 
@@ -70,7 +76,11 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 
 ## 9. Pitfalls
 
-- Captions are big: keep the structure's important parts below y ≈ 330.
+- **App safe zones**: keep text and key action out of the top ~300 px (app tabs), the right ~140 px (like/comment buttons) and the bottom ~380 px (caption/username block). Cover art must work in the TikTok 3:4 and Instagram 4:5 centre crops.
+- Captions are big: keep the structure's important parts below y ≈ 430.
+- **Small subjects lose**: the reference format works because one bright subject fills the frame. If the bunker shrinks to show context, the shot loses impact; push in instead.
+- **Every number must make sense** against the premise (bed numbers vs 100,000 capacity, levels vs ranges) and match between voice, captions and doors; viewers comment on inconsistencies.
+- **The lore must explain what the narrator knows** (e.g. they went down once and welded the hatch shut), or the twist reads as a plot hole.
 - The cell grid at small scale shimmers; draw it on a cached layer and scale it, never redraw sub-pixel lines per frame.
 - Blur is expensive: blur a downscaled glow layer, not the full frame.
 - Red and gold in the same frame confuse the meaning: keep the twist red apart from the viewer's gold.
@@ -84,4 +94,14 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 
 ## 11. Variation space
 
-The structure (bunker, ark, ship, tower, stadium), the world around it, the number of cells, the milestones and what each one changes, the twist cell's number and what's wrong with it, the zones offered in the call to comment, and the narrator's voice.
+The episode's milestone and new clue (one of each per episode), the structure (bunker, ark, ship, tower, stadium), the world around it, the number of cells, the milestones and what each one changes, the twist cell's number and what's wrong with it, the zones offered in the call to comment, and the narrator's voice.
+
+## Episode checklist (from ep. 1)
+
+1. Hook card in the first second; the twist promised by ~8 s; mystery recurs mid-video.
+2. ≤ 50 s; one milestone beat and one new clue per episode.
+3. Bunker ≥ 70 % of frame width; rim light; tags ≥ 40 px on screen.
+4. Captions 78 px, outlined, no punctuation commas, below the top tabs; nothing in the app safe zones.
+5. Numbers consistent everywhere (voice = captions = doors); the narrator's knowledge explained by the lore.
+6. Call to comment: two attractive rooms + one dare, each shown in a close-up; end on the threat, then loop.
+7. Deliverables: video, cover (3:4 / 4:5 safe), caption, pinned comment, and the handle list for the next episode's Founders Wall.
