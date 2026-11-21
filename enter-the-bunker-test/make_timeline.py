@@ -2,9 +2,10 @@
 import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
-START = {'l01': 0.0, 'l02': 3.6, 'l03': 7.35, 'l04': 10.0, 'l05': 11.75, 'l06': 12.6, 'l07': 16.5,
-         'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.1, 'l12b': 33.75, 'l12c': 35.65, 'l12d': 39.6, 'l12e': 43.2, 'l13': 46.4, 'l13b': 48.4, 'l13c': 50.5, 'l13d': 52.7, 'l14': 56.0}
-DUR = 60.5
+START = {'l01': 0.0, 'l02': 3.75, 'l03': 9.15, 'l04': 11.85, 'l05': 14.0, 'l06': 14.95, 'l07': 18.75,
+         'l08': 21.15, 'l09': 23.6, 'l10': 26.35, 'l11': 32.9, 'l12': 35.35, 'l12b': 38.1, 'l12c': 40.35, 'l12d': 44.0, 'l12e': 47.4,
+         'l13': 50.3, 'l13b': 52.3, 'l13c': 54.4, 'l13d': 56.5, 'l14': 60.0}
+DUR = 64.5
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': '100,000 beds, | and every single one | is empty.',

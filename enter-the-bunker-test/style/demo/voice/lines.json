@@ -4,133 +4,156 @@
   "text": "This bunker has room for one hundred thousand people.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "This bunker has room for 100,000 people."
+  "asr": "This bunker has room for 100,000 people.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l02",
   "text": "One hundred thousand beds, and every single one is empty.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "100,000 beds, and every single one is empty."
+  "asr": "100,000 beds, and every single one is empty.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l03",
   "text": "The blast door won't seal until it's full.",
   "voice": "am_michael",
-  "speed": 1.08
+  "speed": 1.08,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l04",
   "text": "So who sleeps down here?",
   "voice": "am_michael",
-  "speed": 1.05
+  "speed": 1.05,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l05",
   "text": "You.",
   "voice": "am_michael",
-  "speed": 1.0
+  "speed": 1.0,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l06",
   "text": "Everyone who follows gets a bed, with their name on the door.",
   "voice": "am_michael",
-  "speed": 1.08
+  "speed": 1.08,
+  "asr": "Everyone who follows gets a bet with their name on the door.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l07",
   "text": "Right now, there's nobody inside.",
   "voice": "am_michael",
-  "speed": 1.05
+  "speed": 1.05,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l08",
   "text": "At one thousand, the lights come on.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "At 1,000 the lights come on."
+  "asr": "At 1,000 the lights come on.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l09",
   "text": "At ten thousand, the air starts flowing.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "At 10,000, the air starts flowing."
+  "asr": "At 10,000, the air starts flowing.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l10",
   "text": "And at one hundred thousand, the door seals, and we wait out the end of the world.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "And at 100,000 the door seals and we wait out the end of the world."
+  "asr": "And at 100,000 the door seals and we wait out the end of the world.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l11",
   "text": "But there's something I haven't told you.",
   "voice": "am_michael",
-  "speed": 0.98
+  "speed": 0.98,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l12",
   "text": "We thought this bunker had seven levels.",
   "voice": "am_michael",
-  "speed": 0.98
+  "speed": 0.98,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l12b",
   "text": "Then we found an eighth.",
   "voice": "am_michael",
   "speed": 0.92,
-  "asr": "Then we found an 8th."
+  "asr": "Then we found an eights.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l12c",
   "text": "There was only one bed down there. Bed zero.",
   "voice": "am_michael",
   "speed": 0.95,
-  "asr": "There was only one bed down there. Bed zero."
+  "asr": "There was only one bed down there. Bed zero.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l12d",
   "text": "Its door was locked from the inside.",
   "voice": "am_michael",
-  "speed": 0.92
+  "speed": 0.92,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l12e",
   "text": "So we welded the hatch shut.",
   "voice": "am_michael",
-  "speed": 0.92
+  "speed": 0.92,
+  "asr": "So we welded the hatch shot.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l13",
   "text": "Pick your spot in the comments.",
   "voice": "am_michael",
-  "speed": 1.05
+  "speed": 1.05,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l13b",
   "text": "By the garden,",
   "voice": "am_michael",
-  "speed": 1.0
+  "speed": 1.0,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l13c",
   "text": "next to the armory,",
   "voice": "am_michael",
-  "speed": 1.0
+  "speed": 1.0,
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l13d",
   "text": "or on B seven, right above bed zero.",
   "voice": "am_michael",
   "speed": 0.97,
-  "asr": "or on B7 right above bed zero."
+  "asr": "or on B7 right above bed zero.",
+  "voice_source": "ElevenLabs (user recording)"
  },
  {
   "id": "l14",
   "text": "Follow me, and get inside before the door closes.",
   "voice": "am_michael",
-  "speed": 1.05
+  "speed": 1.05,
+  "voice_source": "ElevenLabs (user recording)"
  }
 ]
