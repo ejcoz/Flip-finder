@@ -3,7 +3,7 @@ import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
 START = {'l01': 0, 'l02': 3.48, 'l03': 6.6, 'l04': 9.01, 'l05': 10.89, 'l06': 11.58, 'l08': 15.21, 'l09': 17.44, 'l10': 19.9, 'l11': 26.09, 'l12': 28.32, 'l12b': 30.76, 'l12c': 32.69, 'l12d': 35.98, 'l12e': 38.86, 'l13': 41.81, 'l13b': 43.53, 'l13c': 44.98, 'l13d': 46.43, 'l14': 49.56}
-DUR = 52.78
+DUR = 54.58
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': 'And every single one | is empty.',
@@ -24,7 +24,7 @@ DISP = {
  'l13b': 'By the garden,',
  'l13c': 'next to the armory,',
  'l13d': 'or on B7, | right above bed 0.',
- 'l14': 'Follow me, | and get inside | before the door closes.'}
+ 'l14': 'Follow me | and get inside | before bed 0 wakes up.'}
 lines, caps = [], []
 for lid, t0 in START.items():
     d = dur[lid]; w = words[lid]

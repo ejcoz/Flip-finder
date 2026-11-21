@@ -39,7 +39,7 @@ const T = {
   lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d - .05, back2b: L.l12e.t + L.l12e.d + 1.0, weld: wt('l12e', 'welded'),
   card: L.l13.t - .05, pantry: wt('l13b', 'garden'), gens: wt('l13c', 'armory'), beside: wt('l13d', 'B7'),
   g0: L.l13b.t - .3, a0: L.l13c.t - .3, d0: L.l13d.t - .2,
-  follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + L.l14.d - 1.25, end: TL.DUR
+  follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), wake: wt('l14', 'wakes'), push0: L.l14.t + L.l14.d - .35, end: TL.DUR
 };
 
 // ---------- world geometry (cutaway) ----------
@@ -159,7 +159,7 @@ function state(t) {
   const pulse = t > T.pulse && t < T.pulse + .9 ? Math.sin(seg(t, T.pulse, T.pulse + .9) * Math.PI) * .55 : 0;
   const tease2 = t > T.seal + .45 && t < T.seal + .95 ? (Math.sin((t - T.seal) * 34) > 0 ? .85 : .15) : 0;
   const tease = t > T.tease && t < T.tease + .75 ? (Math.sin((t - T.tease) * 38) > -.3 ? 1 : .2) : 0;
-  S.b8 = t < T.b8show ? Math.max(pulse, tease, tease2) : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
+  S.b8 = t < T.b8show ? Math.max(pulse, tease, tease2) : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 + 1.4 * ss(seg(t, T.wake - .3, T.wake + .9)));
   S.lv = t;
   S.redTint = t < T.red ? 0 : t < T.back2a ? ss(seg(t, T.red, T.red + .35)) : 1 - ss(seg(t, T.back2a + .2, T.back2b));
   S.sweep = seg(t, T.sweep0, T.sweep1);
@@ -253,7 +253,7 @@ function drawCyl(c, g, t, cam, S) {
 
 function drawB8(c, g, t, S) {
   const { cx, R, r, ry } = CY, top = CY.top + 7 * CY.LH + 95, yF = top + CY.LH, NA = CY.NA;
-  c.save(); c.globalAlpha = S.b8;
+  c.save(); c.globalAlpha = Math.min(1, S.b8);
   // a dark drum below the footing, older and dirtier than the rest
   c.fillStyle = '#6A6450'; c.fillRect(cx - R, top - 12, 2 * R, CY.LH + 30); c.beginPath(); c.ellipse(cx, yF + 18, R, ry + 8, 0, 0, Math.PI); c.fill();
   const gr = c.createLinearGradient(cx - r, 0, cx + r, 0); gr.addColorStop(0, '#0A0807'); gr.addColorStop(.5, '#2A2219'); gr.addColorStop(1, '#0A0807');
@@ -269,7 +269,7 @@ function drawB8(c, g, t, S) {
   for (const sgn of [-1, 1]) { c.fillStyle = '#77715A'; c.fillRect(Math.min(cx + sgn * r, cx + sgn * R), top - 12, Math.abs(R - r), CY.LH + 30); }
   c.font = '700 30px Fredoka'; c.fillStyle = '#FF4040'; c.textAlign = 'center'; c.fillText('B8', cx - r + 40, top + 40);
   c.restore();
-  const [x, y, w, h] = cellRect(SIXC); glowDot(g, x + w / 2, y + h / 2, 120, 'rgba(255,30,30,1)', S.b8 * (.8 + .2 * Math.sin(t * 6)));
+  const [x, y, w, h] = cellRect(SIXC); glowDot(g, x + w / 2, y + h / 2, 120 * Math.max(1, S.b8), 'rgba(255,30,30,1)', Math.min(1, S.b8) * (.8 + .2 * Math.sin(t * 6)));
 }
 
 // ---------- the rooms you can pick (drawn in detail; the camera swoops in) ----------

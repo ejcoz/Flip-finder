@@ -24,7 +24,7 @@ Recorded by the user in ElevenLabs (takes BL1–BL3), cut per line and played 7%
 | l13b | 40.5 s | By the garden, | Warm, tempting. Short beat after it (the camera swoops into the garden). |
 | l13c | 41.9 s | next to the armory, | A little tougher, confident. Short beat after it (the armory). |
 | l13d | 43.4 s | or on B seven, right above bed zero. | Slow down and drop: it's the dare. Little smile on "bed zero". |
-| l14 | 46.5 s | Follow me, and get inside before the door closes. | Urgent, final. No fade: the video loops. |
+| l14 | 46.5 s | Follow me, and get inside before bed zero wakes up. | Urgent, final. No fade: the video loops. |
 
 ## Read-through
 
@@ -68,7 +68,7 @@ next to the armory,
 
 or on B seven, right above bed zero.
 
-Follow me, and get inside before the door closes.
+Follow me, and get inside before bed zero wakes up.
 
 ## Total
 
