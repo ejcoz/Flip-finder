@@ -1,6 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <link rel="stylesheet" href="/core/fonts/fonts.css">
+<style>@font-face { font-family: "Anton"; src: url(fonts/Anton-Regular.ttf) format("truetype"); font-display: block; }</style>
 <style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
 </head><body><canvas id="c"></canvas>
 <script type="module">
@@ -156,8 +157,9 @@ function state(t) {
   S.world = reset ? 0 : ss(seg(t, T.world - .3, T.world + 1.2));
   S.power = t > T.tease - .05 && t < T.tease + .75 ? (Math.sin((t - T.tease) * 38) > 0 ? .3 : .55) : t < T.cut ? 1 : t < T.red ? .05 + (t > 28.7 && t < 28.76 ? .4 : 0) : 1;
   const pulse = t > T.pulse && t < T.pulse + .9 ? Math.sin(seg(t, T.pulse, T.pulse + .9) * Math.PI) * .55 : 0;
+  const tease2 = t > T.seal + .45 && t < T.seal + .95 ? (Math.sin((t - T.seal) * 34) > 0 ? .85 : .15) : 0;
   const tease = t > T.tease && t < T.tease + .75 ? (Math.sin((t - T.tease) * 38) > -.3 ? 1 : .2) : 0;
-  S.b8 = t < T.b8show ? Math.max(pulse, tease) : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
+  S.b8 = t < T.b8show ? Math.max(pulse, tease, tease2) : (t < T.b8show + .45 ? (Math.sin((t - T.b8show) * 40) > -.2 ? 1 : .15) : 1) * (1 - .45 * ss(seg(t, T.push0, T.end - .4)));
   S.lv = t;
   S.redTint = t < T.red ? 0 : t < T.back2a ? ss(seg(t, T.red, T.red + .35)) : 1 - ss(seg(t, T.back2a + .2, T.back2b));
   S.sweep = seg(t, T.sweep0, T.sweep1);
@@ -618,7 +620,7 @@ function drawCorridor(t, red) {
         const hs = ss(seg(t, T.handle - .15, T.handle + .25));
         c.font = `700 ${size}px Fredoka`; c.fillStyle = P.gold; c.shadowColor = 'rgba(255,170,40,.9)'; c.shadowBlur = 18; c.globalAlpha = 1; c.fillText('YOU', sx, sy); c.shadowBlur = 0; c.globalAlpha = 1;
         TEXTS.push({ id: 'you', text: 'YOU', x0: sx - 60, y0: sy - 40, x1: sx + 60, y1: sy + 40, pass: t < T.you - .2 });
-        if (hs > 0) { const yy = sy + size * .95; c.globalAlpha = hs; tag(c, sx, yy, '@YOUR_NAME', P.gold, hs, size * .45, true); c.globalAlpha = 1; TEXTS.push({ id: 'handle', text: '@YOUR_NAME', x0: sx - 150, y0: yy - 30, x1: sx + 150, y1: yy + 30 }); }
+        if (hs > 0) { const yy = sy + size * .95; c.globalAlpha = hs; tag(c, sx, yy, '@jointhebunker', P.gold, hs, size * .45, true); c.globalAlpha = 1; TEXTS.push({ id: 'handle', text: '@jointhebunker', x0: sx - 150, y0: yy - 30, x1: sx + 150, y1: yy + 30 }); }
       } else {
         c.font = `700 ${size}px Fredoka`; c.fillStyle = '#FF4A4A'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 20; c.fillText('0000', sx, sy); TEXTS.push({ id: 'six-num', text: '0000', x0: sx - 90, y0: sy - 40, x1: sx + 90, y1: sy + 40 });
       }
@@ -691,16 +693,29 @@ function captions(t) {
   });
   ctx.restore();
 }
+function titleCard(t) {
+  if (t > 3.3) return;
+  const k1 = back(seg(t, 0, .3)), k2 = back(seg(t, .25, .55)), out = ss(seg(t, 2.85, 3.25));
+  ctx.save(); ctx.globalAlpha = 1 - out; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+  const y0 = 650 - out * 40;
+  ctx.save(); ctx.translate(540, y0); const s1 = lerp(1.5, 1, Math.min(1, k1)) * (k1 > 1 ? k1 : 1); ctx.scale(s1, s1); ctx.globalAlpha *= Math.min(1, k1 * 2);
+  ctx.font = '210px Anton'; ctx.lineWidth = 14; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText('100,000', 0, 0);
+  ctx.fillStyle = '#F5A82A'; ctx.shadowColor = 'rgba(245,168,42,.45)'; ctx.shadowBlur = 30; ctx.fillText('100,000', 0, 0); ctx.restore();
+  ctx.save(); ctx.translate(540, y0 + 118); const s2 = lerp(1.4, 1, Math.min(1, k2)); ctx.scale(s2, s2); ctx.globalAlpha *= Math.min(1, k2 * 2);
+  ctx.font = '100px Anton'; ctx.lineWidth = 12; ctx.strokeStyle = 'rgba(0,0,0,.85)'; ctx.strokeText('EMPTY BEDS', 0, 0); ctx.fillStyle = '#FFFFFF'; ctx.fillText('EMPTY BEDS', 0, 0); ctx.restore();
+  ctx.restore();
+  if (out < .99) TEXTS.push({ id: 'titlecard', text: '100,000 EMPTY BEDS', x0: 160, y0: 470, x1: 920, y1: 790 });
+}
 function commentCard(t) {
   const a = back(seg(t, T.card - .05, T.card + .35)), out = ss(seg(t, T.a0 - .1, T.a0 + .3));
   if (a <= .001 || out >= 1) return;
   ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(540 - out * 200, 540); ctx.scale(a, a);
   rr(ctx, -290, -54, 580, 108, 22); ctx.fillStyle = '#F7F8FB'; ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.fill(); ctx.shadowBlur = 0;
-  ctx.fillStyle = '#E8455A'; ctx.beginPath(); ctx.arc(-230, 0, 26, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 26px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Y', -230, 2);
-  ctx.textAlign = 'left'; ctx.fillStyle = '#8A90A0'; ctx.font = '500 22px Fredoka'; ctx.fillText('your_user', -186, -18);
+  ctx.fillStyle = '#E8455A'; ctx.beginPath(); ctx.arc(-230, 0, 26, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 26px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('S', -230, 2);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#8A90A0'; ctx.font = '500 22px Fredoka'; ctx.fillText('survivor_77', -186, -18);
   ctx.fillStyle = '#12151E'; ctx.font = '700 30px Fredoka'; ctx.fillText('Me by the garden!', -186, 16);
   ctx.restore();
-  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 486, x1: 830, y1: 594 });
+  TEXTS.push({ id: 'card', text: 'survivor_77 Me by the garden!', x0: 250, y0: 486, x1: 830, y1: 594 });
 }
 
 // ---------- frame ----------
@@ -729,6 +744,7 @@ window.render = (t) => {
   atmosphere(t, cor && full);
   if (!full) labels.forEach(f => f());
   commentCard(t);
+  titleCard(t);
   captions(t);
   // loop seam: a 2-frame dip at the very end
   if (t > T.end - .07) { ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 0, W, H); }
@@ -749,17 +765,17 @@ window.TEXTS = (t) => { window.render(t); return TEXTS.slice(); };
 // ---------- sound events ----------
 const EV = [];
 const ev = (t, type, o = {}) => EV.push({ t: +t.toFixed(3), type, ...o });
-ev(.05, 'whoosh', { d: 1.45, v: .7 }); ev(T.pulse + .1, 'knock', { v: .35 }); ev(T.tease, 'powerdown'); ev(T.tease + .2, 'knock', { v: .8 }); ev(T.tease + .05, 'lowping'); ev(T.sweep0, 'sweep', { d: T.sweep1 - T.sweep0 }); ev(T.doorPing, 'ping', { v: .6 }); ev(T.counterIn, 'pop');
+ev(.05, 'whoosh', { d: 1.45, v: .7 }); ev(.02, 'slam'); ev(.27, 'slam', { v: .5 }); ev(T.pulse + .1, 'knock', { v: .35 }); ev(T.tease, 'powerdown'); ev(T.tease + .2, 'knock', { v: .8 }); ev(T.tease + .05, 'lowping'); ev(T.sweep0, 'sweep', { d: T.sweep1 - T.sweep0 }); ev(T.doorPing, 'ping', { v: .6 }); ev(T.counterIn, 'pop');
 ev(T.dive0, 'dive', { d: 1.1 }); ev(T.you, 'chime'); ev(T.handle, 'pop'); ev(T.back0, 'whoosh', { d: 1.2, v: .6, rev: 1 });
 for (const k of [T.k1, T.k10, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ? 1.0 : .65 }); }
 ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); ev(T.air, 'air', { d: T.cut - T.air }); 
-ev(T.seal - .35, 'roll', { d: .9 }); ev(T.seal + .55, 'slam'); ev(T.world, 'rumble', { d: T.cut - T.world });
+ev(T.seal - .35, 'roll', { d: .9 }); ev(T.seal + .55, 'slam'); ev(T.seal + .6, 'knock', { v: .5 }); ev(T.world, 'rumble', { d: T.cut - T.world });
 ev(T.cut, 'powerdown'); ev(T.red, 'hit'); ev(T.dive2a, 'dive', { d: 1.1, v: .7 }); ev(T.red + .2, 'redhum', { d: T.back2a - T.red });
 ev(T.b8show, 'lowping'); ev(T.weld, 'weld'); ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); for (let j = 0; j < 3; j++) ev(L.l12d.t + L.l12d.d + .15 + j * .22, 'knock', { v: 1 }); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
 ev(T.pantry, 'ping', { v: .5 }); ev(T.gens, 'ping', { v: .5, p: 1.25 }); ev(T.beside, 'lowping'); ev(T.follow, 'chime', { v: .6 });
 ev(T.closes, 'roll', { d: 3.0, v: .5 }); ev(T.push0 - .5, 'riser', { d: T.end - T.push0 + .5 });
 window.EV = EV;
 window.T = T;
-await document.fonts.load('700 60px Fredoka'); await document.fonts.load('600 20px Fredoka'); await document.fonts.load('500 20px Fredoka');
+await document.fonts.load('80px Anton'); await document.fonts.load('700 60px Fredoka'); await document.fonts.load('600 20px Fredoka'); await document.fonts.load('500 20px Fredoka');
 window.READY = true;
 </script></body></html>
