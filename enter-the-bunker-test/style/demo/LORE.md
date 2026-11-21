@@ -53,6 +53,7 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 - The **generators** and the reactor that power everything, the air scrubbers that start at 10,000 survivors, and water purification.
 - It's loud and hot, and the workers who live here like the noise.
 - A maintenance hatch in the floor is welded shut. It's not on any current map.
+- **The bed above the hatch (on screen):** the B7 bed directly over bed 000, as close as anyone is allowed to sleep. It's the dare option when picking your spot.
 
 ### B8 — The floor that doesn't exist (on screen)
 - Officially there are seven levels **(on screen: "This bunker only has seven levels")**. B8 lies *below the foundation*, under the hazard-striped footing **(on screen)**. It only appears when the power fails and the red emergency lights come on.

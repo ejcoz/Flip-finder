@@ -36,7 +36,7 @@ const T = {
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: 28.0, red: 28.85,
   b8show: L.l12b.t - .05, levels: wt('l12', 'seven'), six: wt('l12b', '000'), dive2a: wt('l12b', 'eighth') - .05, dive2b: wt('l12b', 'eighth') + 1.05,
   lock: wt('l12c', 'locked'), arrive: wt('l12c', 'locked') - .1, back2a: L.l12c.t + L.l12c.d + 1.75, back2b: L.l12c.t + L.l12c.d + 2.9,
-  card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', 'beside'),
+  card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', 'B7'),
   follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + 2.55, end: TL.DUR
 };
 
@@ -63,7 +63,8 @@ function cylCellRect(lv, row, a) {
   return [x0, yb - 9.5, x1 - x0, 9.5];
 }
 const cellRect = cell => cell.length === 3 ? cylCellRect(...cell) : (([x, y]) => [x, y, 11, 7])(cellXY(cell[0], cell[1]));
-const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [7, 2, 16] : [SPINE + 1, 10], YOURBED = CYL ? [4, 1, 18] : [8, 63], SIXC = CYL ? [7, 2, 16] : [SPINE, 3];
+const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [7, 2, 21] : [SPINE + 1, 10], YOURBED = CYL ? [4, 1, 18] : [8, 63], SIXC = CYL ? [7, 2, 21] : [SPINE, 3];
+const ABOVE000 = [6, 0, 21];
 const cellCenter = cell => { const [x, y, w, h] = cellRect(cell); return [x + w / 2, y + h / 2]; };
 const rnd = mulberry(7); const LIT = Array.from({ length: NCOL * NROW }, () => rnd());
 
@@ -377,6 +378,13 @@ function drawCutaway(t, cam, S) {
     const [x, y] = cellCenter(SIXC), pul = .75 + .25 * Math.sin(t * 6);
     glowDot(g, x, y, 50, 'rgba(255,40,40,1)', S.six * pul); c.globalAlpha = S.six; c.fillStyle = '#FF6A6A'; c.beginPath(); c.arc(x, y, 11, 0, TAU); c.fill(); c.fillStyle = '#FFD0D0'; c.beginPath(); c.arc(x - 3, y - 3, 4, 0, TAU); c.fill(); c.globalAlpha = 1;
   }
+  if (CYL && S.sixTag > 0) {                       // the dare: the B7 bed over the welded hatch, and the drop to bed 000
+    const [x, y, w, h] = cellRect(ABOVE000), [bx, by] = cellCenter(SIXC), a = S.sixTag;
+    c.save(); c.globalAlpha = a; c.strokeStyle = P.amber; c.lineWidth = 2.5; c.strokeRect(x - 3, y - 3, w + 6, h + 6);
+    c.fillStyle = 'rgba(242,194,48,.35)'; c.fillRect(x, y, w, h);
+    c.setLineDash([6, 6]); c.lineDashOffset = -t * 30; c.strokeStyle = '#FF4040'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x + w / 2, y + h + 4); c.lineTo(bx, by - 8); c.stroke(); c.restore();
+    glowDot(g, x + w / 2, y + h / 2, 34, 'rgba(242,194,48,1)', a * .8);
+  }
   if (S.yours > 0) {
     const [x, y] = cellCenter(YOURBED), a = back(S.yours), pul = .8 + .2 * Math.sin(t * 5);
     glowDot(g, x, y, 46 * a, 'rgba(255,220,120,1)', pul); c.fillStyle = '#FFF2C4'; c.beginPath(); c.arc(x, y, 10 * a, 0, TAU); c.fill();
@@ -397,7 +405,8 @@ function drawCutaway(t, cam, S) {
   labels.length = 0;
   labels.push(() => CYL ? lab(VX1 + 60, CY.top + 3 * CY.LH - 40, 'GARDEN', '#9CF04A', S.pantry, 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
   labels.push(() => CYL ? lab(VX1 + 60, CY.top + 6 * CY.LH - 60, 'ARMORY', P.amber, S.gens, 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
-  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x + 70, y - 34, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
+  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x + 110, y + 34, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
+  if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(VX1 + 20, y + 4, 'B7 · ABOVE BED 000', P.amber, S.sixTag, 'dare')); }
   { const [x, y] = cellCenter(YOURBED); labels.push(() => lab(x + 100, y - 40, 'YOUR BED', P.gold, S.yours > 0 ? Math.min(1, S.yours * 2) : 0, 'yours')); }
   if (S.doorPing > 0) { labels.push(() => { const [sx, sy] = w2s(cam, DOOR.x, DOOR.y); ctxLabels.save(); ctxLabels.globalAlpha = S.doorPing; ctxLabels.strokeStyle = P.amber; ctxLabels.lineWidth = 4; ctxLabels.beginPath(); ctxLabels.arc(sx, sy, (DOOR.r + 20 + (1 - S.doorPing) * 70) * cam.z, 0, TAU); ctxLabels.stroke(); ctxLabels.restore(); }); }
   // composite glow onto cutaway

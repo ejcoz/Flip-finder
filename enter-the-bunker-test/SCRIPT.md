@@ -1,6 +1,6 @@
 # Enter the Bunker: narration script
 
-For recording a better voiceover. Each line is timed to the picture; the **slot** is the time between the line's start and the next line's start. Stay within the slot (a little shorter is fine, longer pushes the edit). Numbers are spoken as written in *Say* ("bed zero" is captioned as "Bed 000").
+For recording a better voiceover. Each line is timed to the picture; the **slot** is the time between the line's start and the next line's start. Stay within the slot (a little shorter is fine, longer pushes the edit). Numbers are spoken as written in *Say* ("bed zero" is captioned "Bed 000", "B seven" is captioned "B7").
 
 **How to deliver it:** record each line as a separate file named by its ID (`l01.wav`, `l02.wav`, …, `l12b.wav`, `l12c.wav`) and I'll drop them in and re-time the captions automatically. One continuous take also works; I'll cut it.
 
@@ -20,8 +20,8 @@ For recording a better voiceover. Each line is timed to the picture; the **slot*
 | l12 | 31.1 s | 2.6 s | This bunker only has seven levels. | Quiet, deliberate. "seven" clearly. |
 | l12b | 33.7 s | 3.2 s | Bed zero is on the eighth. | Let the dread show. Small pause after "bed zero". |
 | l12c | 36.9 s | 4.9 s | And it's locked from the inside. | Barely above a whisper. Let "inside" hang. |
-| l13 | 41.8 s | 6.3 s | Pick your spot in the comments. By the garden, next to the armory, or right beside bed zero. | Snap back to upbeat host voice: the call to action. Lift on "bed zero" with a grin. |
-| l14 | 48.1 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. Ends on the loop: no fade. |
+| l13 | 41.8 s | 7.0 s | Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero. | Snap back to upbeat host voice: the call to action. Slow down and drop a little on "B seven, right above bed zero": it's the dare. |
+| l14 | 48.8 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. Ends on the loop: no fade. |
 
 ## Plain read-through
 
@@ -39,7 +39,7 @@ But there's something I haven't told you.
 This bunker only has seven levels.
 Bed zero is on the eighth.
 And it's locked from the inside.
-Pick your spot in the comments. By the garden, next to the armory, or right beside bed zero.
+Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero.
 Follow me, and get inside before the door closes.
 
 ## Total
