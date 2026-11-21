@@ -18,7 +18,7 @@ DISP = {
  'l10': 'And at 100,000, | the door seals, | and we wait out | the end of the world.',
  'l11': "But there's something | I haven't told you.",
  'l12': 'Bed 404 | was already locked | from the inside | when we dug it out.',
- 'l13': 'Pick your spot | in the comments. | By the pantry, | next to the generators, | or right beside 404.',
+ 'l13': 'Pick your spot | in the comments. | By the garden, | next to the armory, | or right beside 404.',
  'l14': 'Follow me, | and get inside | before the door closes.'}
 lines, caps = [], []
 for lid, t0 in START.items():

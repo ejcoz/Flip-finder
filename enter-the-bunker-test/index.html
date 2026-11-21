@@ -21,6 +21,7 @@ const L = Object.fromEntries(TL.lines.map(l => [l.id, l]));
 const wt = (id, word) => { const w = L[id].w.find(x => x[0].toLowerCase().startsWith(word.toLowerCase())); return w ? w[1] : L[id].t; };
 const lineEnd = id => L[id].t + L[id].d;
 
+const CYL = new URLSearchParams(location.search).get('shape') !== 'box';
 // ---------- palette ----------
 const P = {
   sky0: '#140E0A', sky1: '#5A3417', shell: '#A9A48C', shellS: '#6C6855', inner: '#1C2016', cell: '#2E3625', slab: '#12140D',
@@ -34,7 +35,7 @@ const T = {
   k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: 28.0, red: 28.85,
   dive2a: 29.2, dive2b: 30.3, six: wt('l12', '404'), lock: wt('l12', 'locked'), back2a: 35.95, back2b: 37.1,
-  card: wt('l13', 'comments'), pantry: wt('l13', 'pantry'), gens: wt('l13', 'generators'), beside: wt('l13', '404'),
+  card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', '404'),
   follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: 45.45, end: TL.DUR
 };
 
@@ -52,8 +53,17 @@ const NCOL = Math.floor((VX1 - VX0 - 76) / CW), NROW = Math.floor((VBOT - GY0 - 
 const SPINE = Math.floor(NCOL / 2);
 const DOOR = { x: VX0 + 2, y: 900, r: 64 }, TUN = { x: -180, y: SURF - 10 };
 const tunU = (() => { const dx = TUN.x - DOOR.x, dy = TUN.y - DOOR.y, l = Math.hypot(dx, dy); return [dx / l, dy / l]; })();
-const LOOPC = [8, 39], DIVE1 = [27, 46], DIVE2 = [SPINE + 1, 10], YOURBED = [8, 63], SIXC = [SPINE, 3];
-const cellCenter = ([i, j]) => { const [x, y] = cellXY(i, j); return [x + 5.5, y + 3.5]; };
+const CY = { cx: 540, R: 345, r: 312, ry: 30, top: 620, bot: 1460, NL: 7, NA: 30, ROWS: 7 };
+CY.LH = (CY.bot - CY.top) / CY.NL;
+// a cylinder cell is [level, row, column]: on the back wall of a level, rising from its floor
+function cylCellRect(lv, row, a) {
+  const a0 = -1.42 + a * 2.84 / CY.NA, a1 = a0 + 2.84 / CY.NA - .012, am = (a0 + a1) / 2, yF = CY.top + (lv + 1) * CY.LH;
+  const x0 = CY.cx + CY.r * Math.sin(a0), x1 = CY.cx + CY.r * Math.sin(a1), yb = yF - CY.ry * Math.cos(am) - 6 - row * 12.5;
+  return [x0, yb - 9.5, x1 - x0, 9.5];
+}
+const cellRect = cell => cell.length === 3 ? cylCellRect(...cell) : (([x, y]) => [x, y, 11, 7])(cellXY(cell[0], cell[1]));
+const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [1, 2, 15] : [SPINE + 1, 10], YOURBED = CYL ? [5, 1, 9] : [8, 63], SIXC = CYL ? [0, 2, 16] : [SPINE, 3];
+const cellCenter = cell => { const [x, y, w, h] = cellRect(cell); return [x + w / 2, y + h / 2]; };
 const rnd = mulberry(7); const LIT = Array.from({ length: NCOL * NROW }, () => rnd());
 
 // ---------- static backgrounds (world, scale .5) ----------
@@ -169,9 +179,8 @@ function tag(c, x, y, text, col, a = 1, size = 20, plate = true, id) {
 }
 
 // ---------- cylindrical variant (?shape=cyl): a vertical silo cut open at the front ----------
-const CYL = new URLSearchParams(location.search).get('shape') === 'cyl';
 function drawCyl(c, g, t, cam, S) {
-  const cx = 540, R = 345, r = 312, ry = 30, top = VTOP + 20, bot = VBOT - 30, NL = 7, LH = (bot - top) / NL;
+  const { cx, R, r, ry, top, bot, NL, LH, NA, ROWS } = CY;
   const fy = k => top + k * LH;
   // outer shell: concrete cylinder (walls, roof cap, base)
   c.fillStyle = P.shellS; c.beginPath(); c.ellipse(cx, top, R, ry + 8, 0, Math.PI, 0); c.lineTo(cx + R, bot); c.ellipse(cx, bot, R, ry + 8, 0, 0, Math.PI); c.closePath(); c.fill();
@@ -181,23 +190,38 @@ function drawCyl(c, g, t, cam, S) {
   const gr = c.createLinearGradient(cx - r, 0, cx + r, 0); gr.addColorStop(0, '#0E110B'); gr.addColorStop(.5, '#232A1B'); gr.addColorStop(1, '#0E110B');
   c.fillStyle = gr; c.fillRect(cx - r, top + ry + 8, 2 * r, bot - top - ry - 8);
   // levels: back-wall bunks, floor disc, core, then the ceiling's front lip over them
-  const NA = 30;
   for (let k = 0; k < NL; k++) {
     const yF = fy(k + 1);
     // floor disc of this level
     c.fillStyle = '#2C3022'; c.beginPath(); c.ellipse(cx, yF, r, ry, 0, 0, TAU); c.fill();
     // bunks along the back wall: 5 rows rising from the back arc
-    for (let row = 0; row < 5; row++) for (let a = 0; a < NA; a++) {
+    for (let row = 0; row < ROWS; row++) for (let a = 0; a < NA; a++) {
       const a0 = -1.42 + a * 2.84 / NA, a1 = a0 + 2.84 / NA - .012, am = (a0 + a1) / 2;
-      const x0 = cx + r * Math.sin(a0), x1 = cx + r * Math.sin(a1), yb = yF - ry * Math.cos(am) - 6 - row * 14;
+      const x0 = cx + r * Math.sin(a0), x1 = cx + r * Math.sin(a1), yb = yF - ry * Math.cos(am) - 6 - row * 12.5;
       const w = x1 - x0; if (w < 2) continue;
-      const lit = LIT[(k * 5 + row) * NA + a]; let col = P.cell;
+      const lit = LIT[(k * ROWS + row) * NA + a]; let col = P.cell;
       if (S.lights > 0 && lit < .42 * S.lights) col = lit < .14 ? '#FFD27A' : '#C9A35A';
       const shade = .55 + .45 * Math.cos(am);
-      c.globalAlpha = shade; c.fillStyle = col; rr(c, x0, yb - 10, w, 10, 1.5); c.fill();
+      c.globalAlpha = shade; c.fillStyle = col; rr(c, x0, yb - 9.5, w, 9.5, 1.5); c.fill();
       c.fillStyle = col === P.cell ? '#141810' : '#7A5A22'; c.fillRect(x0 + w * .1, yb - 8, w * .8, 5);
+      c.fillStyle = col === P.cell ? '#8E957A' : '#FFE3A0'; c.fillRect(x0 + w * .14, yb - 7.4, w * .2, 3.8);
+      c.fillStyle = col === P.cell ? '#4A5634' : '#E0A848'; c.fillRect(x0 + w * .38, yb - 7.2, w * .48, 3.4);
       c.fillStyle = col === P.cell ? '#9CF04A' : '#FFD27A'; c.fillRect(x0 + w * .2, yb - 2, w * .6, .8); c.globalAlpha = 1;
       if (col !== P.cell) { g.fillStyle = 'rgba(255,190,90,.9)'; g.fillRect(x0 - 2, yb - 12, w + 4, 14); }
+    }
+    // garden ring (level 3): a planted floor under grow-lights
+    if (k === 2 && S.pantry > 0) {
+      c.globalAlpha = S.pantry; c.fillStyle = '#2F6B22'; c.beginPath(); c.ellipse(cx, yF, r - 6, ry - 3, 0, 0, TAU); c.fill();
+      for (let p = 0; p < 90; p++) { const a = hash(p * 3.7) * TAU, rr2 = .3 + .65 * hash(p * 1.9); c.fillStyle = p % 3 ? '#7FD94A' : '#B8F27A'; c.beginPath(); c.arc(cx + Math.cos(a) * (r - 20) * rr2, yF + Math.sin(a) * (ry - 6) * rr2 - 3, 3.2, 0, TAU); c.fill(); }
+      c.globalAlpha = 1; g.globalAlpha = S.pantry; g.fillStyle = 'rgba(150,255,90,.8)'; g.beginPath(); g.ellipse(cx, yF - 10, r, ry + 12, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
+    }
+    // armory (level 6): a racked section of the back wall
+    if (k === 5 && S.gens > 0) {
+      const [ax0] = cylCellRect(5, 0, 3), [ax1, , aw] = cylCellRect(5, 0, 10), ay = yF - ry * .55 - 76;
+      c.globalAlpha = S.gens; c.fillStyle = '#3A2A12'; c.fillRect(ax0, ay, ax1 + aw - ax0, 70);
+      c.strokeStyle = P.amber; c.lineWidth = 2; c.strokeRect(ax0, ay, ax1 + aw - ax0, 70);
+      for (let q = 0; q < 14; q++) { const x = ax0 + 8 + q * (ax1 + aw - ax0 - 16) / 13; c.fillStyle = '#B9B39A'; c.fillRect(x - 1.5, ay + 10, 3, 34); c.fillStyle = '#6E5A30'; c.fillRect(x - 3, ay + 46, 6, 12); }
+      c.globalAlpha = 1; g.globalAlpha = S.gens; g.fillStyle = 'rgba(255,190,60,.8)'; g.fillRect(ax0, ay, ax1 + aw - ax0, 70); g.globalAlpha = 1;
     }
     // central core (stair/lift) for this level
     c.fillStyle = P.shellS; c.fillRect(cx - 16, fy(k), 32, LH); c.fillStyle = '#0E100A'; c.fillRect(cx - 10, fy(k), 20, LH);
@@ -208,6 +232,9 @@ function drawCyl(c, g, t, cam, S) {
     c.fillStyle = P.shell; c.beginPath(); c.ellipse(cx, yC + 12, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, yC + 15); c.ellipse(cx, yC + 15, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
     c.save(); c.font = '700 14px Fredoka'; c.fillStyle = P.amber; c.textAlign = 'center'; c.fillText('B' + (k + 1), cx, yC + ry + 30); c.restore();
   }
+  // scanner sweep and filtered air
+  if (S.sweep > 0 && S.sweep < 1) { const y = lerp(top - 40, bot + 40, S.sweep); c.fillStyle = 'rgba(166,255,77,.35)'; c.fillRect(cx - r, y - 30, 2 * r, 30); c.fillStyle = 'rgba(220,255,170,.9)'; c.fillRect(cx - r, y, 2 * r, 3); g.fillStyle = 'rgba(166,255,77,.8)'; g.fillRect(cx - r, y - 8, 2 * r, 12); }
+  if (S.air > 0) for (let k = 0; k < 60; k++) { const vx = k % 2 ? cx - 230 : cx + 230, y = bot - ((t * 120 + hash(k * 3.1) * 800) % 800); c.globalAlpha = S.air * .7; c.fillStyle = '#E2E8CC'; c.fillRect(vx + (hash(k) - .5) * 40, y, 2.5, 9); c.globalAlpha = 1; }
   // bottom slab front lip
   c.fillStyle = P.shellS; c.beginPath(); c.ellipse(cx, bot, r, ry, 0, 0, Math.PI); c.lineTo(cx - r, bot + 14); c.ellipse(cx, bot + 14, r, ry, 0, Math.PI, 0, true); c.closePath(); c.fill();
   // cut faces of the wall (left and right), concrete with a hazard-yellow dashed edge
@@ -339,8 +366,8 @@ function drawCutaway(t, cam, S) {
   // world-attached labels
   const lab = (x, y, text, col, a, id) => { if (a <= .01) return; const [sx, sy] = w2s(cam, x, y); tag(ctxLabels, sx, sy, text, col, a, 22, true); TEXTS.push({ id, text, x0: sx - 90, y0: sy - 18, x1: sx + 90, y1: sy + 18 }); };
   labels.length = 0;
-  labels.push(() => lab(VX1 + 70, VTOP + 90, 'PANTRY', P.cyan, S.pantry, 'pantry'));
-  labels.push(() => lab(VX1 + 30, VBOT - 75, 'GENERATORS', P.gold, S.gens, 'gens'));
+  labels.push(() => CYL ? lab(VX1 + 60, CY.top + 3 * CY.LH - 40, 'GARDEN', '#9CF04A', S.pantry, 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
+  labels.push(() => CYL ? lab(VX1 + 60, CY.top + 6 * CY.LH - 60, 'ARMORY', P.amber, S.gens, 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
   { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x + 70, y - 34, '404', '#FF6A6A', S.sixTag, 'six')); }
   { const [x, y] = cellCenter(YOURBED); labels.push(() => lab(x + 100, y - 40, 'YOUR BED', P.gold, S.yours > 0 ? Math.min(1, S.yours * 2) : 0, 'yours')); }
   if (S.doorPing > 0) { labels.push(() => { const [sx, sy] = w2s(cam, DOOR.x, DOOR.y); ctxLabels.save(); ctxLabels.globalAlpha = S.doorPing; ctxLabels.strokeStyle = P.amber; ctxLabels.lineWidth = 4; ctxLabels.beginPath(); ctxLabels.arc(sx, sy, (DOOR.r + 20 + (1 - S.doorPing) * 70) * cam.z, 0, TAU); ctxLabels.stroke(); ctxLabels.restore(); }); }
@@ -548,13 +575,13 @@ function commentCard(t) {
   rr(ctx, -290, -54, 580, 108, 22); ctx.fillStyle = '#F7F8FB'; ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.fill(); ctx.shadowBlur = 0;
   ctx.fillStyle = '#E8455A'; ctx.beginPath(); ctx.arc(-230, 0, 26, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 26px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Y', -230, 2);
   ctx.textAlign = 'left'; ctx.fillStyle = '#8A90A0'; ctx.font = '500 22px Fredoka'; ctx.fillText('your_user', -186, -18);
-  ctx.fillStyle = '#12151E'; ctx.font = '700 30px Fredoka'; ctx.fillText('Me by the pantry!', -186, 16);
+  ctx.fillStyle = '#12151E'; ctx.font = '700 30px Fredoka'; ctx.fillText('Me by the garden!', -186, 16);
   ctx.restore();
-  TEXTS.push({ id: 'card', text: 'your_user Me by the pantry!', x0: 250, y0: 1186, x1: 830, y1: 1294 });
+  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 1186, x1: 830, y1: 1294 });
 }
 
 // ---------- frame ----------
-function cellScreenRect(cam, cell) { const [x, y] = cellXY(...cell); const a = w2s(cam, x, y), b = w2s(cam, x + 11, y + 7); return [a[0], a[1], b[0] - a[0], b[1] - a[1]]; }
+function cellScreenRect(cam, cell) { const [x, y, w, h] = cellRect(cell); const a = w2s(cam, x, y), b = w2s(cam, x + w, y + h); return [a[0], a[1], b[0] - a[0], b[1] - a[1]]; }
 window.render = (t) => {
   TEXTS.length = 0;
   const cam = camAt(t), S = state(t);
