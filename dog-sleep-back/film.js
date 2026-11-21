@@ -59,7 +59,7 @@ function build({ dur, words, off, script }) {
   SHOTS.slice(1).forEach(s => EV.push({ t: s.t0 - WHIP / 2, type: 'whoosh' }));
   STEPS.forEach(([, i]) => EV.push({ t: LINES[i].t0 + .2, type: 'tick' }));
   EV.push({ t: L1.wt[7], type: 'pop' }, { t: L2.wt[4], type: 'pop' }, { t: L2.wt[10], type: 'puff' }, { t: STRIKE(), type: 'strike' });
-  EV.push({ t: L4.wt[6], type: 'pop' }, { t: L5.wt[6], type: 'tick' }, { t: L5.wt[8], type: 'tick' }, { t: L5.wt[4], type: 'pop' });
+  EV.push({ t: L4.wt[6], type: 'pop' }, { t: L5.wt[1] + .1, type: 'tick' }, { t: L5.wt[7] + .25, type: 'tick' }, { t: L5.wt[8], type: 'tick' }, { t: L5.wt[4], type: 'pop' });
   for (let i = 0; i < 19; i += 3) EV.push({ t: HOP() + i * .045, type: 'tick' });
   EV.push({ t: L6.wt[1], type: 'tick' }, { t: L6.wt[5], type: 'pop' }, { t: L6.wt[8] + .1, type: 'tick' });
   EV.push({ t: L7.wt[8], type: 'chime' });
@@ -128,20 +128,38 @@ function home(g, t) {
 
 // ---------- the wild: the one takeover card ----------
 function wild(g, t, lt) {
+  // a change every 0.5–1 s, tied to words: the push starts on the whip · "packs": eyes blink on in the trees ·
+  // "sleep": both settle, 360° COVERED · "someone's": the right one lifts its head and its watch cone sweeps out ·
+  // "always": they swap · "watching": both watch, and the eyes in the trees back away
   g.fillStyle = '#060A15'; g.fillRect(0, 0, W, H);
   const x = 60, y = 600, w = 860, h = 880;
   A.card(x, y, w, h, 'the wild', 'pack-mates, back to back', 'CAM 04', (lt / 6) % 1);
   g.save(); g.beginPath(); g.roundRect(x + 14, y + 118, w - 28, h - 132, 20); g.clip();
+  const z = 1 + .08 * ease(lt / 4.2), zx = 490, zy = 1250;
+  g.translate(zx, zy); g.scale(z, z); g.translate(-zx, -zy);
   g.save(); g.translate(0, -20); A.forestNight(t); g.restore();
-  // who is awake: both asleep for "dogs may sleep back-to-back", one opens its eyes on "so", they swap on "always", both on "watching"
-  const eR = Math.min(ease((t - L5.wt[6]) / .25), 1 - ease((t - L5.wt[8]) / .25)), eL = ease((t - L5.wt[8]) / .25);
-  const cone = (hx, hy, dir, k) => { if (k <= 0) return; const gr = g.createRadialGradient(hx, hy, 10, hx, hy, 420); gr.addColorStop(0, `rgba(255,201,77,${.45 * k})`); gr.addColorStop(1, 'rgba(255,201,77,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(hx, hy); g.arc(hx, hy, 420, dir > 0 ? -.45 : Math.PI - .45, dir > 0 ? .45 : Math.PI + .45); g.closePath(); g.fill(); };
-  const both = ease((t - L5.wt[9]) / .3);
-  const s = .85, gy = 1350, LX = 325, RX = 655;
-  cone(LX - 140 * s, gy - 190 * s, -1, Math.max(eL, both));
-  cone(RX + 140 * s, gy - 190 * s, 1, Math.max(eR, both * .9));
-  g.save(); g.translate(LX, gy); g.scale(s, s); A.sphinxDog(0, 0, -1, { eye: Math.max(eL, both * .9), breath: breathAt(t), earTwitch: bump(t, L5.wt[4], .4) }); g.restore();
-  g.save(); g.translate(RX, gy); g.scale(s, s); A.sphinxDog(0, 0, 1, { eye: Math.max(eR, both), breath: breathAt(t + 1.3), earTwitch: bump(t, L5.wt[2], .4), coat: ['#D9C3A4', '#A88A64', '#735C40'], dark: ['#7E654A', '#5C4834', '#3E3022'] }); g.restore();   // a warmer coat, so the two read as two
+  // eyes in the dark trees: blink on with "packs", back away on "watching"
+  const away = ease((t - L5.wt[9] - .2) / .6);
+  [[170, 1060, 0], [820, 1010, .25], [600, 940, .5], [330, 960, .7]].forEach(([ex, ey, d]) => {
+    const on = ease((t - L5.wt[1] - .1 - d) / .25) * (1 - away), bl = ((t + d * 3) % 2.4) < .12 ? .15 : 1;
+    if (on <= 0) return;
+    g.save(); g.globalAlpha = on; g.translate(ex, ey - 30 * away); g.scale(1 - .4 * away, 1 - .4 * away);
+    g.fillStyle = 'rgba(255,200,80,.22)'; A.ell(0, 0, 40, 22); g.fill();
+    g.fillStyle = '#FFD15A'; A.ell(-15, 0, 8, 6 * bl); g.fill(); A.ell(15, 0, 8, 6 * bl); g.fill();
+    g.restore();
+  });
+  // who is on watch
+  const wakeR = L5.wt[7] + .25, swap = L5.wt[8], all = L5.wt[9];
+  const both = ease((t - all) / .3);
+  const liftR = Math.max(Math.min(ease((t - wakeR) / .3), 1 - ease((t - swap) / .3)), both);
+  const liftL = Math.max(ease((t - swap) / .3), both);
+  const settle = bump(t, L5.wt[4], .6);   // both tuck in on "sleep"
+  const cone = (hx, hy, dir, k) => { if (k <= 0) return; const r = 600, sp = .55 * k; const gr = g.createRadialGradient(hx, hy, 10, hx, hy, r); gr.addColorStop(0, `rgba(255,201,77,${.75 * k})`); gr.addColorStop(.55, `rgba(255,201,77,${.32 * k})`); gr.addColorStop(1, 'rgba(255,201,77,0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(hx, hy); const c = dir > 0 ? -1.3 : Math.PI + 1.3; g.arc(hx, hy, r, c - sp, c + sp); /* angled up into the trees */ g.closePath(); g.fill(); };
+  const s = .9, gy = 1360, LX = 330, RX = 650;
+  cone(LX - 180, gy - 200, -1, liftL);
+  cone(RX + 180, gy - 200, 1, liftR);
+  g.save(); g.translate(LX, gy + 6 * settle); g.scale(s, s); A.sphinxDog(0, 0, -1, { eye: liftL, lift: liftL, breath: breathAt(t), earTwitch: bump(t, L5.wt[2], .4) }); g.restore();
+  g.save(); g.translate(RX, gy + 6 * settle); g.scale(s, s); A.sphinxDog(0, 0, 1, { eye: liftR, lift: liftR, breath: breathAt(t + 1.3), earTwitch: bump(t, L5.wt[3], .4), coat: ['#D9C3A4', '#A88A64', '#735C40'], dark: ['#7E654A', '#5C4834', '#3E3022'] }); g.restore();   // a warmer coat, so the two read as two
   g.restore();
   if (t > L5.wt[4]) { const k = back((t - L5.wt[4]) / .3); g.save(); g.translate(490, 800); g.scale(k, k); A.pill('360° COVERED', 0, 0, ACC.fact, 30); g.restore(); }
 }

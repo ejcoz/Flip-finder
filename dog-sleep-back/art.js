@@ -490,7 +490,7 @@ export function rearDog(x, y, o = {}) {
   g.restore();
 }
 // a wolf (or dog) lying sphinx-style, side view; dir = 1 faces right, -1 faces left. eye 0..1 (0 asleep, 1 wide awake)
-export function sphinxDog(x, y, dir = 1, { eye = 1, coat = ['#C9C2B6', '#8E8478', '#5E554C'], dark = ['#6E655A', '#4E463E', '#332D27'], breath = 0, earTwitch = 0 } = {}) {
+export function sphinxDog(x, y, dir = 1, { eye = 1, lift = 1, coat = ['#C9C2B6', '#8E8478', '#5E554C'], dark = ['#6E655A', '#4E463E', '#332D27'], breath = 0, earTwitch = 0 } = {}) {   // lift 0..1: head resting low (asleep) → raised (on watch)
   g.save(); g.translate(x, y); g.scale(dir, 1);
   g.fillStyle = 'rgba(0,0,0,.35)'; ell(-10, 8, 230, 22); g.fill();
   // tail curled along the ground at the back
@@ -503,7 +503,7 @@ export function sphinxDog(x, y, dir = 1, { eye = 1, coat = ['#C9C2B6', '#8E8478'
   g.fillStyle = shade(-30, 0, coat); g.beginPath(); g.roundRect(40, -30, 160, 30, 14); g.fill(); g.beginPath(); g.roundRect(60, -22, 150, 24, 12); g.fill();
   // neck + head (profile, raised)
   g.fillStyle = shade(-200, -40, coat); g.beginPath(); g.moveTo(40, -110); g.quadraticCurveTo(80, -170, 120, -200); g.lineTo(160, -150); g.quadraticCurveTo(130, -90, 100, -40); g.closePath(); g.fill();
-  g.save(); g.translate(140, -190); g.scale(1.3, 1.3);
+  g.save(); g.translate(140 + 8 * (1 - lift), -150 - 40 * lift); g.rotate(.22 * (1 - lift)); g.scale(1.3, 1.3);
   g.fillStyle = shade(-50, 40, coat); ell(0, 0, 52, 46); g.fill();
   g.fillStyle = shade(-10, 40, ['#F2EEE6', '#DCD5C9', '#B5AC9E']); ell(58, 14, 46, 24); g.fill();   // muzzle
   g.fillStyle = '#2A2230'; ell(100, 6, 11, 9); g.fill();
