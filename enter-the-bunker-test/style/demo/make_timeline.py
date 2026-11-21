@@ -2,18 +2,16 @@
 import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
-START = {'l01': 0.0, 'l02': 3.66, 'l03': 9.91, 'l04': 12.48, 'l05': 14.57, 'l06': 15.38, 'l07': 18.92, 'l08': 21.11, 'l09': 23.39, 'l10': 25.91, 'l11': 32.49, 'l12': 34.76, 'l12b': 37.39, 'l12c': 39.48, 'l12d': 42.98, 'l12e': 46.44, 'l13': 49.92, 'l13b': 51.55, 'l13c': 53.65, 'l13d': 55.75, 'l14': 59.12}
-DUR = 63.35
+START = {'l01': 0.0, 'l02': 3.48, 'l03': 6.6, 'l04': 9.01, 'l05': 10.89, 'l06': 11.58, 'l08': 15.21, 'l10': 17.35, 'l11': 23.04, 'l12': 25.27, 'l12b': 27.71, 'l12c': 29.64, 'l12d': 32.93, 'l12e': 35.81, 'l13': 38.76, 'l13b': 40.48, 'l13c': 41.93, 'l13d': 43.38, 'l14': 46.51}
+DUR = 49.73
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
- 'l02': '100,000 beds, | and every single one | is empty.',
+ 'l02': 'And every single one | is empty.',
  'l03': "The blast door won't seal | until it's full.",
  'l04': 'So who sleeps down here?',
  'l05': 'You.',
  'l06': 'Everyone who follows | gets a bed, | with their name on the door.',
- 'l07': "Right now, | there's nobody inside.",
  'l08': 'At 1,000, | the lights come on.',
- 'l09': 'At 10,000, | the air starts flowing.',
  'l10': 'And at 100,000, | the door seals, | and we wait out | the end of the world.',
  'l11': "But there's something | I haven't told you.",
  'l12': 'We thought this bunker | had seven levels.',

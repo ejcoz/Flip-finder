@@ -9,10 +9,9 @@
  },
  {
   "id": "l02",
-  "text": "One hundred thousand beds, and every single one is empty.",
+  "text": "And every single one is empty.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "100,000 beds, and every single one is empty.",
   "voice_source": "ElevenLabs (user recording)"
  },
  {
@@ -45,26 +44,11 @@
   "voice_source": "ElevenLabs (user recording)"
  },
  {
-  "id": "l07",
-  "text": "Right now, there's nobody inside.",
-  "voice": "am_michael",
-  "speed": 1.05,
-  "voice_source": "ElevenLabs (user recording)"
- },
- {
   "id": "l08",
   "text": "At one thousand, the lights come on.",
   "voice": "am_michael",
   "speed": 1.08,
   "asr": "At 1,000 the lights come on.",
-  "voice_source": "ElevenLabs (user recording)"
- },
- {
-  "id": "l09",
-  "text": "At ten thousand, the air starts flowing.",
-  "voice": "am_michael",
-  "speed": 1.08,
-  "asr": "At 10,000, the air starts flowing.",
   "voice_source": "ElevenLabs (user recording)"
  },
  {
@@ -94,7 +78,6 @@
   "text": "Then we found an eighth.",
   "voice": "am_michael",
   "speed": 0.92,
-  "asr": "Then we found an eights.",
   "voice_source": "ElevenLabs (user recording)"
  },
  {
