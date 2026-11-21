@@ -3,8 +3,8 @@ import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
 START = {'l01': 0.0, 'l02': 3.6, 'l03': 7.35, 'l04': 10.0, 'l05': 11.75, 'l06': 12.6, 'l07': 16.5,
-         'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.1, 'l12b': 33.75, 'l12c': 35.65, 'l12d': 39.6, 'l12e': 43.2, 'l13': 46.4, 'l14': 53.35}
-DUR = 57.85
+         'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.1, 'l12b': 33.75, 'l12c': 35.65, 'l12d': 39.6, 'l12e': 43.2, 'l13': 46.4, 'l13b': 48.4, 'l13c': 50.5, 'l13d': 52.7, 'l14': 56.0}
+DUR = 60.5
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': '100,000 beds, | and every single one | is empty.',
@@ -22,7 +22,10 @@ DISP = {
  'l12c': 'There was only one bed | down there. | Bed 000.',
  'l12d': 'Its door was locked | from the inside.',
  'l12e': 'So we welded | the hatch shut.',
- 'l13': 'Pick your spot | in the comments. | By the garden, | next to the armory, | or on B7, | right above bed 000.',
+ 'l13': 'Pick your spot | in the comments.',
+ 'l13b': 'By the garden,',
+ 'l13c': 'next to the armory,',
+ 'l13d': 'or on B7, | right above bed 000.',
  'l14': 'Follow me, | and get inside | before the door closes.'}
 lines, caps = [], []
 for lid, t0 in START.items():

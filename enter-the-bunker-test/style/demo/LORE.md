@@ -32,7 +32,7 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 - The archives: the original builders' blueprints, which show **eight** levels.
 
 ### B3 — The garden (on screen)
-- A ring of hydroponic beds under grow-lights: the only green thing left in the world.
+- A ring of planter boxes under pink grow-lights, with leafy plants and tomato vines **(on screen)**: the only green thing left in the world.
 - The seed vault and the water-recycling tanks under the planters.
 - It's the warmest, brightest level, which makes it the most wanted place to sleep.
 
@@ -46,7 +46,7 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 - **Your bed, B5-0143 (on screen):** gold, with your name on the door.
 
 ### B6 — Armory and security (on screen)
-- Weapon racks along the back wall **(on screen)**, the security office and a small brig.
+- Free-standing rifle racks and stacked ammo crates round the floor under caged work lamps, a hazard-striped steel wall **(on screen)**, the security office and a small brig.
 - The guards sleep here. Bunks near the armory feel safest, or most dangerous, depending on who you ask.
 
 ### B7 — Engineering and life support

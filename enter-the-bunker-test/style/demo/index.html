@@ -36,7 +36,8 @@ const T = {
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: 28.0, red: 28.85,
   b8show: wt('l12b', 'eighth') - .05, levels: wt('l12', 'seven'), six: wt('l12c', '000'), dive2a: wt('l12c', '000') + .15, dive2b: wt('l12c', '000') + 1.25,
   lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d + .3, back2b: L.l12e.t + L.l12e.d + 1.45, weld: wt('l12e', 'welded'),
-  card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', 'B7'),
+  card: L.l13.t - .05, pantry: wt('l13b', 'garden'), gens: wt('l13c', 'armory'), beside: wt('l13d', 'B7'),
+  g0: L.l13b.t - .3, a0: L.l13c.t - .3, d0: L.l13d.t - .2,
   follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + 2.55, end: TL.DUR
 };
 
@@ -128,8 +129,16 @@ function camAt(t) {
   if (t < T.b8show) return mixCam(UPV, B8V, eio(seg(t, T.red + .4, T.b8show - .2)));
   if (t < T.dive2a) return { ...B8V, y: B8V.y + (t - T.b8show) * 30, z: B8V.z * (1 + (t - T.b8show) * .06) };
   if (t < T.back2a) { const S0 = { ...B8V, y: B8V.y + (T.dive2a - T.b8show) * 30, z: B8V.z * (1 + (T.dive2a - T.b8show) * .06) }; const u = ei(seg(t, T.dive2a, T.dive2b + .05)); return mixCam(S0, D2, ss(seg(t, T.dive2a, T.dive2a + .7)), u); }
-  if (t < T.back2b + 4.0) { const u = eo(seg(t, T.back2a, T.back2b + .4)); return mixCam(D2, wide(.0), ss(seg(t, T.back2a + .3, T.back2b + .4)), u); }
-  if (t < T.push0) return wide(lerp(0, .03, ss(seg(t, T.back2b + 4.0, T.push0 - .05))));
+  if (t < T.back2b + .6) { const u = eo(seg(t, T.back2a, T.back2b + .4)); return mixCam(D2, wide(.0), ss(seg(t, T.back2a + .3, T.back2b + .4)), u); }
+  if (t < T.push0) {
+    const base = wide(lerp(0, .03, ss(seg(t, T.back2b + .6, T.push0 - .05))));
+    const GC = { x: 470, y: CY.top + 2.62 * CY.LH, z: 4.6, r: 0 }, AC = { x: 470, y: CY.top + 5.62 * CY.LH, z: 4.6, r: 0 };
+    const drift = (C, t0) => ({ ...C, x: C.x + (t - t0) * 36, z: C.z * (1 + (t - t0) * .025) });
+    if (t < T.g0) return base;
+    if (t < T.a0) return mixCam(base, drift(GC, T.g0), eio(seg(t, T.g0, T.g0 + .55)));
+    if (t < T.d0) return mixCam(drift(GC, T.g0), drift(AC, T.a0), eio(seg(t, T.a0, T.a0 + .5)));
+    return mixCam(drift(AC, T.a0), base, eio(seg(t, T.d0, T.d0 + .6)));
+  }
   const u = eio(seg(t, T.push0, T.end)); return mixCam(wide(.03), ECU, u, u);
 }
 // world → screen for the cutaway
@@ -151,8 +160,8 @@ function state(t) {
   S.redTint = t < T.red ? 0 : t < T.back2a ? ss(seg(t, T.red, T.red + .35)) : 1 - ss(seg(t, T.back2a + .2, T.back2b));
   S.sweep = seg(t, T.sweep0, T.sweep1);
   S.six = t > T.six - .1 ? ss(seg(t, T.six - .1, T.six + .3)) * (1 - ss(seg(t, T.push0 + .6, T.end - .3))) : 0;
-  S.pantry = ss(seg(t, T.pantry - .1, T.pantry + .4)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
-  S.gens = ss(seg(t, T.gens - .1, T.gens + .4)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
+  S.pantry = ss(seg(t, T.g0, T.g0 + .45)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
+  S.gens = ss(seg(t, T.a0, T.a0 + .45)) * (1 - ss(seg(t, T.follow - .4, T.follow + .3)));
   S.sixTag = ss(seg(t, T.beside - .05, T.beside + .35)) * (1 - ss(seg(t, T.push0, T.push0 + .6)));
   S.yours = seg(t, T.follow - .05, T.follow + .5) * (1 - ss(seg(t, T.push0 + .4, T.end - .4)));
   S.doorPing = t > T.doorPing && t < T.doorPing + 1.6 ? 1 - seg(t, T.doorPing, T.doorPing + 1.6) : 0;
@@ -163,6 +172,7 @@ function counterAt(t) {
   let show = (t > T.counterIn ? back(seg(t, T.counterIn, T.counterIn + .45)) : 0);
   if (t > T.cut) show = 0;
   if (t > T.back2b - .3) show = back(seg(t, T.back2b - .3, T.back2b + .15)) * (1 - ss(seg(t, T.push0 + .3, T.push0 + 1)));
+  if (t > T.g0) show *= 1 - ss(seg(t, T.g0, T.g0 + .3)) * (1 - ss(seg(t, T.d0 + .2, T.d0 + .6)));
   if (t < T.k1 || t > T.cut) return { show, tag: 'SURVIVORS INSIDE', txt: '0 / 100,000', pop: 0, roll: false };
   let v, roll = false, pop = 0;
   const r1 = [T.k1 - .1, T.k1 + .55], r2 = [T.k10 - .1, T.k10 + .55], r3 = [T.k100 - .1, T.k100 + .9];
@@ -216,20 +226,8 @@ function drawCyl(c, g, t, cam, S) {
       c.fillStyle = col === P.cell ? '#9CF04A' : '#FFD27A'; c.fillRect(x0 + w * .2, yb - 2, w * .6, .8); c.globalAlpha = 1;
       if (col !== P.cell) { g.fillStyle = 'rgba(255,190,90,.9)'; g.fillRect(x0 - 2, yb - 12, w + 4, 14); }
     }
-    // garden ring (level 3): a planted floor under grow-lights
-    if (k === 2 && S.pantry > 0) {
-      c.globalAlpha = S.pantry; c.fillStyle = '#2F6B22'; c.beginPath(); c.ellipse(cx, yF, r - 6, ry - 3, 0, 0, TAU); c.fill();
-      for (let p = 0; p < 90; p++) { const a = hash(p * 3.7) * TAU, rr2 = .3 + .65 * hash(p * 1.9); c.fillStyle = p % 3 ? '#7FD94A' : '#B8F27A'; c.beginPath(); c.arc(cx + Math.cos(a) * (r - 20) * rr2, yF + Math.sin(a) * (ry - 6) * rr2 - 3, 3.2, 0, TAU); c.fill(); }
-      c.globalAlpha = 1; g.globalAlpha = S.pantry; g.fillStyle = 'rgba(150,255,90,.8)'; g.beginPath(); g.ellipse(cx, yF - 10, r, ry + 12, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
-    }
-    // armory (level 6): a racked section of the back wall
-    if (k === 5 && S.gens > 0) {
-      const [ax0] = cylCellRect(5, 0, 3), [ax1, , aw] = cylCellRect(5, 0, 10), ay = yF - ry * .55 - 76;
-      c.globalAlpha = S.gens; c.fillStyle = '#3A2A12'; c.fillRect(ax0, ay, ax1 + aw - ax0, 70);
-      c.strokeStyle = P.amber; c.lineWidth = 2; c.strokeRect(ax0, ay, ax1 + aw - ax0, 70);
-      for (let q = 0; q < 14; q++) { const x = ax0 + 8 + q * (ax1 + aw - ax0 - 16) / 13; c.fillStyle = '#B9B39A'; c.fillRect(x - 1.5, ay + 10, 3, 34); c.fillStyle = '#6E5A30'; c.fillRect(x - 3, ay + 46, 6, 12); }
-      c.globalAlpha = 1; g.globalAlpha = S.gens; g.fillStyle = 'rgba(255,190,60,.8)'; g.fillRect(ax0, ay, ax1 + aw - ax0, 70); g.globalAlpha = 1;
-    }
+    if (k === 2 && S.pantry > 0) drawGarden(c, g, t, fy(k), yF, S.pantry);
+    if (k === 5 && S.gens > 0) drawArmory(c, g, t, fy(k), yF, S.gens);
     // central core (stair/lift) for this level
     c.fillStyle = P.shellS; c.fillRect(cx - 16, fy(k), 32, LH); c.fillStyle = '#0E100A'; c.fillRect(cx - 10, fy(k), 20, LH);
     c.fillStyle = 'rgba(190,180,140,.55)'; for (let y = fy(k) + 4; y < fy(k + 1); y += 6) c.fillRect(cx - 10, y, 20, 1.3);
@@ -268,6 +266,79 @@ function drawB8(c, g, t, S) {
   c.font = '700 30px Fredoka'; c.fillStyle = '#FF4040'; c.textAlign = 'center'; c.fillText('B8', cx - r + 40, top + 40);
   c.restore();
   const [x, y, w, h] = cellRect(SIXC); glowDot(g, x + w / 2, y + h / 2, 120, 'rgba(255,30,30,1)', S.b8 * (.8 + .2 * Math.sin(t * 6)));
+}
+
+// ---------- the rooms you can pick (drawn in detail; the camera swoops in) ----------
+function plant(c, x, y, h, seed, a = 1) {
+  c.strokeStyle = '#3E7A26'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + (hash(seed) - .5) * 8, y - h * .6, x + (hash(seed * 2) - .5) * 6, y - h); c.stroke();
+  for (let q = 0; q < 5; q++) { const yy = y - h * (.25 + q * .17), side = q % 2 ? 1 : -1, lw = 7 + hash(seed + q) * 5;
+    c.fillStyle = q % 2 ? '#6CCB3F' : '#8FE05A'; c.beginPath(); c.ellipse(x + side * lw * .6, yy, lw, lw * .42, side * .5, 0, TAU); c.fill(); }
+  if (hash(seed * 5.1) > .55) for (let q = 0; q < 3; q++) { c.fillStyle = q === 1 ? '#FF8A3A' : '#E8442A'; c.beginPath(); c.arc(x + (q - 1) * 4, y - h * (.4 + q * .12), 2.6, 0, TAU); c.fill(); }
+}
+function drawGarden(c, g, t, yC, yF, A) {
+  const { cx, r, ry } = CY;
+  c.save(); c.globalAlpha = A;
+  // soil bed, water channel
+  c.fillStyle = '#3B2A1A'; c.beginPath(); c.ellipse(cx, yF, r - 6, ry - 3, 0, 0, TAU); c.fill();
+  c.fillStyle = '#2E5A1E'; c.beginPath(); c.ellipse(cx, yF, r - 30, ry - 9, 0, 0, TAU); c.fill();
+  c.strokeStyle = '#6FC3E8'; c.lineWidth = 2; c.beginPath(); c.ellipse(cx, yF, r - 60, ry - 14, 0, 0, TAU); c.stroke();
+  // grow-light bars and their soft cones
+  for (let q = 0; q < 6; q++) { const x = cx - r + 70 + q * (2 * r - 140) / 5, y = yC + ry + 22;
+    const cone = c.createLinearGradient(0, y, 0, yF); cone.addColorStop(0, 'rgba(255,170,230,.28)'); cone.addColorStop(1, 'rgba(255,170,230,0)');
+    c.fillStyle = cone; c.beginPath(); c.moveTo(x - 18, y); c.lineTo(x + 18, y); c.lineTo(x + 46, yF); c.lineTo(x - 46, yF); c.fill();
+    c.fillStyle = '#FFD6F0'; c.fillRect(x - 22, y - 3, 44, 5); c.strokeStyle = '#555043'; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 16, y - 3); c.lineTo(x - 16, yC + ry); c.moveTo(x + 16, y - 3); c.lineTo(x + 16, yC + ry); c.stroke();
+    g.globalAlpha = A; g.fillStyle = 'rgba(255,150,220,.9)'; g.fillRect(x - 26, y - 6, 52, 11); g.globalAlpha = 1; }
+  // planter boxes round the ring: back half first, then the near half (bigger)
+  const pts = []; for (let q = 0; q < 34; q++) { const a = q / 34 * TAU; pts.push([a, Math.cos(a)]); }
+  pts.sort((p, q) => q[1] - p[1]);
+  for (const [a, co] of pts) {
+    const x = cx + (r - 34) * Math.sin(a), y = yF - (ry - 8) * co, sc = 1 - co * .15;
+    c.fillStyle = '#6B5338'; c.fillRect(x - 12 * sc, y - 6 * sc, 24 * sc, 9 * sc); c.fillStyle = '#4A3826'; c.fillRect(x - 12 * sc, y + 1 * sc, 24 * sc, 2 * sc);
+    plant(c, x - 5 * sc, y - 5 * sc, 30 * sc + hash(a * 9) * 16, a * 13.1); plant(c, x + 6 * sc, y - 5 * sc, 26 * sc + hash(a * 7) * 14, a * 17.7);
+  }
+  c.restore();
+  g.globalAlpha = A * .55; g.fillStyle = 'rgba(140,255,90,.7)'; g.beginPath(); g.ellipse(cx, yF - 16, r - 20, ry + 4, 0, 0, TAU); g.fill(); g.globalAlpha = 1;
+}
+function drawArmory(c, g, t, yC, yF, A) {
+  const { cx, r, ry } = CY, x0 = cx - r + 46, x1 = cx + r - 46, wy0 = yC + ry + 18, wy1 = yF - ry * .55 - 4;
+  c.save(); c.globalAlpha = A;
+  // steel wall panels with racks
+  c.fillStyle = '#57533F'; c.fillRect(x0, wy0, x1 - x0, wy1 - wy0); const wl = c.createRadialGradient(cx, wy0 + 30, 10, cx, wy0 + 30, 360); wl.addColorStop(0, 'rgba(255,210,130,.35)'); wl.addColorStop(1, 'rgba(255,210,130,0)'); c.fillStyle = wl; c.fillRect(x0, wy0, x1 - x0, wy1 - wy0);
+  c.save(); c.beginPath(); c.rect(x0, wy1 - 9, x1 - x0, 9); c.clip(); c.fillStyle = '#1A1810'; c.fillRect(x0, wy1 - 9, x1 - x0, 9); c.fillStyle = P.amber; for (let x = x0 - 10; x < x1; x += 14) { c.beginPath(); c.moveTo(x, wy1); c.lineTo(x + 7, wy1); c.lineTo(x + 16, wy1 - 9); c.lineTo(x + 9, wy1 - 9); c.fill(); } c.restore();
+  c.strokeStyle = '#3A3728'; c.lineWidth = 1.5; for (let x = x0; x <= x1; x += 52) { c.beginPath(); c.moveTo(x, wy0); c.lineTo(x, wy1); c.stroke(); }
+  c.fillStyle = '#8A8468'; c.fillRect(x0, wy0 + 8, x1 - x0, 4); c.fillRect(x0, wy1 - 18, x1 - x0, 4);
+  for (let q = 0; q < 22; q++) {                     // rifles standing in the rack
+    const x = x0 + 22 + q * (x1 - x0 - 44) / 21; if (Math.abs(x - cx) < 70) continue;
+    c.fillStyle = '#121110'; c.fillRect(x - 1.5, wy0 + 14, 3, wy1 - wy0 - 38); c.fillRect(x - 2.5, wy0 + 38, 7, 11);
+    c.fillStyle = '#9A6A36'; c.beginPath(); c.moveTo(x - 2, wy1 - 42); c.lineTo(x + 3, wy1 - 42); c.lineTo(x + 6, wy1 - 20); c.lineTo(x - 5, wy1 - 20); c.fill();
+  }
+  for (const lx of [x0 + 4, x1 - 38]) { c.fillStyle = '#6E8060'; c.fillRect(lx, wy0 + 2, 34, wy1 - wy0 - 4); c.strokeStyle = '#2A3326'; c.strokeRect(lx, wy0 + 2, 34, wy1 - wy0 - 4); c.fillStyle = '#2A3326'; for (let y = wy0 + 10; y < wy0 + 30; y += 5) c.fillRect(lx + 8, y, 18, 1.5); }
+  // caged work lamps hanging from the ceiling
+  for (let q = 0; q < 5; q++) { const x = cx - r + 90 + q * (2 * r - 180) / 4, y = yC + ry + 26;
+    c.strokeStyle = '#3A3528'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x, yC + ry); c.lineTo(x, y - 8); c.stroke();
+    const cone = c.createLinearGradient(0, y, 0, yF); cone.addColorStop(0, 'rgba(255,200,110,.3)'); cone.addColorStop(1, 'rgba(255,200,110,0)');
+    c.fillStyle = cone; c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x + 6, y); c.lineTo(x + 50, yF); c.lineTo(x - 50, yF); c.fill();
+    c.fillStyle = '#FFD27A'; c.beginPath(); c.arc(x, y, 6, 0, TAU); c.fill(); c.strokeStyle = '#2A261C'; c.beginPath(); c.arc(x, y, 8.5, 0, TAU); c.moveTo(x - 8.5, y); c.lineTo(x + 8.5, y); c.stroke();
+    glowDot(g, x, y, 60, 'rgba(255,200,110,1)', A); }
+  c.fillStyle = '#41402F'; c.beginPath(); c.ellipse(cx, yF, r - 6, ry - 3, 0, 0, TAU); c.fill();   // painted steel floor
+  c.save(); c.beginPath(); c.ellipse(cx, yF, r - 40, ry - 10, 0, 0, TAU); c.clip(); c.strokeStyle = 'rgba(242,194,48,.5)'; c.lineWidth = 3; c.setLineDash([10, 8]); c.beginPath(); c.ellipse(cx, yF, r - 60, ry - 14, 0, 0, TAU); c.stroke(); c.restore();
+  // free-standing rifle racks and crate stacks round the floor ring, back to front
+  const pts = []; for (let q = 0; q < 22; q++) { const a = (q + .5) / 22 * TAU; pts.push([a, Math.cos(a), q]); }
+  pts.sort((p, q) => q[1] - p[1]);
+  for (const [a, co, q] of pts) {
+    const x = cx + (r - 40) * Math.sin(a), y = yF - (ry - 9) * co, sc = 1 - co * .15;
+    if (q % 2) {                                         // rifle rack
+      c.fillStyle = '#6E6A54'; c.fillRect(x - 16 * sc, y - 4 * sc, 32 * sc, 4 * sc); c.fillRect(x - 16 * sc, y - 30 * sc, 32 * sc, 3 * sc);
+      for (let k = 0; k < 5; k++) { const rx = x - 12 * sc + k * 6 * sc;
+        c.fillStyle = '#121110'; c.fillRect(rx - 1 * sc, y - 44 * sc, 2 * sc, 32 * sc); c.fillRect(rx - .5 * sc, y - 30 * sc, 4 * sc, 5 * sc);
+        c.fillStyle = '#9A6A36'; c.beginPath(); c.moveTo(rx - 1.5 * sc, y - 14 * sc); c.lineTo(rx + 2 * sc, y - 14 * sc); c.lineTo(rx + 3 * sc, y - 2 * sc); c.lineTo(rx - 3 * sc, y - 2 * sc); c.fill(); }
+    } else {                                             // stacked ammo crates
+      for (let k = 0; k < 2; k++) { const yy = y - k * 13 * sc, xx = x + (k ? 4 : 0) * sc;
+        c.fillStyle = '#7E8652'; c.fillRect(xx - 14 * sc, yy - 12 * sc, 28 * sc, 12 * sc); c.fillStyle = '#5A6038'; c.fillRect(xx - 14 * sc, yy - 12 * sc, 28 * sc, 2.5 * sc);
+        c.fillStyle = P.amber; c.fillRect(xx - 7 * sc, yy - 7 * sc, 14 * sc, 2 * sc); }
+    }
+  }
+  c.restore();
 }
 
 // ---------- the cutaway ----------
@@ -401,8 +472,8 @@ function drawCutaway(t, cam, S) {
   // world-attached labels
   const lab = (x, y, text, col, a, id) => { if (a <= .01) return; const [sx, sy] = w2s(cam, x, y); tag(ctxLabels, sx, sy, text, col, a, 22, true); TEXTS.push({ id, text, x0: sx - 90, y0: sy - 18, x1: sx + 90, y1: sy + 18 }); };
   labels.length = 0;
-  labels.push(() => CYL ? lab(VX1 + 60, CY.top + 3 * CY.LH - 40, 'GARDEN', '#9CF04A', S.pantry, 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
-  labels.push(() => CYL ? lab(VX1 + 60, CY.top + 6 * CY.LH - 60, 'ARMORY', P.amber, S.gens, 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
+  labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 2 * CY.LH + CY.ry + 46, 'B3 · THE GARDEN', '#9CF04A', S.pantry, 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
+  labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 5 * CY.LH + CY.ry + 46, 'B6 · THE ARMORY', P.amber, S.gens, 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
   { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x + 110, y + 34, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
   if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(VX1 + 20, y + 4, 'B7 · ABOVE BED 000', P.amber, S.sixTag, 'dare')); }
   { const [x, y] = cellCenter(YOURBED); labels.push(() => lab(x + 100, y - 40, 'YOUR BED', P.gold, S.yours > 0 ? Math.min(1, S.yours * 2) : 0, 'yours')); }
@@ -616,15 +687,15 @@ function captions(t) {
   ctx.restore();
 }
 function commentCard(t) {
-  const a = back(seg(t, T.card - .05, T.card + .35)), out = ss(seg(t, T.gens + .6, T.gens + 1.1));
+  const a = back(seg(t, T.card - .05, T.card + .35)), out = ss(seg(t, T.a0 - .1, T.a0 + .3));
   if (a <= .001 || out >= 1) return;
-  ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(540 - out * 200, 1240); ctx.scale(a, a);
+  ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(540 - out * 200, 1560); ctx.scale(a, a);
   rr(ctx, -290, -54, 580, 108, 22); ctx.fillStyle = '#F7F8FB'; ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 24; ctx.fill(); ctx.shadowBlur = 0;
   ctx.fillStyle = '#E8455A'; ctx.beginPath(); ctx.arc(-230, 0, 26, 0, TAU); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = '700 26px Fredoka'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Y', -230, 2);
   ctx.textAlign = 'left'; ctx.fillStyle = '#8A90A0'; ctx.font = '500 22px Fredoka'; ctx.fillText('your_user', -186, -18);
   ctx.fillStyle = '#12151E'; ctx.font = '700 30px Fredoka'; ctx.fillText('Me by the garden!', -186, 16);
   ctx.restore();
-  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 1186, x1: 830, y1: 1294 });
+  TEXTS.push({ id: 'card', text: 'your_user Me by the garden!', x0: 250, y0: 1506, x1: 830, y1: 1614 });
 }
 
 // ---------- frame ----------

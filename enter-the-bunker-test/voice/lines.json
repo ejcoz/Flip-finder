@@ -104,10 +104,28 @@
  },
  {
   "id": "l13",
-  "text": "Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero.",
+  "text": "Pick your spot in the comments.",
   "voice": "am_michael",
-  "speed": 1.08,
-  "asr": "Pick your spot in the comments by the garden next to the armory or on B7 right above bed zero."
+  "speed": 1.05
+ },
+ {
+  "id": "l13b",
+  "text": "By the garden,",
+  "voice": "am_michael",
+  "speed": 1.0
+ },
+ {
+  "id": "l13c",
+  "text": "next to the armory,",
+  "voice": "am_michael",
+  "speed": 1.0
+ },
+ {
+  "id": "l13d",
+  "text": "or on B seven, right above bed zero.",
+  "voice": "am_michael",
+  "speed": 0.97,
+  "asr": "or on B7 right above bed zero."
  },
  {
   "id": "l14",

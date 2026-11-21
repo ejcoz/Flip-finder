@@ -4,7 +4,7 @@ For recording the voiceover. Each line is timed to the picture. **Max length** i
 
 **Say** "bed zero" and "B seven"; the captions show "Bed 000" and "B7".
 
-**Files:** one per line, named by its ID: `l01`, `l02`, `l03`, `l04`, `l05`, `l06`, `l07`, `l08`, `l09`, `l10`, `l11`, `l12`, `l12b`, `l12c`, `l12d`, `l12e`, `l13`, `l14` (18 files, WAV or MP3). One continuous take also works; I'll cut it.
+**Files:** one per line, named by its ID: `l01`, `l02`, `l03`, `l04`, `l05`, `l06`, `l07`, `l08`, `l09`, `l10`, `l11`, `l12`, `l12b`, `l12c`, `l12d`, `l12e`, `l13`, `l13b`, `l13c`, `l13d`, `l14` (21 files, WAV or MP3). One continuous take also works; I'll cut it.
 
 | ID | Start | Max length | Say | Direction |
 |---|---|---|---|---|
@@ -26,8 +26,11 @@ For recording the voiceover. Each line is timed to the picture. **Max length** i
 | l12d | 39.6 s | 3.6 s | Its door was locked from the inside. | Barely above a whisper. Let "inside" hang. |
 | | 42.1 s | | *(knock, knock, knock: sound effect, leave empty)* | |
 | l12e | 43.2 s | 3.2 s | So we welded the hatch shut. | After the knocks. Flat, haunted, almost no emotion: they did what they had to. |
-| l13 | 46.4 s | 7.0 s | Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero. | Snap back to the upbeat host voice: the call to action. Slow down and drop on "B seven, right above bed zero": it's the dare. |
-| l14 | 53.4 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. No fade: the video loops. |
+| l13 | 46.4 s | 2.0 s | Pick your spot in the comments. | Snap back to the upbeat host voice: the call to action. |
+| l13b | 48.4 s | 2.1 s | By the garden, | Warm, tempting. Short beat after it (the camera swoops into the garden). |
+| l13c | 50.5 s | 2.2 s | next to the armory, | A little tougher, confident. Short beat after it (the armory). |
+| l13d | 52.7 s | 3.3 s | or on B seven, right above bed zero. | Slow down and drop: it's the dare. Little smile on "bed zero". |
+| l14 | 56.0 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. No fade: the video loops. |
 
 ## Read-through
 
@@ -67,10 +70,16 @@ Its door was locked from the inside.
 
 So we welded the hatch shut.
 
-Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero.
+Pick your spot in the comments.
+
+By the garden,
+
+next to the armory,
+
+or on B seven, right above bed zero.
 
 Follow me, and get inside before the door closes.
 
 ## Total
 
-About 58 seconds.
+About 60 seconds.
