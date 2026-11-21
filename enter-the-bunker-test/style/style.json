@@ -1,0 +1,12 @@
+{
+ "slug": "enter-the-bunker",
+ "en": "Enter the Bunker",
+ "cn": "进入地堡",
+ "based_on": "flat-space-explainer",
+ "borrows": [],
+ "size": "1080x1920",
+ "library_version": "f9e2042",
+ "created": "2026-11-21",
+ "line": "A glowing cutaway of one huge structure packed with tiny cells: claim your cell in the comments, watch the counter climb, and find out which cell is already taken.",
+ "line_cn": "一座塞满小格子的巨大建筑的发光剖面：在评论里认领你的格子，看计数器攀升，再发现哪一格早已有人。"
+}

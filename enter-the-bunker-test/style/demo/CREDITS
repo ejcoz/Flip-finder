@@ -1,0 +1,8 @@
+Enter the Bunker — credits and licences
+
+Picture, music and sound effects: generated in code for this film (index.html, mix.py). No samples, stock footage or images.
+Voice: Kokoro TTS v1.0 (voice am_michael), Apache-2.0 — https://github.com/thewh1teagle/kokoro-onnx ; https://huggingface.co/hexgrad/Kokoro-82M
+Voice check: faster-whisper (MIT) with OpenAI Whisper base.en (MIT).
+Font: Fredoka — Copyright 2016 The Fredoka Project Authors, SIL Open Font License 1.1 (served from the Lemo-Opuscar library, core/fonts/).
+Tools: Lemo-Opuscar core render/mix tools (core/lib.js, core/audio/sfx.py, core/render/*), MIT licence — https://github.com/lemomo-ai/lemo-opuscar
+Handles on screen (@YOUR_NAME, your_user) are fictional placeholders.
