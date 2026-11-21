@@ -104,4 +104,5 @@ The episode's milestone and new clue (one of each per episode), the structure (b
 4. Captions 78 px, outlined, no punctuation commas, below the top tabs; nothing in the app safe zones.
 5. Numbers consistent everywhere (voice = captions = doors); the narrator's knowledge explained by the lore.
 6. Call to comment: two attractive rooms + one dare, each shown in a close-up; end on the threat, then loop.
-7. Deliverables: video, cover (3:4 / 4:5 safe), caption, pinned comment, and the handle list for the next episode's Founders Wall.
+7. **Roll call (every episode):** 4–6 real commenters on screen: their comment on a card, their handle on a door plate (with the bed number if they named one). Rotate who's featured; skip handles with profanity.
+8. Deliverables: video, cover (3:4 / 4:5 safe), caption, pinned comment, and the handle list for the next episode's Founders Wall.
