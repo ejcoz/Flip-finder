@@ -50,6 +50,11 @@ for i, c in enumerate(caps):
 for c in caps:
     if c['w'][-1][0] == 'empty.':
         te = c['w'][-1][2]; c['w'].append(['…almost.', te + .35, te + .9]); c['t1'] = max(c['t1'], te + 1.6)
+# strip punctuation commas from the burned-in captions (keep the ones inside numbers like 100,000)
+for c in caps:
+    for w in c['w']: w[0] = re.sub(r',$', '', w[0])
+for l in lines:
+    for w in l['w']: w[0] = re.sub(r',$', '', w[0])
 json.dump({'DUR': DUR, 'lines': lines, 'caps': caps}, open(f'{H}/timeline.json', 'w'), indent=1)
 json.dump([{'t0': c['t0'], 't1': c['t1'], 'text': ' '.join(x[0] for x in c['w'])} for c in caps], open(os.path.join(os.environ.get('OUT', f'{H}/out'), 'cues.json'), 'w'), indent=1)
 print(len(caps), 'captions; last line ends', max(l['t'] + l['d'] for l in lines))
