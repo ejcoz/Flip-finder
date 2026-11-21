@@ -98,6 +98,9 @@ for e in EV:
         for k in range(int(d / 1.3)): add(fx, ding(.05) * env_exp(1.6, .05), t + .7 + k * 1.3 + (k % 3) * .2, pan=.5 - (k % 2))
     elif ty == 'creak': add(fx, creak(.35), t); add(fx, creak(.25), t + .3)
     elif ty == 'latch': add(fx, thump(.9, 70), t); add(fx, click(.5, .6), t); add(fx, metal(.3, 260), t)
+    elif ty == 'weld':
+        d = 1.1; n = hp(noise(d), 2500); crack = (np.random.default_rng(3).random(len(n)) > .985) * 1.0
+        add(fx, fade(n * .05 + lp(crack, 6000) * hp(noise(d), 1500) * .5, .05, .3), t, pan=.15)
     elif ty == 'knock': d = .25; tt = t_(d); add(fx, norm(np.sin(2 * np.pi * 85 * tt) * env_exp(d, .05) + lp(noise(d), 1500) * env_exp(d, .012) * .8) * .9 * v, t, pan=.25)
     elif ty == 'riser':
         d = e['d']; tt = t_(d); add(fx, fade(hp(noise(d), 800) * (tt / d) ** 2 * .12 + np.sin(2 * np.pi * np.cumsum(200 + 600 * (tt / d) ** 2) / SR) * (tt / d) ** 2 * .06, .2, .02), t)

@@ -2,7 +2,7 @@
 
 For recording a better voiceover. Each line is timed to the picture; the **slot** is the time between the line's start and the next line's start. Stay within the slot (a little shorter is fine, longer pushes the edit). Numbers are spoken as written in *Say* ("bed zero" is captioned "Bed 000", "B seven" is captioned "B7").
 
-**How to deliver it:** record each line as a separate file named by its ID (`l01.wav`, `l02.wav`, …, `l12b.wav`, `l12c.wav`) and I'll drop them in and re-time the captions automatically. One continuous take also works; I'll cut it.
+**How to deliver it:** record each line as a separate file named by its ID (`l01.wav`, `l02.wav`, …, `l12b.wav`, `l12c.wav`, `l12d.wav`) and I'll drop them in and re-time the captions automatically. One continuous take also works; I'll cut it.
 
 | ID | Start | Slot | Say | Direction |
 |---|---|---|---|---|
@@ -19,9 +19,10 @@ For recording a better voiceover. Each line is timed to the picture; the **slot*
 | l11 | 28.9 s | 2.2 s | But there's something I haven't told you. | Drop to near whisper after the power cut. Slow. |
 | l12 | 31.1 s | 2.6 s | This bunker only has seven levels. | Quiet, deliberate. "seven" clearly. |
 | l12b | 33.7 s | 3.2 s | Bed zero is on the eighth. | Let the dread show. Small pause after "bed zero". |
-| l12c | 36.9 s | 4.9 s | And it's locked from the inside. | Barely above a whisper. Let "inside" hang. |
-| l13 | 41.8 s | 7.0 s | Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero. | Snap back to upbeat host voice: the call to action. Slow down and drop a little on "B seven, right above bed zero": it's the dare. |
-| l14 | 48.8 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. Ends on the loop: no fade. |
+| l12c | 36.9 s | 2.6 s | And it's locked from the inside. | Barely above a whisper. Let "inside" hang. |
+| l12d | 39.5 s | 3.1 s | So we welded the hatch shut. | Flat, haunted confession after the knocks. Almost no emotion: they did what they had to. |
+| l13 | 42.6 s | 6.9 s | Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero. | Snap back to upbeat host voice: the call to action. Slow down and drop a little on "B seven, right above bed zero": it's the dare. |
+| l14 | 49.5 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. Ends on the loop: no fade. |
 
 ## Plain read-through
 
@@ -39,9 +40,10 @@ But there's something I haven't told you.
 This bunker only has seven levels.
 Bed zero is on the eighth.
 And it's locked from the inside.
+So we welded the hatch shut.
 Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero.
 Follow me, and get inside before the door closes.
 
 ## Total
 
-About 53 seconds. Silences: 28.0–28.9 s (power cut, before "But there's something…") and after the latch at ~37.2 s (three knocks, no voice) are part of the film; leave them empty.
+About 54 seconds. Silences: 28.0–28.9 s (power cut, before "But there's something…") and the three knocks after "locked from the inside" (~38.6–39.2 s, before "So we welded the hatch shut") are part of the film; leave them empty.

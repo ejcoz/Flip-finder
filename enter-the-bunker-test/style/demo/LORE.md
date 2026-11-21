@@ -52,14 +52,16 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 ### B7 — Engineering and life support
 - The **generators** and the reactor that power everything, the air scrubbers that start at 10,000 survivors, and water purification.
 - It's loud and hot, and the workers who live here like the noise.
-- A maintenance hatch in the floor is welded shut. It's not on any current map.
+- A maintenance hatch in the floor, welded shut by the narrator's group after their one trip to B8. It's not on any current map.
 - **The bed above the hatch (on screen):** the B7 bed directly over bed 000, as close as anyone is allowed to sleep. It's the dare option when picking your spot.
 
 ### B8 — The floor that doesn't exist (on screen)
 - Officially there are seven levels **(on screen: "This bunker only has seven levels")**. B8 lies *below the foundation*, under the hazard-striped footing **(on screen)**. It only appears when the power fails and the red emergency lights come on.
 - It's older and dirtier than the rest: darker concrete, cracked ceiling, every bunk dark and dusty except one.
 - **Bed 000 (on screen).** The only bed on B8 that's lit, glowing red. Every other door on B8 has its number scratched off; only 0000 is still labelled **(on screen)**. Its door is latched **from the inside** **(on screen)**, and after the latch slams, three knocks come back **(on screen)**. Nobody has opened it, and bed numbers start at 1, so its number shouldn't exist.
-- The original blueprints in the B2 archives show eight levels. The welded hatch in the B7 floor is the only known way down.
+- **How anyone knows (on screen):** when the narrator's group first dug the bunker out, the hatch in B7's floor was **open**. They went down once, found B8 and bed 000 latched from the inside, and knocked. Something knocked back. They came up and **welded the hatch shut** ("So we welded the hatch shut."). Nobody has been down since.
+- That's the narrator's guilty secret: they're filling the bunker with 100,000 people, knowing it isn't empty.
+- The original blueprints in the B2 archives show eight levels.
 
 ## Story threads to use later
 - **Who is in bed 000**, and why the knocks come in threes.

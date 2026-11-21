@@ -35,7 +35,7 @@ const T = {
   k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: 28.0, red: 28.85,
   b8show: L.l12b.t - .05, levels: wt('l12', 'seven'), six: wt('l12b', '000'), dive2a: wt('l12b', 'eighth') - .05, dive2b: wt('l12b', 'eighth') + 1.05,
-  lock: wt('l12c', 'locked'), arrive: wt('l12c', 'locked') - .1, back2a: L.l12c.t + L.l12c.d + 1.75, back2b: L.l12c.t + L.l12c.d + 2.9,
+  lock: wt('l12c', 'locked'), arrive: wt('l12c', 'locked') - .1, back2a: L.l12d.t + L.l12d.d + .3, back2b: L.l12d.t + L.l12d.d + 1.45, weld: wt('l12d', 'welded'),
   card: wt('l13', 'comments'), pantry: wt('l13', 'garden'), gens: wt('l13', 'armory'), beside: wt('l13', 'B7'),
   follow: wt('l14', 'Follow'), closes: wt('l14', 'before'), push0: L.l14.t + 2.55, end: TL.DUR
 };
@@ -670,7 +670,7 @@ for (const k of [T.k1, T.k10, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ?
 ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); ev(T.air, 'air', { d: T.cut - T.air });
 ev(T.seal - .35, 'roll', { d: .9 }); ev(T.seal + .55, 'slam'); ev(T.world, 'rumble', { d: T.cut - T.world });
 ev(T.cut, 'powerdown'); ev(T.red, 'hit'); ev(T.dive2a, 'dive', { d: 1.1, v: .7 }); ev(T.red + .2, 'redhum', { d: T.back2a - T.red });
-ev(T.b8show, 'lowping'); ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); for (let j = 0; j < 3; j++) ev(T.lock + 1.45 + j * .24, 'knock', { v: 1 }); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
+ev(T.b8show, 'lowping'); ev(T.weld, 'weld'); ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); for (let j = 0; j < 3; j++) ev(T.lock + 1.45 + j * .24, 'knock', { v: 1 }); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
 ev(T.pantry, 'ping', { v: .5 }); ev(T.gens, 'ping', { v: .5, p: 1.25 }); ev(T.beside, 'lowping'); ev(T.follow, 'chime', { v: .6 });
 ev(T.closes, 'roll', { d: 3.0, v: .5 }); ev(T.push0 - .5, 'riser', { d: T.end - T.push0 + .5 });
 window.EV = EV;

@@ -90,6 +90,12 @@
   "speed": 0.95
  },
  {
+  "id": "l12d",
+  "text": "So we welded the hatch shut.",
+  "voice": "am_michael",
+  "speed": 0.92
+ },
+ {
   "id": "l13",
   "text": "Pick your spot in the comments. By the garden, next to the armory, or on B seven, right above bed zero.",
   "voice": "am_michael",
