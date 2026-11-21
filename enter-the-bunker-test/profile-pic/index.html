@@ -76,7 +76,7 @@ function door000() {
   c.fillStyle = '#86826A'; c.fillRect(380, 360, 320, 470); c.fillStyle = '#5E5A48'; c.fillRect(404, 384, 272, 422);
   const dg = c.createRadialGradient(540, 590, 20, 540, 600, 300); dg.addColorStop(0, '#FF8A8A'); dg.addColorStop(1, '#C81010'); c.fillStyle = dg; c.fillRect(420, 400, 240, 390);
   c.fillStyle = '#C3CAD6'; c.fillRect(392, 570, 296, 54); c.fillStyle = '#E8EDF4'; c.fillRect(392, 570, 296, 14); c.fillStyle = '#E02020'; c.fillRect(430, 582, 30, 30);
-  c.font = '150px Anton'; c.textAlign = 'center'; c.fillStyle = '#FF3B3B'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 30; c.fillText('000', 540, 330); c.shadowBlur = 0;
+  c.font = '150px Anton'; c.textAlign = 'center'; c.fillStyle = '#FF3B3B'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 30; c.fillText('BED 0', 540, 330); c.shadowBlur = 0;
 }
 window.DUR = 1;
 window.render = () => { c.setTransform(S, 0, 0, S, 0, 0); c.clearRect(0, 0, 1080, 1080); ({ a: doorA, b: bunkerB, c: door000 })[V](); };

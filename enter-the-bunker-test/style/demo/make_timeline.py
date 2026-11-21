@@ -17,13 +17,13 @@ DISP = {
  'l11': "But there's something | I haven't told you.",
  'l12': 'We thought this bunker | had seven levels.',
  'l12b': 'Then we found | an eighth.',
- 'l12c': 'There was only one bed | down there. | Bed 000.',
+ 'l12c': 'There was only one bed | down there. | Bed 0.',
  'l12d': 'Its door was locked | from the inside.',
  'l12e': 'So we welded | the hatch shut.',
  'l13': 'Pick your spot | in the comments.',
  'l13b': 'By the garden,',
  'l13c': 'next to the armory,',
- 'l13d': 'or on B7, | right above bed 000.',
+ 'l13d': 'or on B7, | right above bed 0.',
  'l14': 'Follow me, | and get inside | before the door closes.'}
 lines, caps = [], []
 for lid, t0 in START.items():

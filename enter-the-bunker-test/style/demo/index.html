@@ -35,7 +35,7 @@ const T = {
   dive0: L.l04.t, dive1: L.l04.t + 1.0, you: wt('l05', 'You'), name: wt('l06', 'name'), handle: wt('l06', 'gets'), back0: L.l06.t + L.l06.d - .15, back1: L.l06.t + L.l06.d + .9, m0: L.l06.t + L.l06.d + 1.2, m1: L.l10.t - .1,
   k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: L.l11.t - .75, red: L.l11.t - .1,
-  b8show: wt('l12b', 'eighth') - .05, levels: wt('l12', 'seven'), six: wt('l12c', '000'), dive2a: wt('l12c', '000') + .15, dive2b: wt('l12c', '000') + 1.25,
+  b8show: wt('l12b', 'eighth') - .05, levels: wt('l12', 'seven'), six: wt('l12c', '0.'), dive2a: wt('l12c', '0.') + .15, dive2b: wt('l12c', '0.') + 1.25,
   lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d - .05, back2b: L.l12e.t + L.l12e.d + 1.0, weld: wt('l12e', 'welded'),
   card: L.l13.t - .05, pantry: wt('l13b', 'garden'), gens: wt('l13c', 'armory'), beside: wt('l13d', 'B7'),
   g0: L.l13b.t - .3, a0: L.l13c.t - .3, d0: L.l13d.t - .2,
@@ -478,8 +478,8 @@ function drawCutaway(t, cam, S) {
   labels.length = 0;
   labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 2 * CY.LH + CY.ry + 46, 'GARDEN', '#9CF04A', S.pantry * ss(seg(t, T.d0, T.d0 + .3)), 'garden') : lab(VX1 + 70, VTOP + 90, 'GARDEN', P.cyan, S.pantry, 'garden'));
   labels.push(() => CYL ? lab(CY.cx - 70, CY.top + 5 * CY.LH + CY.ry + 46, 'ARMORY', P.amber, S.gens * ss(seg(t, T.d0, T.d0 + .3)), 'armory') : lab(VX1 + 30, VBOT - 75, 'ARMORY', P.gold, S.gens, 'armory'));
-  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x - 170, y + 8, 'BED 000', '#FF6A6A', S.sixTag, 'six')); }
-  if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(x - 175, y - 4, 'B7 · ABOVE BED 000', P.amber, S.sixTag, 'dare')); }
+  { const [x, y] = cellCenter(SIXC); labels.push(() => lab(x - 140, y + 8, 'BED 0', '#FF6A6A', S.sixTag, 'six')); }
+  if (CYL) { const [x, y] = cellCenter(ABOVE000); labels.push(() => lab(x - 175, y - 4, 'BED 100,000 · ABOVE BED 0', P.amber, S.sixTag, 'dare')); }
   { const [x, y] = cellCenter(YOURBED); labels.push(() => lab(x + 100, y - 40, 'YOUR BED', P.gold, S.yours > 0 ? Math.min(1, S.yours * 2) : 0, 'yours')); }
   if (S.doorPing > 0) { labels.push(() => { const [sx, sy] = w2s(cam, DOOR.x, DOOR.y); ctxLabels.save(); ctxLabels.globalAlpha = S.doorPing; ctxLabels.strokeStyle = P.amber; ctxLabels.lineWidth = 4; ctxLabels.beginPath(); ctxLabels.arc(sx, sy, (DOOR.r + 20 + (1 - S.doorPing) * 70) * cam.z, 0, TAU); ctxLabels.stroke(); ctxLabels.restore(); }); }
   // composite glow onto cutaway
@@ -607,7 +607,7 @@ function drawCorridor(t, red) {
     const p = proj(cam, L.p); if (p[2] < .4) continue;
     const [sx, sy] = scr(p), size = F * .17 / p[2]; if (size < 5) continue;
     c.save(); c.globalAlpha = L.fog * (L.hot ? 1 : .8); c.font = `700 ${size}px Fredoka`; c.textAlign = 'center'; c.fillStyle = L.hot ? (red ? '#FF6A6A' : '#FFD27A') : '#C8C3AA';
-    c.fillText(red && !L.hot ? '----' : red ? '0000' : String(L.num).padStart(4, '0'), sx, sy); c.restore();
+    c.fillText(red && !L.hot ? '----' : red ? '0' : (48000 + L.num).toLocaleString('en-US'), sx, sy); c.restore();
   }
   // panel labels: YOU / handle under the gold bed, 0666 under the red one
   const tagQ = quads.find(q => q.tex === (red ? 'six' : 'you'));
@@ -622,7 +622,7 @@ function drawCorridor(t, red) {
         TEXTS.push({ id: 'you', text: 'YOU', x0: sx - 60, y0: sy - 40, x1: sx + 60, y1: sy + 40, pass: t < T.you - .2 });
         if (hs > 0) { const yy = sy + size * .95; c.globalAlpha = hs; tag(c, sx, yy, '@jointhebunker', P.gold, hs, size * .45, true); c.globalAlpha = 1; TEXTS.push({ id: 'handle', text: '@jointhebunker', x0: sx - 150, y0: yy - 30, x1: sx + 150, y1: yy + 30 }); }
       } else {
-        c.font = `700 ${size}px Fredoka`; c.fillStyle = '#FF4A4A'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 20; c.fillText('0000', sx, sy); TEXTS.push({ id: 'six-num', text: '0000', x0: sx - 90, y0: sy - 40, x1: sx + 90, y1: sy + 40 });
+        c.font = `700 ${size}px Fredoka`; c.fillStyle = '#FF4A4A'; c.shadowColor = 'rgba(255,40,40,.9)'; c.shadowBlur = 20; c.fillText('BED 0', sx, sy); TEXTS.push({ id: 'six-num', text: 'BED 0', x0: sx - 90, y0: sy - 40, x1: sx + 90, y1: sy + 40 });
       }
       c.restore();
     }
