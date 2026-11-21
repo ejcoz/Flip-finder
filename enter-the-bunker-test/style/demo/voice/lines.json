@@ -52,6 +52,14 @@
   "voice_source": "ElevenLabs (user recording)"
  },
  {
+  "id": "l09",
+  "text": "At ten thousand, the air starts flowing.",
+  "voice": "am_michael",
+  "speed": 1.08,
+  "voice_source": "ElevenLabs (user recording)",
+  "asr": "At 10,000, the air starts flowing."
+ },
+ {
   "id": "l10",
   "text": "And at one hundred thousand, the door seals, and we wait out the end of the world.",
   "voice": "am_michael",

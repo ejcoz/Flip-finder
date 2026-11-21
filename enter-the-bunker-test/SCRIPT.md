@@ -1,6 +1,6 @@
 # Enter the Bunker: narration script (final cut, under 50 s)
 
-Recorded by the user in ElevenLabs (takes BL1–BL3), cut per line and played 7% faster (pitch kept). Cut from the full script: "Right now, there's nobody inside.", "At ten thousand, the air starts flowing.", and "One hundred thousand beds," at the start of line 2.
+Recorded by the user in ElevenLabs (takes BL1–BL3), cut per line and played 7% faster (pitch kept). Cut from the full script: "Right now, there's nobody inside." and "One hundred thousand beds," at the start of line 2.
 
 | ID | Start | Say | Direction |
 |---|---|---|---|

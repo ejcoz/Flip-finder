@@ -2,8 +2,8 @@
 import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
-START = {'l01': 0.0, 'l02': 3.48, 'l03': 6.6, 'l04': 9.01, 'l05': 10.89, 'l06': 11.58, 'l08': 15.21, 'l10': 17.35, 'l11': 23.04, 'l12': 25.27, 'l12b': 27.71, 'l12c': 29.64, 'l12d': 32.93, 'l12e': 35.81, 'l13': 38.76, 'l13b': 40.48, 'l13c': 41.93, 'l13d': 43.38, 'l14': 46.51}
-DUR = 49.73
+START = {'l01': 0, 'l02': 3.48, 'l03': 6.6, 'l04': 9.01, 'l05': 10.89, 'l06': 11.58, 'l08': 15.21, 'l09': 17.44, 'l10': 19.9, 'l11': 25.59, 'l12': 27.82, 'l12b': 30.26, 'l12c': 32.19, 'l12d': 35.48, 'l12e': 38.36, 'l13': 41.31, 'l13b': 43.03, 'l13c': 44.48, 'l13d': 45.93, 'l14': 49.06}
+DUR = 52.28
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': 'And every single one | is empty.',
@@ -12,6 +12,7 @@ DISP = {
  'l05': 'You.',
  'l06': 'Everyone who follows | gets a bed, | with their name on the door.',
  'l08': 'At 1,000, | the lights come on.',
+ 'l09': 'At 10,000, | the air starts flowing.',
  'l10': 'And at 100,000, | the door seals, | and we wait out | the end of the world.',
  'l11': "But there's something | I haven't told you.",
  'l12': 'We thought this bunker | had seven levels.',

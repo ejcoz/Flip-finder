@@ -32,7 +32,7 @@ const P = {
 const T = {
   pullEnd: 1.45, pulse: 1.75, tease: L.l02.w[L.l02.w.length - 1][2] + .3, sweep0: wt('l02', 'and') - .2, sweep1: wt('l02', 'and') + 2.4, w1: L.l03.t - .25, w2: L.l03.t + 2.2, doorPing: wt('l03', 'blast'), counterIn: wt('l03', 'until'),
   dive0: L.l04.t, dive1: L.l04.t + 1.0, you: wt('l05', 'You'), name: wt('l06', 'name'), handle: wt('l06', 'gets'), back0: L.l06.t + L.l06.d - .15, back1: L.l06.t + L.l06.d + .9, m0: L.l06.t + L.l06.d + 1.2, m1: L.l10.t - .1,
-  k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: 1e9, air: 1e9,
+  k1: wt('l08', '1,000'), lights: wt('l08', 'on'), k10: wt('l09', '10,000'), air: wt('l09', 'flowing'),
   k100: wt('l10', '100,000'), seal: wt('l10', 'seals'), world: wt('l10', 'wait'), cut: L.l11.t - .75, red: L.l11.t - .1,
   b8show: wt('l12b', 'eighth') - .05, levels: wt('l12', 'seven'), six: wt('l12c', '000'), dive2a: wt('l12c', '000') + .15, dive2b: wt('l12c', '000') + 1.25,
   lock: wt('l12d', 'locked'), arrive: wt('l12d', 'locked') - .1, back2a: L.l12e.t + L.l12e.d - .05, back2b: L.l12e.t + L.l12e.d + 1.0, weld: wt('l12e', 'welded'),
@@ -178,8 +178,9 @@ function counterAt(t) {
   if (t < T.k1 || t > T.cut) return { show, tag: 'SURVIVORS INSIDE', txt: '0 / 100,000', pop: 0, roll: false };
   let v, roll = false, pop = 0;
   const r1 = [T.k1 - .1, T.k1 + .55], r2 = [T.k10 - .1, T.k10 + .55], r3 = [T.k100 - .1, T.k100 + .9];
-  if (t < r3[0]) { v = 1000 * eo(seg(t, ...r1)); roll = t < r1[1]; pop = seg(t, r1[1], r1[1] + .3); }
-  else { v = lerp(1000, 100000, eo(seg(t, ...r3))); roll = t < r3[1]; pop = seg(t, r3[1], r3[1] + .3); }
+  if (t < r2[0]) { v = 1000 * eo(seg(t, ...r1)); roll = t < r1[1]; pop = seg(t, r1[1], r1[1] + .3); }
+  else if (t < r3[0]) { v = lerp(1000, 10000, eo(seg(t, ...r2))); roll = t < r2[1]; pop = seg(t, r2[1], r2[1] + .3); }
+  else { v = lerp(10000, 100000, eo(seg(t, ...r3))); roll = t < r3[1]; pop = seg(t, r3[1], r3[1] + .3); }
   return { show, tag: 'GOAL: SURVIVORS', txt: fmt(v), pop: pop > 0 && pop < 1 ? Math.sin(pop * Math.PI) : 0, roll };
 }
 
@@ -750,8 +751,8 @@ const EV = [];
 const ev = (t, type, o = {}) => EV.push({ t: +t.toFixed(3), type, ...o });
 ev(.05, 'whoosh', { d: 1.45, v: .7 }); ev(T.pulse + .1, 'knock', { v: .35 }); ev(T.tease, 'powerdown'); ev(T.tease + .2, 'knock', { v: .8 }); ev(T.tease + .05, 'lowping'); ev(T.sweep0, 'sweep', { d: T.sweep1 - T.sweep0 }); ev(T.doorPing, 'ping', { v: .6 }); ev(T.counterIn, 'pop');
 ev(T.dive0, 'dive', { d: 1.1 }); ev(T.you, 'chime'); ev(T.handle, 'pop'); ev(T.back0, 'whoosh', { d: 1.2, v: .6, rev: 1 });
-for (const k of [T.k1, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ? 1.0 : .65 }); }
-ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); 
+for (const k of [T.k1, T.k10, T.k100]) { ev(k - .1, 'ticks', { d: k === T.k100 ? 1.0 : .65 }); }
+ev(T.lights, 'clunk'); ev(T.lights + .05, 'hum'); ev(T.air, 'air', { d: T.cut - T.air }); 
 ev(T.seal - .35, 'roll', { d: .9 }); ev(T.seal + .55, 'slam'); ev(T.world, 'rumble', { d: T.cut - T.world });
 ev(T.cut, 'powerdown'); ev(T.red, 'hit'); ev(T.dive2a, 'dive', { d: 1.1, v: .7 }); ev(T.red + .2, 'redhum', { d: T.back2a - T.red });
 ev(T.b8show, 'lowping'); ev(T.weld, 'weld'); ev(T.six, 'creak'); ev(T.lock + .1, 'latch'); for (let j = 0; j < 3; j++) ev(L.l12d.t + L.l12d.d + .15 + j * .22, 'knock', { v: 1 }); ev(T.back2a, 'whoosh', { d: 1.2, v: .6, rev: 1 }); ev(T.card, 'pop');
