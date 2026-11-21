@@ -1,0 +1,264 @@
+<title>Bunker Reply Bank</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Stencil+Display:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one thumb-width column. Sticky level strip on top, tap a reply to copy it. Single dark bunker look on purpose. */
+:root{
+  --bg:#12130f; --panel:#1c1e17; --line:#33362a; --fg:#ecebe2; --muted:#9c9b8a;
+  --hazard:#f2c230; --green:#9cf04a; --red:#ff4b4b; --gold:#ffc23a;
+  --display:"Big Shoulders Stencil Display",Impact,"Arial Narrow",sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--bg);color:var(--fg)}
+body{font:16px/1.45 var(--body);-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 120px}
+header{display:flex;flex-direction:column;gap:6px;padding-bottom:14px;border-bottom:4px solid var(--hazard);
+  border-image:repeating-linear-gradient(135deg,var(--hazard) 0 12px,#12130f 12px 24px) 4}
+h1{font:800 44px/0.95 var(--display);letter-spacing:.02em;text-transform:uppercase;margin:0;text-wrap:balance}
+h1 span{color:var(--hazard)}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line)}
+.search{width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:11px 12px;font:16px var(--body)}
+.search:focus{outline:2px solid var(--hazard);outline-offset:1px}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 11px;cursor:pointer}
+.chip:focus-visible{outline:2px solid var(--hazard)}
+.chip.b6{border-color:var(--hazard);color:var(--hazard)}
+.chip.b8{border-color:var(--red);color:var(--red)}
+.lookup{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:16px}
+.lookup label{font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);flex:none}
+.lookup input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--hazard);font:500 20px var(--mono);padding:2px 0;font-variant-numeric:tabular-nums}
+.lookup input:focus{outline:none;border-color:var(--hazard)}
+.out{font-size:14px;color:var(--fg);margin:8px 2px 0;min-height:1.4em}
+.out b{color:var(--hazard)}
+section{scroll-margin-top:140px;margin-top:28px}
+.sh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid var(--line);padding-bottom:6px;margin-bottom:10px}
+h2{font:800 28px/1 var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0}
+h2 .lv{color:var(--hazard);margin-right:8px}
+section.red h2 .lv{color:var(--red)}
+.range{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.note{font-size:13px;color:var(--muted);margin:0 0 10px}
+.list{display:flex;flex-direction:column;gap:8px}
+.r{display:flex;gap:10px;align-items:center;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 12px;color:var(--fg);font:16px/1.4 var(--body);cursor:pointer}
+.r:active{transform:scale(.99);background:#25281e}
+.r:focus-visible{outline:2px solid var(--hazard)}
+.r .t{flex:1;min-width:0}
+.r .ic{flex:none;font:500 11px var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.r.used{opacity:.55}
+.r.used .ic{color:var(--green)}
+.r.just{border-color:var(--green)}
+.empty{color:var(--muted);font-size:14px;padding:20px 0}
+.foot{margin-top:36px;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:8px}
+.foot button{align-self:flex-start;background:transparent;color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:13px var(--body);cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--hazard);color:#12130f;font:700 18px var(--display);letter-spacing:.08em;text-transform:uppercase;padding:10px 18px;border-radius:999px;transition:.18s;pointer-events:none;z-index:20}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}.r:active{transform:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Bunker <span>Reply Bank</span></h1>
+    <p class="sub">Tap a reply to copy it. Faded ones were copied recently, so pick a fresh one.</p>
+  </header>
+
+  <div class="bar">
+    <input id="q" class="search" type="search" placeholder="Search replies (e.g. dog, knock, garden)" autocomplete="off">
+    <nav class="chips" id="chips" aria-label="Jump to level"></nav>
+  </div>
+
+  <div class="lookup">
+    <label for="bed">Bed #</label>
+    <input id="bed" inputmode="numeric" placeholder="48,143" autocomplete="off">
+  </div>
+  <p class="out" id="bedout">Type a bed number to see its level and a reply.</p>
+
+  <main id="main"></main>
+
+  <div class="foot">
+    <span>Bed numbers only when the commenter names one. Bed 0 is never available. Bed 100,000 goes to the first person who asks.</span>
+    <button id="reset" type="button">Clear faded replies</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite">Copied</div>
+
+<script>
+const LEVELS=[
+ {id:"b1",lv:"B1",name:"Entry",range:"1 – 10,000",lo:1,hi:10000,where:"near the decontamination showers",note:"Bed ___ lines only when they named a number.",r:[
+  "Bed ___ is yours. B1, near the decontamination showers.",
+  "B1. First floor down. You'll hear the blast door every time it opens.",
+  "Logged: B1. Shower before bed. Every night. No exceptions.",
+  "B1. Closest to the surface. Closest to whatever's out there too."]},
+ {id:"b2",lv:"B2",name:"Radio & medical",range:"10,001 – 20,000",lo:10001,hi:20000,where:"by the radio room",note:"Bed ___ lines only when they named a number.",r:[
+  "Bed ___ is yours. B2, by the radio room.",
+  "B2. If the radio crackles at night, wake someone.",
+  "Logged: B2. Medical's next door. Hope you never need it.",
+  "B2. You'll hear every transmission before anyone else."]},
+ {id:"b3",lv:"B3",name:"Garden",range:"20,001 – 30,000",lo:20001,hi:30000,where:"under the grow-lights",r:[
+  "B3 it is. The garden level. Your bed number comes when the lights come on.",
+  "Logged: B3, under the grow-lights. Don't eat the tomatoes before they're ripe.",
+  "B3. Water the beans and they'll keep you alive. Simple deal.",
+  "Garden it is. Quietest level down here. We like to keep it that way. 🌱",
+  "Logged: B3. You'll be the only one who's seen green in years.",
+  "B3. The grow-lights never go off. You get used to it.",
+  "Garden. Fewer guns, more tomatoes. Wise."]},
+ {id:"b4",lv:"B4",name:"Pantry",range:"30,001 – 40,000",lo:30001,hi:40000,where:"next to the pantry",note:"Also \"between the garden and the armory\" and \"by the food\".",r:[
+  "Between the garden and the armory… that's B4, the pantry level.",
+  "B4. Food above, firepower below. You're in the middle of everything.",
+  "Logged: B4. Count the cans. Someone has to.",
+  "B4. Nobody eats without passing you."]},
+ {id:"b5",lv:"B5",name:"Dormitory",range:"40,001 – 70,000",lo:40001,hi:70000,where:"in the main dormitory",note:"Also \"let me in\" and no preference.",r:[
+  "B5, the main dormitory. Plenty of room. For now.",
+  "B5. The big dormitory. Thirty thousand bunks and one light switch.",
+  "Logged: B5. Snoring complaints go to the radio room.",
+  "You're in. Pick a floor before the good ones go.",
+  "Door's open. Garden, armory or B7?",
+  "Welcome down. Where are you sleeping?"]},
+ {id:"b6",lv:"B6",name:"Armory",range:"70,001 – 85,000",lo:70001,hi:85000,where:"by the rifle racks",r:[
+  "B6 it is. Your bed number comes with the next transmission. 🔫",
+  "Armory. Noted. Keep your boots by the door.",
+  "B6. Closest thing to safe down here.",
+  "Logged: B6. Don't touch the racks until you're assigned.",
+  "B6. Sign the rack log. Nobody signs the rack log.",
+  "Armory. You'll sleep in your boots like everyone else.",
+  "B6 it is. Lights out means lights out. Especially on B6.",
+  "Logged. The armory's loud at night. That's the ventilation. Mostly.",
+  "B6. Grab a bunk before the armory runs out of floor.",
+  "Armory again. At this rate B6 needs its own blast door.",
+  "B6. Check your bunk before you sleep. Then check under it.",
+  "B6. You get the top bunk. And the flashlight.",
+  "Logged: B6. Ammo crates count as furniture now.",
+  "B6. Rifles on the wall, boots by the bunk. That's the rule.",
+  "Armory it is. Don't count the bullets. It doesn't help.",
+  "Logged: B6. The racks rattle when the generators kick on. That's normal.",
+  "B6. Every survivor down here wants your bunk. Keep it.",
+  "Armory. Welcome to the loudest floor in the bunker.",
+  "B6 it is. Clean your gear. Nobody else will.",
+  "Logged. B6 is officially the most crowded level. Squeeze in.",
+  "B6. You're one floor above B7. Two above the hatch. Sleep light.",
+  "Armory again. We're running out of bunks and patience. Welcome.",
+  "B6. Lights out at 22:00. Rifle check at 22:01.",
+  "Logged: B6. If you hear footsteps on the stairs below, they're not ours.",
+  "B6 it is. Armory crew eats last. Sorry.",
+  "Armory. You get a flashlight, a cot and a view of the racks.",
+  "B6. Don't touch anything labelled with a red tag.",
+  "B6. Half the bunker wants in. You made it.",
+  "Armory it is. Snore quietly. People are armed.",
+  "B6. Night watch rotates every four hours. You're next.",
+  "Logged: B6. Stack your boots. Don't stack anything else.",
+  "B6. Welcome to the armory. Please stop asking about the locked crate.",
+  "B6 it is. Armory's filling faster than any level. Garden's still wide open… 🌱",
+  "Approved. Dogs are allowed on B6. They hear things before we do."]},
+ {id:"b7",lv:"B7",name:"Above the hatch",range:"85,001 – 100,000",lo:85001,hi:100000,where:"down by the generators",note:"The bed 100,000 line is only for the first person who asks.",r:[
+  "B7. Right above the hatch. Sleep with the light on.",
+  "B7 it is. If you hear knocking through the floor, don't knock back.",
+  "B7. Don't put your ear to the floor. Everyone does once.",
+  "Logged: B7. The generators hide most of the noise. Most.",
+  "B7 it is. Closest bunk to the hatch. Furthest from help.",
+  "B7. If the floor knocks three times, it's not the pipes.",
+  "Nothing goes down those stairs. Closest you get is B7.",
+  "Bed 100,000. The last bed, right above the hatch. Sleep tight. Don't knock back."]},
+ {id:"b8",lv:"B8",name:"Bed 0",range:"0 · taken",red:true,r:[
+  "Bed 0 is taken.",
+  "Bed 0 doesn't take visitors.",
+  "That bed's been occupied longer than you've been alive.",
+  "You don't want bed 0. Trust us.",
+  "We welded the hatch shut for a reason.",
+  "Bed 0 is taken. Ask again and we'll move you to B7."]},
+ {id:"brave",lv:"",name:"Brave comments",range:"\"I'll stop bed 0\"",r:[
+  "Bold. Start on B6. You'll need the gear.",
+  "Noted. We'll put you on night watch above the hatch.",
+  "Everyone says that until the knocking starts."]},
+ {id:"nums",lv:"",name:"Named numbers",range:"1 – 100,000",r:[
+  "That bed's taken. Pick another, survivor.",
+  "We only have 100,000 beds. Pick one that exists."]},
+ {id:"qs",lv:"",name:"Questions",range:"story",r:[
+  "Some things on B8 we don't talk about yet.",
+  "Follow and you'll find out with everyone else.",
+  "The next transmission answers some of it.",
+  "Bed assignments go out at 1,000 survivors. Stay close."]},
+ {id:"fix",lv:"",name:"Fixing a mistake",range:"wrong level",r:[
+  "Correction, survivor. Clerical error. You're on B6, by the racks. Boots by the door.",
+  "Records got scrambled down here. Fixed: B6, the armory. Whoever wrote B7 is on night watch for a week."]},
+ {id:"tag",lv:"",name:"Tag prompts",range:"every 5–10",r:[
+  "Logged. Tag who you're bringing down with you.",
+  "B6. Tag the one person you'd trust on night watch.",
+  "Garden. Tag who's on watering duty. 🌱",
+  "B7. Tag someone brave enough to sleep next to you."]}
+];
+
+let used={};
+try{used=JSON.parse(localStorage.getItem("bunker-used")||"{}")}catch(e){used={}}
+const save=()=>{try{localStorage.setItem("bunker-used",JSON.stringify(used))}catch(e){}};
+const DAY=36e5*6; // a reply stays faded for 6 hours
+
+const main=document.getElementById("main"),chips=document.getElementById("chips"),toast=document.getElementById("toast");
+let tt;
+function flash(msg){toast.textContent=msg;toast.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove("on"),1100)}
+
+function copy(text,btn){
+  const done=()=>{used[text]=Date.now();save();btn&&btn.classList.add("used","just");btn&&(btn.querySelector(".ic").textContent="copied");setTimeout(()=>btn&&btn.classList.remove("just"),900);flash("Copied")};
+  const fallback=()=>{const ta=document.createElement("textarea");ta.value=text;ta.setAttribute("readonly","");ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,text.length);let ok=false;try{ok=document.execCommand("copy")}catch(e){}ta.remove();ok?done():flash("Hold to copy")};
+  try{navigator.clipboard.writeText(text).then(done,fallback)}catch(e){fallback()}
+}
+
+function render(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  main.innerHTML="";let any=false;const now=Date.now();
+  for(const L of LEVELS){
+    const items=L.r.filter(t=>!q||t.toLowerCase().includes(q)||(L.name+" "+L.lv).toLowerCase().includes(q));
+    if(!items.length)continue;any=true;
+    const s=document.createElement("section");s.id=L.id;if(L.red)s.className="red";
+    const sh=document.createElement("div");sh.className="sh";
+    const h=document.createElement("h2");
+    if(L.lv){const lv=document.createElement("span");lv.className="lv";lv.textContent=L.lv;h.appendChild(lv)}
+    h.appendChild(document.createTextNode(L.name));
+    const rg=document.createElement("span");rg.className="range";rg.textContent=L.range;
+    sh.append(h,rg);s.appendChild(sh);
+    if(L.note){const n=document.createElement("p");n.className="note";n.textContent=L.note;s.appendChild(n)}
+    const list=document.createElement("div");list.className="list";
+    for(const t of items){
+      const b=document.createElement("button");b.type="button";b.className="r";
+      const recent=used[t]&&now-used[t]<DAY;if(recent)b.classList.add("used");
+      const sp=document.createElement("span");sp.className="t";sp.textContent=t;
+      const ic=document.createElement("span");ic.className="ic";ic.textContent=recent?"used":"copy";
+      b.append(sp,ic);b.addEventListener("click",()=>copy(t,b));list.appendChild(b);
+    }
+    s.appendChild(list);main.appendChild(s);
+  }
+  if(!any){const e=document.createElement("p");e.className="empty";e.textContent="No replies match that search.";main.appendChild(e)}
+}
+
+for(const L of LEVELS.filter(l=>l.lv)){
+  const c=document.createElement("button");c.type="button";c.className="chip "+L.id;c.textContent=L.lv;
+  c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(L.id).scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});
+  chips.appendChild(c);
+}
+for(const [id,label] of [["brave","Brave"],["qs","Questions"],["fix","Fixes"],["tag","Tags"]]){
+  const c=document.createElement("button");c.type="button";c.className="chip";c.textContent=label;
+  c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(id).scrollIntoView()});
+  chips.appendChild(c);
+}
+
+const bed=document.getElementById("bed"),out=document.getElementById("bedout");
+bed.addEventListener("input",()=>{
+  const n=parseInt(bed.value.replace(/[^0-9]/g,""),10);out.innerHTML="";
+  if(bed.value.trim()===""){out.textContent="Type a bed number to see its level and a reply.";return}
+  if(isNaN(n)){out.textContent="Numbers only.";return}
+  let line;
+  if(n===0)line="Bed 0 is taken.";
+  else if(n>100000)line="We only have 100,000 beds. Pick one that exists.";
+  else{const L=LEVELS.find(l=>l.lo&&n>=l.lo&&n<=l.hi);line=(n===100000?"Bed 100,000. The last bed, right above the hatch. Sleep tight. Don't knock back.":"Bed "+n.toLocaleString("en-US")+" is yours. "+L.lv+", "+L.where+".")}
+  const b=document.createElement("button");b.type="button";b.className="r";
+  const sp=document.createElement("span");sp.className="t";sp.textContent=line;
+  const ic=document.createElement("span");ic.className="ic";ic.textContent="copy";
+  b.append(sp,ic);b.addEventListener("click",()=>copy(line,b));out.appendChild(b);
+});
+
+document.getElementById("q").addEventListener("input",render);
+document.getElementById("reset").addEventListener("click",()=>{used={};save();render();flash("Cleared")});
+render();
+</script>
