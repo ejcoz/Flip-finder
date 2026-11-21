@@ -1,0 +1,380 @@
+<title>Survivor Registry</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a bunker logbook. Intake on top, the registry list below, summary rail first. Single dark look by choice. */
+:root {
+  --bg: #14130e; --panel: #1f1d16; --panel2: #29261d; --line: #3b372a;
+  --fg: #ece6d2; --muted: #a39d86; --hazard: #f2c230; --gold: #ffc23a; --red: #ff4b3e; --green: #9cf04a; --cyan: #7fd6e8;
+  --display: "Anton", Impact, "Arial Narrow", sans-serif; --body: "Inter", system-ui, -apple-system, sans-serif; --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.45; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 60px }
+.wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 18px }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; border-bottom: 3px solid var(--hazard); padding-bottom: 12px }
+h1 { font-family: var(--display); font-weight: 400; font-size: clamp(30px, 6vw, 46px); letter-spacing: .02em; margin: 0; line-height: 1 }
+h1 span { color: var(--hazard) }
+.sub { color: var(--muted); font-size: 13px; margin-top: 6px }
+h2 { font-family: var(--display); font-weight: 400; font-size: 22px; letter-spacing: .03em; margin: 0 0 10px; text-wrap: balance }
+.stripes { height: 8px; background: repeating-linear-gradient(-45deg, var(--hazard) 0 10px, #15130c 10px 20px); border-radius: 2px }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px }
+.stat { background: var(--panel2); border-radius: 8px; padding: 10px 12px; min-width: 0 }
+.stat b { display: block; font-family: var(--mono); font-size: 22px; font-variant-numeric: tabular-nums }
+.stat small { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em }
+.bar { height: 10px; background: var(--panel2); border-radius: 5px; overflow: hidden; margin-top: 10px }
+.bar i { display: block; height: 100%; background: var(--hazard) }
+textarea, input, select { background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 9px 10px; width: 100%; min-width: 0 }
+textarea { min-height: 120px; resize: vertical; font-family: var(--mono); font-size: 13px }
+textarea:focus, input:focus, select:focus, button:focus-visible { outline: 2px solid var(--hazard); outline-offset: 1px }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.row > * { min-width: 0 }
+button { font: 600 14px var(--body); border-radius: 8px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); padding: 9px 14px; cursor: pointer }
+button.primary { background: var(--hazard); color: #15130c; border-color: var(--hazard) }
+button.danger { color: var(--red); border-color: #5a2a24 }
+button:disabled { opacity: .45; cursor: default }
+button.small { padding: 6px 10px; font-size: 13px }
+.hint { color: var(--muted); font-size: 13px }
+.preview { display: grid; gap: 6px; margin-top: 10px }
+.pv { display: grid; grid-template-columns: minmax(90px, 160px) 1fr auto; gap: 10px; align-items: center; background: var(--panel2); border-radius: 8px; padding: 8px 10px }
+.pv .h { font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere }
+.pv .c { overflow-wrap: anywhere }
+.chip { display: inline-block; font: 700 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap }
+.c-garden { color: var(--green) } .c-armory { color: var(--hazard) } .c-b7 { color: var(--red) } .c-between { color: var(--cyan) }
+.c-number { color: var(--gold) } .c-letmein { color: var(--fg) } .c-bed0 { color: var(--red) } .c-question { color: var(--cyan) } .c-other { color: var(--muted) }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.filters button.on { background: var(--hazard); color: #15130c; border-color: var(--hazard) }
+.list { display: grid; gap: 10px }
+.card { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px }
+.card.pending { border-left-color: var(--hazard) }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center }
+.card .handle { font: 700 15px var(--mono); overflow-wrap: anywhere }
+.card .bed { font: 700 13px var(--mono); color: var(--gold) }
+.card .said { color: var(--muted); font-size: 14px; overflow-wrap: anywhere }
+.reply { background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; padding: 9px 11px; overflow-wrap: anywhere }
+.card .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.card .actions select { width: auto }
+.empty { text-align: center; padding: 30px 10px; color: var(--muted) }
+.note { font-size: 13px; color: var(--muted) }
+.warn { color: var(--red) }
+.founders { font-family: var(--mono); font-size: 12px; max-height: 220px; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; white-space: pre-wrap }
+details summary { cursor: pointer; font-weight: 600 }
+.levels { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums }
+.levels td, .levels th { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line) }
+.tblwrap { overflow-x: auto }
+@media (max-width: 560px) { .pv { grid-template-columns: 1fr } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>SURVIVOR <span>REGISTRY</span></h1>
+      <div class="sub">Join the Bunker · ep. 1 comments · who picked what, and what to reply</div>
+    </div>
+    <div class="hint" id="status">Connecting to the registry…</div>
+  </header>
+  <div class="stripes" aria-hidden="true"></div>
+
+  <section class="panel">
+    <div class="stats" id="stats"></div>
+    <div class="bar" aria-hidden="true"><i id="foundersBar" style="width:0%"></i></div>
+    <div class="note" id="foundersNote" style="margin-top:6px">Founders Wall: 0 / 1,000</div>
+  </section>
+
+  <section class="panel">
+    <h2>Add comments</h2>
+    <p class="hint" style="margin:0 0 10px">Paste comments straight from the app (any mix of usernames, comments, likes and "Reply" lines), or one per line as <code>@handle: comment</code>. Check the sort below, then save.</p>
+    <label for="paste" class="hint">Pasted comments</label>
+    <textarea id="paste" placeholder="@survivor_77: by the armoury&#10;bunkerkid&#10;garden please&#10;2h  Reply&#10;@nightshift: 3332"></textarea>
+    <div class="row" style="margin-top:10px">
+      <button id="parseBtn">Sort comments</button>
+      <span class="hint" id="parseNote"></span>
+    </div>
+    <div class="preview" id="preview"></div>
+    <div class="row" style="margin-top:10px" id="saveRow" hidden>
+      <button class="primary" id="saveBtn">Save to registry</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="filters" id="filters" role="group" aria-label="Filter survivors"></div>
+    <div class="row" style="margin:10px 0">
+      <label for="search" class="hint" style="flex:0 0 auto">Find</label>
+      <input id="search" type="search" placeholder="handle or comment" style="max-width:320px">
+    </div>
+    <div class="list" id="list"><div class="empty">The registry is empty. Paste the first comments above.</div></div>
+  </section>
+
+  <section class="panel">
+    <h2>Bed assignments</h2>
+    <p class="hint" style="margin:0 0 10px">Gives every survivor without a bed a number in their level's range. People who named a number keep it. Bed 100,000 goes to the first person who asked for it. Others who picked B7 get a bed nearby. Leftover picks ("let me in") go to the B5 dormitory.</p>
+    <div class="row">
+      <button id="assignBtn">Assign beds…</button>
+      <button class="danger" id="assignGo" hidden>Yes, assign <span id="assignCount">0</span> beds</button>
+      <button id="assignCancel" hidden>Cancel</button>
+      <span class="hint" id="assignNote"></span>
+    </div>
+    <details style="margin-top:12px">
+      <summary>Level ranges</summary>
+      <div class="tblwrap"><table class="levels"><thead><tr><th>Beds</th><th>Level</th></tr></thead><tbody id="levelTable"></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="panel">
+    <h2>Founders Wall</h2>
+    <p class="hint" style="margin:0 0 10px">The first 1,000 survivors in the order they joined. Copy this list for episode 2.</p>
+    <div class="founders" id="founders">No survivors yet.</div>
+    <div class="row" style="margin-top:10px"><button id="copyFounders">Copy list</button><span class="hint" id="copyNote"></span></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const LEVELS = [
+    { id: "B1", name: "entry & decontamination", lo: 1, hi: 10000, where: "near the decontamination showers" },
+    { id: "B2", name: "command & medical", lo: 10001, hi: 20000, where: "by the radio room" },
+    { id: "B3", name: "the garden", lo: 20001, hi: 30000, where: "under the grow-lights 🌱" },
+    { id: "B4", name: "commons & pantry", lo: 30001, hi: 40000, where: "next to the pantry" },
+    { id: "B5", name: "main dormitory", lo: 40001, hi: 70000, where: "in the main dormitory" },
+    { id: "B6", name: "the armory", lo: 70001, hi: 85000, where: "by the rifle racks 🔫" },
+    { id: "B7", name: "engineering", lo: 85001, hi: 100000, where: "down by the generators" },
+  ];
+  const SPOT = {
+    garden: { label: "Garden", level: "B3" }, armory: { label: "Armory", level: "B6" }, b7: { label: "B7 dare", level: "B7" },
+    between: { label: "Between", level: "B4" }, number: { label: "Number", level: null }, letmein: { label: "Let me in", level: "B5" },
+    bed0: { label: "Bed 0", level: null }, question: { label: "Question", level: null }, other: { label: "Other", level: "B5" },
+  };
+  const REPLIES = {
+    garden: ["B3 it is. The garden level. Your bed number comes when the lights come on. 🌱", "Logged: B3, under the grow-lights. Don't eat the tomatoes before they're ripe.", "Garden it is. Warmest level in the bunker. You're on the B3 list. 🌱", "B3. Good choice. It's the only green thing left down here."],
+    armory: ["B6 it is. Your bed number comes with the next transmission. 🔫", "Armory. Noted. Assignments go out when the lights come on.", "Good choice. You're on the B6 list. Keep your boots by the door.", "Logged: B6, armory. Don't touch the racks until you're assigned.", "B6. Closest thing to safe down here. Your bed will be waiting."],
+    b7: ["B7. Right above the hatch. Sleep with the light on.", "Noted: B7. The closest anyone is allowed to bed 0. Brave.", "B7 it is. If you hear knocking through the floor, don't knock back.", "Bed 100,000? Only one survivor gets it. You're on the list."],
+    between: ["Between the garden and the armory… that's B4, the pantry level. Food above you, firepower below. 🌱🔫", "B4 it is. Middle of everything. Nobody gets to the food or the guns without passing you.", "Logged: B4. You'll hear the grow-lights hum above and the racks rattle below."],
+    letmein: ["The door's open. Garden, armory or B7, your call. 🔒", "You're on the list. Now pick your spot before someone takes it.", "Welcome, survivor. Garden 🌱, armory 🔫 or right above bed 0?", "Door's still open… for now. Where do you want to sleep?"],
+    bed0: ["Bed 0 is taken.", "Nobody gets bed 0.", "We welded the hatch shut for a reason."],
+    question: ["Good question. Stay close. The next transmission answers some of it.", "Some things on B8 we don't talk about yet.", "Follow and you'll find out with everyone else."],
+    other: ["Logged. Now pick your spot: garden, armory or B7.", "Welcome, survivor. Garden 🌱, armory 🔫 or right above bed 0?"],
+  };
+  const $ = id => document.getElementById(id);
+  const fmt = n => Number(n).toLocaleString("en-US");
+  const hash = s => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619) } return h >>> 0 };
+  const levelOf = n => LEVELS.find(l => n >= l.lo && n <= l.hi) || null;
+  const keyOf = h => String(h).toLowerCase().replace(/^@+/, "").replace(/[^a-z0-9_.\-~:+]/g, "").replace(/^\.+$/, "").slice(0, 120) || null;
+
+  function classify(text) {
+    const t = " " + text.toLowerCase().replace(/[’']/g, "") + " ";
+    const nums = (t.match(/\d[\d,\.]*k?/g) || []).map(s => s.endsWith("k") ? Math.round(parseFloat(s) * 1000) : parseInt(s.replace(/[,\.]/g, ""), 10)).filter(n => !isNaN(n));
+    if (/\bbed\s*(0|zero)\b|\b000\b|\bbed zero\b/.test(t)) return { spot: "bed0" };
+    if (/\bbetween\b/.test(t) || (/(garden|farm)/.test(t) && /armou?ry/.test(t))) return { spot: "between" };
+    if (/\bb\s*7\b|100k|100,000|100000|hatch|above bed/.test(t)) return { spot: "b7", want100k: /100k|100,000|100000/.test(t) };
+    if (/garden|farm|plant|green|tomato|grow/.test(t)) return { spot: "garden" };
+    if (/armou?ry|weapon|gun|rifle|ammo/.test(t)) return { spot: "armory" };
+    const n = nums.find(x => x >= 0 && x <= 999999);
+    if (n !== undefined) return n === 0 ? { spot: "bed0" } : { spot: "number", bed: n };
+    if (/let me in|let us in|im in|i'?m in|count me|join|me\b|open the door|room for me/.test(t)) return { spot: "letmein" };
+    if (/\?/.test(t)) return { spot: "question" };
+    return { spot: "other" };
+  }
+  const NOISE = /^(reply|replies|like|liked|pinned|creator|author|see translation|view (more|\d+) repl(y|ies)|hide|·|\d+|\d+[smhdw]( ago)?|\d+\s*(s|m|h|d|w|min|hr|hrs)( ago)?(\s+reply)?|\d+(\.\d+)?k?\s*(likes?|replies)?|\d{1,2}[-\/]\d{1,2}(\s+reply)?|just now|yesterday)$/i;
+  function parsePaste(raw) {
+    const lines = raw.split(/\r?\n/).map(s => s.trim()).filter(s => s && !NOISE.test(s));
+    const out = []; let pendingHandle = null;
+    for (const line of lines) {
+      let m = line.match(/^@?([A-Za-z0-9_.]{2,40})\s*[:\-–—]\s+(.+)$/) || line.match(/^@([A-Za-z0-9_.]{2,40})\s+(.+)$/);
+      if (m) { if (pendingHandle) pendingHandle = null; out.push({ handle: m[1], text: m[2] }); continue }
+      const looksHandle = /^@?[A-Za-z0-9_.]{2,40}$/.test(line) && !/^(garden|armou?ry|farm|b7|me|in|yes)$/i.test(line);
+      if (looksHandle && !pendingHandle) { pendingHandle = line.replace(/^@/, ""); continue }
+      if (pendingHandle) { out.push({ handle: pendingHandle, text: line }); pendingHandle = null; continue }
+      if (out.length) out[out.length - 1].text += " " + line;
+    }
+    return out.map(o => ({ ...o, ...classify(o.text) }));
+  }
+  function replyFor(s, taken) {
+    if (s.spot === "number") {
+      const n = s.requestedBed;
+      if (n > 100000) return "We only have 100,000 beds. Pick one that exists.";
+      if (n === 100000) return "Bed 100,000. The last bed, right above the hatch. Sleep tight. Don't knock back.";
+      if (taken) return `Bed ${fmt(n)} is already taken. Pick another, survivor.`;
+      const L = levelOf(n);
+      return `Bed ${fmt(n)} is yours. ${L.id}, ${L.where}.`;
+    }
+    const pool = REPLIES[s.spot] || REPLIES.other;
+    return pool[hash(s.key + (s.replyRoll || 0)) % pool.length];
+  }
+
+  // ---------- state ----------
+  let db = null, col = null, people = [], filter = "pending", query = "", staged = [];
+  const statusEl = $("status");
+  $("levelTable").innerHTML = LEVELS.map(l => `<tr><td>${fmt(l.lo)} – ${fmt(l.hi)}</td><td>${l.id} · ${l.name}</td></tr>`).join("") + `<tr><td>0</td><td>B8 · doesn't exist</td></tr>`;
+
+  function takenMap() { const m = new Map(); for (const p of people) { const b = p.bed ?? p.requestedBed; if (b != null && b !== 0) { if (!m.has(b)) m.set(b, p.key) } } return m }
+  function levelLabel(p) {
+    const b = p.bed ?? (p.spot === "number" ? p.requestedBed : null);
+    if (b != null && b > 0 && b <= 100000) return levelOf(b).id;
+    return SPOT[p.spot]?.level || "—";
+  }
+
+  function renderStats() {
+    const total = people.length, pending = people.filter(p => !p.replied).length, assigned = people.filter(p => p.bed != null).length;
+    const by = k => people.filter(p => p.spot === k).length;
+    const cells = [["Survivors", fmt(total)], ["Need a reply", fmt(pending)], ["Beds assigned", fmt(assigned)], ["Garden", fmt(by("garden"))], ["Armory", fmt(by("armory"))], ["B7 dare", fmt(by("b7"))], ["Named a number", fmt(by("number"))], ["Let me in", fmt(by("letmein"))]];
+    $("stats").innerHTML = cells.map(([k, v]) => `<div class="stat"><b>${v}</b><small>${k}</small></div>`).join("");
+    const f = Math.min(1000, total);
+    $("foundersBar").style.width = (f / 10) + "%";
+    $("foundersNote").textContent = `Founders Wall: ${fmt(f)} / 1,000`;
+    const order = [...people].sort((a, b) => a.firstSeen - b.firstSeen).slice(0, 1000);
+    $("founders").textContent = order.length ? order.map((p, i) => `${String(i + 1).padStart(4, " ")}. @${p.handle}${p.bed != null ? "  ·  bed " + fmt(p.bed) + " (" + levelOf(p.bed)?.id + ")" : "  ·  " + levelLabel(p)}`).join("\n") : "No survivors yet.";
+  }
+  function renderFilters() {
+    const opts = [["pending", "Needs reply"], ["all", "All"], ...Object.entries(SPOT).map(([k, v]) => [k, v.label])];
+    $("filters").innerHTML = opts.map(([k, l]) => `<button class="small ${filter === k ? "on" : ""}" data-f="${k}" aria-pressed="${filter === k}">${l}</button>`).join("");
+  }
+  function renderList() {
+    const taken = takenMap();
+    let rows = [...people].sort((a, b) => (a.replied - b.replied) || (b.lastSeen - a.lastSeen));
+    if (filter === "pending") rows = rows.filter(p => !p.replied); else if (filter !== "all") rows = rows.filter(p => p.spot === filter);
+    if (query) rows = rows.filter(p => (p.handle + " " + (p.comments || []).join(" ")).toLowerCase().includes(query));
+    const list = $("list");
+    if (!people.length) { list.innerHTML = `<div class="empty">The registry is empty. Paste the first comments above.</div>`; return }
+    if (!rows.length) { list.innerHTML = `<div class="empty">Nothing here. ${filter === "pending" ? "Every comment has a reply." : "Try another filter."}</div>`; return }
+    list.innerHTML = "";
+    for (const p of rows) {
+      const clash = p.spot === "number" && p.requestedBed > 0 && taken.get(p.requestedBed) && taken.get(p.requestedBed) !== p.key;
+      const card = document.createElement("article");
+      card.className = "card" + (p.replied ? "" : " pending");
+      const said = (p.comments || []).slice(-3).map(c => "“" + c + "”").join(" · ");
+      card.innerHTML = `<div class="top"><span class="handle"></span><span class="chip c-${p.spot}">${SPOT[p.spot]?.label || p.spot}</span><span class="hint">${levelLabel(p)}</span>${p.bed != null ? `<span class="bed">bed ${fmt(p.bed)}</span>` : ""}${clash ? `<span class="chip c-b7">bed taken</span>` : ""}</div>
+        <div class="said"></div><div class="reply"></div>
+        <div class="actions"><button class="small primary" data-a="copy">Copy reply</button><button class="small" data-a="toggle">${p.replied ? "Mark unreplied" : "Mark replied"}</button><button class="small" data-a="another">Another reply</button>
+        <label class="hint" for="spot-${p.key}">Spot</label><select id="spot-${p.key}" data-a="spot">${Object.entries(SPOT).map(([k, v]) => `<option value="${k}" ${k === p.spot ? "selected" : ""}>${v.label}</option>`).join("")}</select>
+        <button class="small danger" data-a="del">Remove</button><span class="hint" data-msg></span></div>`;
+      card.querySelector(".handle").textContent = "@" + p.handle;
+      card.querySelector(".said").textContent = said;
+      card.querySelector(".reply").textContent = replyFor(p, clash);
+      card.dataset.key = p.key;
+      list.appendChild(card);
+    }
+  }
+  const renderAll = () => { renderStats(); renderFilters(); renderList() };
+
+  // ---------- writes ----------
+  async function write(key, data, merge) {
+    const ref = col.doc(key);
+    try { if (merge) await ref.update(data); else await ref.set(data); return true }
+    catch (e) { statusEl.innerHTML = `<span class="warn">Couldn't save (${e.code || "error"}). ${e.code === "quota_exceeded" ? "The registry is full." : "Try again in a moment."}</span>`; return false }
+  }
+  $("list").addEventListener("click", async e => {
+    const btn = e.target.closest("button[data-a]"); if (!btn) return;
+    const card = btn.closest(".card"); const p = people.find(x => x.key === card.dataset.key); if (!p) return;
+    const msg = card.querySelector("[data-msg]");
+    if (btn.dataset.a === "copy") {
+      const txt = card.querySelector(".reply").textContent;
+      try { await navigator.clipboard.writeText(txt); msg.textContent = "Copied" }
+      catch { const r = document.createRange(); r.selectNodeContents(card.querySelector(".reply")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); msg.textContent = "Selected: copy it" }
+    } else if (btn.dataset.a === "toggle") { await write(p.key, { replied: !p.replied }, true) }
+    else if (btn.dataset.a === "another") { await write(p.key, { replyRoll: (p.replyRoll || 0) + 1 }, true) }
+    else if (btn.dataset.a === "del") {
+      if (btn.dataset.armed) { try { await col.doc(p.key).delete() } catch (err) { msg.textContent = "Couldn't remove" } }
+      else { btn.dataset.armed = "1"; btn.textContent = "Confirm remove"; msg.textContent = "Click again to remove" }
+    }
+  });
+  $("list").addEventListener("change", async e => {
+    const sel = e.target.closest("select[data-a='spot']"); if (!sel) return;
+    const key = sel.closest(".card").dataset.key; await write(key, { spot: sel.value }, true);
+  });
+  $("filters").addEventListener("click", e => { const b = e.target.closest("button[data-f]"); if (!b) return; filter = b.dataset.f; renderFilters(); renderList() });
+  $("search").addEventListener("input", e => { query = e.target.value.trim().toLowerCase(); renderList() });
+
+  // ---------- intake ----------
+  function renderStaged() {
+    const pv = $("preview");
+    pv.innerHTML = "";
+    staged.forEach((s, i) => {
+      const row = document.createElement("div"); row.className = "pv";
+      row.innerHTML = `<div class="h"></div><div class="c"></div><select aria-label="Spot for this comment" data-i="${i}">${Object.entries(SPOT).map(([k, v]) => `<option value="${k}" ${k === s.spot ? "selected" : ""}>${v.label}${k === "number" && s.bed != null ? " " + fmt(s.bed) : ""}</option>`).join("")}</select>`;
+      row.querySelector(".h").textContent = "@" + s.handle; row.querySelector(".c").textContent = s.text;
+      pv.appendChild(row);
+    });
+    $("saveRow").hidden = !staged.length;
+  }
+  $("preview").addEventListener("change", e => { const s = e.target.closest("select[data-i]"); if (s) staged[+s.dataset.i].spot = s.value });
+  $("parseBtn").addEventListener("click", () => {
+    staged = parsePaste($("paste").value);
+    $("parseNote").textContent = staged.length ? `${staged.length} comment${staged.length > 1 ? "s" : ""} found. Fix any sort below, then save.` : "No comments found. Try one per line as @handle: comment.";
+    renderStaged();
+  });
+  $("clearBtn").addEventListener("click", () => { staged = []; $("paste").value = ""; $("parseNote").textContent = ""; renderStaged() });
+  $("saveBtn").addEventListener("click", async () => {
+    if (!col) return;
+    const btn = $("saveBtn"); btn.disabled = true; let saved = 0;
+    const now = Date.now();
+    for (const [i, s] of staged.entries()) {
+      const key = keyOf(s.handle); if (!key) continue;
+      const ex = people.find(p => p.key === key);
+      const base = { spot: s.spot, lastSeen: now + i, replied: false };
+      if (s.spot === "number" && s.bed != null) base.requestedBed = s.bed;
+      if (s.want100k) base.want100k = true;
+      const ok = ex
+        ? await write(key, { ...base, comments: [...(ex.comments || []), s.text].slice(-10) }, true)
+        : await write(key, { ...base, key, handle: s.handle.replace(/^@/, ""), comments: [s.text], firstSeen: now + i }, false);
+      if (ok) saved++;
+    }
+    btn.disabled = false; staged = []; $("paste").value = ""; renderStaged();
+    $("parseNote").textContent = `Saved ${saved} comment${saved === 1 ? "" : "s"}.`;
+  });
+
+  // ---------- bed assignment ----------
+  function planAssignments() {
+    const taken = new Set(people.filter(p => p.bed != null).map(p => p.bed));
+    const plan = []; const order = [...people].filter(p => p.bed == null).sort((a, b) => a.firstSeen - b.firstSeen);
+    const claim = n => { taken.add(n); return n };
+    for (const p of order) {
+      if (p.spot === "number" && p.requestedBed >= 1 && p.requestedBed <= 100000 && !taken.has(p.requestedBed)) { plan.push([p.key, claim(p.requestedBed)]); continue }
+      if (p.spot === "b7" && p.want100k && !taken.has(100000)) { plan.push([p.key, claim(100000)]); continue }
+      if (p.spot === "bed0" || p.spot === "question") continue;
+      const lv = LEVELS.find(l => l.id === (SPOT[p.spot]?.level || (p.requestedBed ? levelOf(Math.min(p.requestedBed, 100000))?.id : "B5"))) || LEVELS[4];
+      const span = lv.hi - lv.lo + 1; let n = lv.lo + (hash(p.key) % span);
+      for (let k = 0; k < span && taken.has(n); k++) n = n + 1 > lv.hi ? lv.lo : n + 1;
+      if (!taken.has(n)) plan.push([p.key, claim(n)]);
+    }
+    return plan;
+  }
+  let pendingPlan = [];
+  $("assignBtn").addEventListener("click", () => {
+    pendingPlan = planAssignments();
+    $("assignCount").textContent = fmt(pendingPlan.length);
+    $("assignNote").textContent = pendingPlan.length ? "Beds can't be un-assigned in one click. Check the list first." : "Everyone who can get a bed already has one.";
+    $("assignGo").hidden = !pendingPlan.length; $("assignCancel").hidden = !pendingPlan.length;
+  });
+  $("assignCancel").addEventListener("click", () => { pendingPlan = []; $("assignGo").hidden = $("assignCancel").hidden = true; $("assignNote").textContent = "" });
+  $("assignGo").addEventListener("click", async () => {
+    const go = $("assignGo"); go.disabled = true; let n = 0;
+    for (const [key, bed] of pendingPlan) { if (await write(key, { bed }, true)) n++ }
+    go.disabled = false; go.hidden = $("assignCancel").hidden = true; pendingPlan = [];
+    $("assignNote").textContent = `Assigned ${fmt(n)} beds.`;
+  });
+
+  $("copyFounders").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText($("founders").textContent); $("copyNote").textContent = "Copied" }
+    catch { const r = document.createRange(); r.selectNodeContents($("founders")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("copyNote").textContent = "Selected: copy it" }
+  });
+
+  // ---------- connect ----------
+  renderAll();
+  (async () => {
+    db = await window.claude?.use?.("db");
+    if (!db) { statusEl.innerHTML = `<span class="warn">The registry can't be reached here. Open this page signed in to claude.ai.</span>`; ["parseBtn", "saveBtn", "assignBtn"].forEach(id => $(id).disabled = true); return }
+    col = db.collection("survivors");
+    const timer = setTimeout(() => { statusEl.textContent = "Still connecting. The list may be out of date." }, 10000);
+    col.onSnapshot(snap => {
+      if (!snap.metadata.fromCache) { clearTimeout(timer); statusEl.textContent = "Registry live · saved for you on every device" }
+      people = snap.docs.map(d => ({ ...d.data(), key: d.id })).map(p => ({ firstSeen: 0, lastSeen: 0, comments: [], replied: false, ...p }));
+      renderAll();
+    }, e => { clearTimeout(timer); statusEl.innerHTML = `<span class="warn">Lost the registry connection (${e.code}). Reload the page.</span>` });
+  })();
+})();
+</script>
