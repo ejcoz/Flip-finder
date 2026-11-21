@@ -89,7 +89,7 @@ Each episode shows 4–6 real commenters so people come back to see themselves. 
 
 ## The Overseer
 
-The bunker can hold an election for an **Overseer**: the most-liked comment on the election post by the deadline wins (ties go to the earlier comment). Only followers can win. The Overseer is named on screen, sits at the top of the Founders Wall, and makes one call per episode when the narrator offers two options. Log the winner with `overseer: true`. Replies about the election stay in character and never promise anything beyond the title and those decisions.
+The bunker can hold an election for an **Overseer**: the most-liked comment on the election post by the deadline wins (ties go to the earlier comment). Only followers can win. The Overseer is named on screen, sits at the top of the Founders Wall, and gets small, cosmetic calls only (name the B6 dog, the pet rule, tonight's ration, which level gets a shout-out). The Overseer never decides anything that changes the plot: the narrator can overrule them, and that refusal is part of the story. Log the winner with `overseer: true`. Replies about the election stay in character and never promise anything beyond the title and those decisions.
 
 ## Things to avoid
 
