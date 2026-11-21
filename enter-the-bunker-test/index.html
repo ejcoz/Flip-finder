@@ -62,7 +62,7 @@ function cylCellRect(lv, row, a) {
   return [x0, yb - 9.5, x1 - x0, 9.5];
 }
 const cellRect = cell => cell.length === 3 ? cylCellRect(...cell) : (([x, y]) => [x, y, 11, 7])(cellXY(cell[0], cell[1]));
-const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [1, 2, 15] : [SPINE + 1, 10], YOURBED = CYL ? [5, 1, 9] : [8, 63], SIXC = CYL ? [0, 2, 16] : [SPINE, 3];
+const LOOPC = CYL ? [3, 1, 6] : [8, 39], DIVE1 = CYL ? [4, 1, 18] : [27, 46], DIVE2 = CYL ? [1, 2, 15] : [SPINE + 1, 10], YOURBED = CYL ? [4, 1, 18] : [8, 63], SIXC = CYL ? [0, 2, 16] : [SPINE, 3];
 const cellCenter = cell => { const [x, y, w, h] = cellRect(cell); return [x + w / 2, y + h / 2]; };
 const rnd = mulberry(7); const LIT = Array.from({ length: NCOL * NROW }, () => rnd());
 
