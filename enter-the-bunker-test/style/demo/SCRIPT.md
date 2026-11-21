@@ -1,6 +1,6 @@
 # Enter the Bunker: narration script
 
-For recording a better voiceover. Each line is timed to the picture; the **slot** is the time between the line's start and the next line's start. Stay within the slot (a little shorter is fine, longer pushes the edit). Numbers are spoken as written in *Say*.
+For recording a better voiceover. Each line is timed to the picture; the **slot** is the time between the line's start and the next line's start. Stay within the slot (a little shorter is fine, longer pushes the edit). Numbers are spoken as written in *Say* ("bed zero" is captioned as "Bed 000").
 
 **How to deliver it:** record each line as a separate file named by its ID (`l01.wav`, `l02.wav`, …, `l12b.wav`, `l12c.wav`) and I'll drop them in and re-time the captions automatically. One continuous take also works; I'll cut it.
 
@@ -18,13 +18,12 @@ For recording a better voiceover. Each line is timed to the picture; the **slot*
 | l10 | 23.4 s | 5.5 s | And at one hundred thousand, the door seals, and we wait out the end of the world. | Biggest line before the turn: "door seals" heavy, "end of the world" grave. |
 | l11 | 28.9 s | 2.2 s | But there's something I haven't told you. | Drop to near whisper after the power cut. Slow. |
 | l12 | 31.1 s | 2.6 s | This bunker only has seven levels. | Quiet, deliberate. "seven" clearly. |
-| l12b | 33.7 s | 3.2 s | Bed four oh four is on the eighth. | Let the dread show. Small pause after "four oh four". |
+| l12b | 33.7 s | 3.2 s | Bed zero is on the eighth. | Let the dread show. Small pause after "bed zero". |
 | l12c | 36.9 s | 4.9 s | And it's locked from the inside. | Barely above a whisper. Let "inside" hang. |
-| l13 | 41.8 s | 6.3 s | Pick your spot in the comments. By the garden, next to the armory, or right beside four oh four. | Snap back to upbeat host voice: the call to action. Lift on "four oh four" with a grin. |
+| l13 | 41.8 s | 6.3 s | Pick your spot in the comments. By the garden, next to the armory, or right beside bed zero. | Snap back to upbeat host voice: the call to action. Lift on "bed zero" with a grin. |
 | l14 | 48.1 s | 4.5 s | Follow me, and get inside before the door closes. | Urgent, final. Ends on the loop: no fade. |
 
 ## Plain read-through
-
 
 This bunker has room for one hundred thousand people.
 One hundred thousand beds, and every single one is empty.
@@ -38,9 +37,9 @@ At ten thousand, the air starts flowing.
 And at one hundred thousand, the door seals, and we wait out the end of the world.
 But there's something I haven't told you.
 This bunker only has seven levels.
-Bed four oh four is on the eighth.
+Bed zero is on the eighth.
 And it's locked from the inside.
-Pick your spot in the comments. By the garden, next to the armory, or right beside four oh four.
+Pick your spot in the comments. By the garden, next to the armory, or right beside bed zero.
 Follow me, and get inside before the door closes.
 
 ## Total

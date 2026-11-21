@@ -11,7 +11,7 @@ Default size: 1080×1920, 30 fps.
 - **One bunker, cut open.** A buried cylindrical concrete silo seen in a front cutaway: stacked levels (B1–B7), each a concrete floor ringed with rows of bunks on the curved back wall, a stair/lift core down the middle, vent stacks and a hatch shaft rising to a ruined surface, a round blast door with a radiation trefoil at the end of a tunnel.
 - **The viewer is a bed.** Every film offers one bed to "you": gold, with a faceless silhouette and the word YOU, then a handle tag (`@YOUR_NAME`).
 - **A counter is the promise.** A dark plate with a small-caps tag and a big hazard-yellow number (`0 / 100,000`); milestones roll it up and change the bunker (lights, air, the door seals).
-- **One floor shouldn't exist.** The twist is always a hidden level revealed under red emergency light, with one red bed on it that is already taken (bed 404 on B8). Reached by the same corridor, turned red.
+- **One floor shouldn't exist.** The twist is always a hidden level revealed under red emergency light, with one red bed on it that is already taken (bed 000 on B8). Reached by the same corridor, turned red.
 - **Into the bunk.** The camera dives from the cutaway into one bed and comes out in a 3D corridor of beds, and pulls back the same way.
 
 Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines), not Sci-fi Hologram HUD (solid concrete, not wireframe), not a 3D product render (the cutaway is drawn flat; only the corridor has depth).
@@ -32,7 +32,7 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 - **Concrete** (#A9A48C / shade #6C6855) with stains and formwork lines; interiors near-black olive (#1C2016), bunks #2E3625 with a toxic-green light strip (#9CF04A).
 - **Hazard yellow** (#F2C230) is the bunker's own mark: dashed edges, stripes on the footing, the trefoil, level labels, every number.
 - **Only lights glow:** lit bunks (warm #FFD27A), beacons, the scanner and the garden (toxic green). The structure itself never glows.
-- **Gold** (#FFC23A) means *you*. **Red** (#FF3B3B) means *the forbidden*: bed 404, B8, the red corridor. Never both in one bed.
+- **Gold** (#FFC23A) means *you*. **Red** (#FF3B3B) means *the forbidden*: bed 000, B8, the red corridor. Never both in one bed.
 
 ## 4. Type & subtitles
 
@@ -66,7 +66,7 @@ Not a sci-fi ship (no rocket fins, engines, starfields or glowing hull outlines)
 - **Into the bunk.** Dive into one bed; the corridor grows from it. *Fits:* showing who lives inside; finding one seat in a stadium.
 - **The counter climbs.** The plate rolls through milestones while the structure changes with each one. *Fits:* launches, doors, unlocks, goals.
 - **The floor that doesn't exist.** The power cuts, red light comes on, the camera tilts below the lowest level and a hidden floor flickers in; one bed on it glows red, and the corridor behind it ends at a latched door that knocks back. *Fits:* any twist where one place is already taken.
-- **Pick your spot.** Rooms light up with tags as a comment card names them (two attractive ones, then the forbidden one: e.g. the garden, the armory, 404). *Fits:* the call to comment.
+- **Pick your spot.** Rooms light up with tags as a comment card names them (two attractive ones, then the forbidden one: e.g. the garden, the armory, bed 000). *Fits:* the call to comment.
 
 ## 9. Pitfalls
 

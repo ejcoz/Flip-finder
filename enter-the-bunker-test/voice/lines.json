@@ -78,10 +78,10 @@
  },
  {
   "id": "l12b",
-  "text": "Bed four oh four is on the eighth.",
+  "text": "Bed zero is on the eighth.",
   "voice": "am_michael",
   "speed": 0.95,
-  "asr": "Bed 404 is on the 8th."
+  "asr": "Bed zero is on the 8th."
  },
  {
   "id": "l12c",
@@ -91,10 +91,10 @@
  },
  {
   "id": "l13",
-  "text": "Pick your spot in the comments. By the garden, next to the armory, or right beside four oh four.",
+  "text": "Pick your spot in the comments. By the garden, next to the armory, or right beside bed zero.",
   "voice": "am_michael",
   "speed": 1.08,
-  "asr": "Pick your spot in the comments by the garden next to the armory or right beside 404."
+  "asr": "Pick your spot in the comments by the garden next to the armory or right beside bed zero."
  },
  {
   "id": "l14",
