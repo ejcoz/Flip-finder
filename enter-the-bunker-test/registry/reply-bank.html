@@ -239,6 +239,31 @@ const LEVELS=[
   "Bed 0 isn't on the list. It never was.",
   "Pick another bed. That one already answered.",
   "The hatch stays welded. Bed 0 stays taken."]},
+ {id:"pets",lv:"",name:"Pets",range:"approved",note:"Dogs, cats and anything else they want to bring.",r:[
+  "Approved. Dogs are allowed. They hear things before we do.",
+  "The dog can come. Your floor has a new night watch now.",
+  "Approved. Keep it close at night. If it growls at the floor, come get us.",
+  "Pet approved. Rations are tight, so share yours.",
+  "Approved. Dogs sleep on the bottom bunk. House rule.",
+  "Bring the dog. It'll be the bravest one on B7.",
+  "Cat approved. It'll find its own bunk. They always do.",
+  "Approved. Cats keep the pantry clear of rats. Welcome aboard.",
+  "Cat approved. If it stares at the floor for too long, move bunks.",
+  "Approved. Pets get a tag too. Name it in the comments.",
+  "Logged: you, plus one. Paws count as survivors down here.",
+  "Approved. Keep it off the garden level. The tomatoes are rationed.",
+  "The garden's perfect for it. Fresh air, sort of. 🌱",
+  "Approved. The armory already has three dogs. Yours makes four.",
+  "Pet approved. If it won't go near the stairs down, don't make it.",
+  "Approved. Animals know which floors to avoid. Follow its lead.",
+  "Hamster approved. Keep the cage away from B7. It gets nervous.",
+  "Approved. Fish need power for the tank. Engineering will love you.",
+  "Bird approved. If it stops singing, tell us right away.",
+  "Approved. Snakes sleep on B4. Away from the pantry mice. Mostly.",
+  "Pets are welcome. Pets that knock back are not.",
+  "One pet per survivor. Don't tell the others we said yes.",
+  "Approved. B6 is turning into a kennel. Squeeze in.",
+  "Pet approved. Tag who's walking it at 3am."]},
  {id:"brave",lv:"",name:"Brave comments",range:"\"I'll stop bed 0\"",r:[
   "Bold. Start on B6. You'll need the gear.",
   "Noted. We'll put you on night watch above the hatch.",
@@ -318,7 +343,7 @@ for(const L of LEVELS.filter(l=>l.lv)){
   c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(L.id).scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"})});
   chips.appendChild(c);
 }
-for(const [id,label] of [["brave","Brave"],["qs","Questions"],["fix","Fixes"],["tag","Tags"]]){
+for(const [id,label] of [["pets","Pets"],["brave","Brave"],["qs","Questions"],["fix","Fixes"],["tag","Tags"]]){
   const c=document.createElement("button");c.type="button";c.className="chip";c.textContent=label;
   c.addEventListener("click",()=>{document.getElementById("q").value="";render();document.getElementById(id).scrollIntoView()});
   chips.appendChild(c);
