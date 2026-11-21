@@ -4,7 +4,8 @@
 // Two cuts from this page: ?cut=yt ends after l07 (YouTube Shorts); the default plays all 8 lines (Instagram, TikTok).
 import * as A from './art.js';
 const { W, H, ACC } = A;
-const CUT = new URLSearchParams(location.search).get('cut') === 'yt' ? 'yt' : 'full';
+const Q = new URLSearchParams(location.search), CUT = Q.get('cut') === 'yt' ? 'yt' : 'full';
+if (Q.get('cover')) window.COVER = true;   // ?cover=1: the scene only, no text (for checking drawings and covers)
 
 // ---------- the script: caption cut (word counts) + the scene each line plays in ----------
 const ALL = [
@@ -79,8 +80,8 @@ const breathAt = t => (Math.sin(t * 2.2) + 1) / 2;
 // ---------- the home scene (the owner's seat on the couch) ----------
 let PIN = [];
 const MYTH = [320, 1180];   // where the myth tag sits on screen (left, over your legs, clear of the dog's face)
-const RUMP = [770, 1560], CONTACT = [548, 1560], HEAD = [880, 1090];
-const F1 = [1.25, 700, 1130];   // the frame-1 shot: the rump against your leg, the face looking back, below the hook
+const RUMP = [700, 1480], CONTACT = [520, 1470], HEAD = [826, 1188];
+const F1 = [1.25, 652, 1340];   // the frame-1 shot: the rump against your leg, the face looking back, below the hook
 let CAM = [1, 0, 0];
 const camAt = (z, fx, fy) => [z, Math.min(0, Math.max(W - W * z, W / 2 - fx * z)), Math.min(0, Math.max(H - H * z, fy - fy * z))];
 const toScreen = (x, y) => [x * CAM[0] + CAM[1], y * CAM[0] + CAM[2]];
@@ -177,7 +178,8 @@ function pins(t, scene) {
   A.setCtx(out);
   if (scene !== 'home') return;
   const list = [];
-  const [bx, by] = toScreen(RUMP[0] + 60, RUMP[1] - 40), [cx, cy] = toScreen(...CONTACT);
+  const [bx, by] = toScreen(RUMP[0] + 30, RUMP[1] + 50),   // the butt
+        [cx, cy] = toScreen(...CONTACT);
   if (t > L1.wt[7] && t < L2.t0 + .1) list.push(['ON PURPOSE?', 300, 1260, bx, by, ACC.ask, 32]);   // on "butt"; gone before the loop frame
   if (t > L2.wt[3] && t < L3.t0 + .5) list.push(['RUDE? GASSY?', MYTH[0], MYTH[1], bx, by, ACC.bad, 34]);
   if (L4 && t > L4.wt[6] && t < L5.t0 - .3) list.push(['BACK TO YOU = TRUST', 560, 1120, cx, cy, ACC.good, 32]);
