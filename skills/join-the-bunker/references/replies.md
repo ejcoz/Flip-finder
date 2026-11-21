@@ -116,3 +116,24 @@ If the armory is clearly the most popular pick, an occasional nudge works: "Armo
 - B6. Tag the one person you'd trust on night watch.
 - Garden. Tag who's on watering duty. 🌱
 - B7. Tag someone brave enough to sleep next to you.
+
+## B1 (beds 1–10,000: entry & decontamination)
+- Bed {n} is yours. B1, near the decontamination showers.
+- B1. First floor down. You'll hear the blast door every time it opens.
+- Logged: B1. Shower before bed. Every night. No exceptions.
+- B1. Closest to the surface. Closest to whatever's out there too.
+
+## B2 (beds 10,001–20,000: command, radio & medical)
+- Bed {n} is yours. B2, by the radio room.
+- B2. If the radio crackles at night, wake someone.
+- Logged: B2. Medical's next door. Hope you never need it.
+- B2. You'll hear every transmission before anyone else.
+
+## B4 extra
+- B4. Food above, firepower below. You're in the middle of everything.
+- Logged: B4. Count the cans. Someone has to.
+
+## B5 extra
+- B5. The big dormitory. Thirty thousand bunks and one light switch.
+- Logged: B5. Snoring complaints go to the radio room.
+- B5. Plenty of room. For now.
