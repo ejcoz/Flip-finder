@@ -22,7 +22,7 @@ const L = Object.fromEntries(TL.lines.map(l => [l.id, l]));
 const wt = (id, word) => { const w = L[id].w.find(x => x[0].toLowerCase().startsWith(word.toLowerCase())); return w ? w[1] : L[id].t; };
 const lineEnd = id => L[id].t + L[id].d;
 
-const CYL = new URLSearchParams(location.search).get('shape') !== 'box';
+const CYL = new URLSearchParams(location.search).get('shape') !== 'box', COVER = new URLSearchParams(location.search).has('cover');
 // ---------- palette ----------
 const P = {
   sky0: '#140E0A', sky1: '#5A3417', shell: '#A9A48C', shellS: '#6C6855', inner: '#1C2016', cell: '#2E3625', slab: '#12140D',
@@ -463,7 +463,7 @@ function drawCutaway(t, cam, S) {
     glowDot(g, x, y, 46 * a, 'rgba(255,220,120,1)', pul); c.fillStyle = '#FFF2C4'; c.beginPath(); c.arc(x, y, 10 * a, 0, TAU); c.fill();
   }
   // counter plate (world-attached)
-  const K = counterAt(t);
+  const K = COVER ? { show: 0 } : counterAt(t);
   if (K.show > 0.01) {
     c.save(); c.translate(540, 1395); c.scale(K.show * (1 + K.pop * .08), K.show * (1 + K.pop * .08));
     c.font = '700 44px Fredoka'; const w = Math.max(220, c.measureText(K.txt).width + 56);
@@ -742,6 +742,7 @@ window.render = (t) => {
     }
   }
   atmosphere(t, cor && full);
+  if (COVER) return;
   if (!full) labels.forEach(f => f());
   commentCard(t);
   titleCard(t);
