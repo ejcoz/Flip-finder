@@ -380,16 +380,42 @@ export function couchPOV(t = 0) {
   g.strokeStyle = 'rgba(0,0,0,.14)'; g.lineWidth = 5; g.beginPath(); g.moveTo(520, 1062); g.lineTo(500, 1920); g.stroke();   // cushion seam
   g.fillStyle = 'rgba(255,255,255,.05)'; g.beginPath(); g.moveTo(60, 1070); g.lineTo(970, 1070); g.lineTo(980, 1120); g.lineTo(50, 1120); g.closePath(); g.fill();
 }
-// the owner's legs, in pyjama trousers, running from the bottom of the frame along the couch, socks at the far end
+// the owner's legs, seen looking down them along the couch: pyjama trousers rounded like real legs (lit down the middle),
+// a slight bend at the knee, folds at the knee and ankle, a soft check that follows the leg into the distance, and socked
+// feet standing up at the far end, toes to the ceiling
 export function legsPOV() {
-  const leg = (bx, tx, wb, wt, ty) => {
-    g.fillStyle = shade(ty, 1920, ['#D9707A', '#B84A56', '#8A3240']);
-    g.beginPath(); g.moveTo(bx - wb / 2, 1940); g.quadraticCurveTo(bx - wb * .55, 1500, tx - wt / 2, ty); g.lineTo(tx + wt / 2, ty); g.quadraticCurveTo(bx + wb * .55, 1500, bx + wb / 2, 1940); g.closePath(); g.fill();
-    g.strokeStyle = 'rgba(255,230,210,.22)'; g.lineWidth = 5; for (let k = 1; k < 6; k++) { const f = k / 6; g.beginPath(); g.moveTo(bx - wb / 2 + (tx - wt / 2 - bx + wb / 2) * f, 1940 + (ty - 1940) * f); g.lineTo(bx + wb / 2 + (tx + wt / 2 - bx - wb / 2) * f, 1940 + (ty - 1940) * f); g.stroke(); }
-    g.fillStyle = shade(ty - 70, ty + 10, ['#F7F2EA', '#E6DCCB', '#C9BBA4']); ell(tx, ty - 22, wt * .62, 46); g.fill();   // sock
+  const leg = (bx, tx, wb, wt, ty, side) => {
+    const L = (f) => [bx + (tx - bx) * f, 1940 + (ty - 1940) * f, wb + (wt - wb) * f];   // centre x, y and width at f (0 near, 1 ankle)
+    const knee = .58, kb = 12;   // the knee: a slight bulge
+    const edge = (sgn) => { const pts = []; for (let k = 0; k <= 20; k++) { const f = k / 20, [cx, cy, w] = L(f), bulge = kb * Math.exp(-((f - knee) ** 2) / .03); pts.push([cx + sgn * (w / 2 + bulge * (sgn === side ? 1 : .4)), cy]); } return pts; };
+    const left = edge(-1), right = edge(1);
+    const path = () => { g.beginPath(); g.moveTo(...left[0]); for (const p of left) g.lineTo(...p); for (const p of right.slice().reverse()) g.lineTo(...p); g.closePath(); };
+    // rounded: dark at both edges, lit down the middle
+    const gr = g.createLinearGradient(bx - wb / 2, 0, bx + wb / 2, 0);
+    gr.addColorStop(0, '#7E2A38'); gr.addColorStop(.35, '#C0505E'); gr.addColorStop(.6, '#D46A76'); gr.addColorStop(1, '#8A3240');
+    g.fillStyle = gr; path(); g.fill();
+    g.save(); path(); g.clip();
+    // distance haze toward the ankle
+    const hz = g.createLinearGradient(0, ty, 0, 1940); hz.addColorStop(0, 'rgba(40,30,70,.25)'); hz.addColorStop(.5, 'rgba(40,30,70,0)'); g.fillStyle = hz; g.fillRect(0, ty, W, 1940 - ty);
+    // the check: lines along the leg (converging) and across it (closer together in the distance)
+    g.strokeStyle = 'rgba(255,225,210,.12)'; g.lineWidth = 4;
+    for (let a = -2; a <= 2; a++) { g.beginPath(); g.moveTo(bx + a * wb / 5, 1940); g.lineTo(tx + a * wt / 5, ty); g.stroke(); }
+    for (let k = 1; k < 8; k++) { const f = 1 - Math.pow(1 - k / 8, 1.6), [cx, cy, w] = L(f); g.beginPath(); g.moveTo(cx - w, cy); g.lineTo(cx + w, cy); g.stroke(); }
+    // folds: soft creases at the knee and above the ankle
+    g.strokeStyle = 'rgba(70,20,30,.2)'; g.lineWidth = 5; g.lineCap = 'round';
+    for (const f of [knee, .93]) { const [cx, cy, w] = L(f), o = side * w * .12; g.beginPath(); g.moveTo(cx - w * .36 + o, cy + 4); g.quadraticCurveTo(cx + o, cy - 6, cx + w * .2 + o, cy + 6); g.stroke(); }
+    g.restore();
+    // the cuff, then the socked foot standing up, toes to the ceiling
+    g.fillStyle = '#7E2A38'; g.beginPath(); g.ellipse(tx, ty + 4, wt * .56, 14, 0, 0, Math.PI * 2); g.fill();
+    g.save(); g.translate(tx, ty); g.rotate(side * .16);
+    g.fillStyle = shade(-120, 10, ['#FFFFFF', '#ECE6DC', '#C9BFAE']);
+    g.beginPath(); g.moveTo(-38, 0); g.bezierCurveTo(-46, -50, -40, -104, -6, -116); g.bezierCurveTo(28, -122, 46, -88, 42, -40); g.lineTo(38, 0); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.4)'; ell(-12, -84, 10, 22, -.2); g.fill();
+    g.fillStyle = '#D8CFC0'; g.beginPath(); g.roundRect(-40, -18, 80, 18, 8); g.fill();   // sock cuff ribbing
+    g.restore();
   };
-  leg(170, 300, 300, 110, 1150);
-  leg(440, 430, 300, 110, 1140);
+  leg(170, 300, 300, 104, 1150, -1);
+  leg(440, 430, 300, 104, 1140, 1);
 }
 // the owner's forearm and hand reaching in from the bottom right; (hx, hy) = the palm, a = arm angle tweak, open 0..1
 export function ownerHand(hx, hy, { a = 0, open = 1 } = {}) {
