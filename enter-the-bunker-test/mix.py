@@ -23,7 +23,7 @@ mf = lambda m: 440 * 2 ** ((m - 69) / 12)
 BEAT = .6
 
 def fade(x, a=.05, b=.3):
-    na, nb = int(a * SR), int(b * SR); x = x.copy()
+    na, nb = min(int(a * SR), len(x) // 2), min(int(b * SR), len(x) // 2); x = x.copy()
     if na: x[:na] *= np.linspace(0, 1, na)
     if nb: x[-nb:] *= np.linspace(1, 0, nb)
     return x
