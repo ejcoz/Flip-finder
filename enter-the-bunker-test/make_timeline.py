@@ -3,8 +3,8 @@ import json, os, re
 H = os.path.dirname(os.path.abspath(__file__))
 dur = json.load(open(f'{H}/voice/dur.json')); words = json.load(open(f'{H}/voice/words.json'))
 START = {'l01': 0.0, 'l02': 3.6, 'l03': 7.35, 'l04': 10.0, 'l05': 11.75, 'l06': 12.6, 'l07': 16.5,
-         'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.1, 'l12b': 33.7, 'l12c': 36.9, 'l12d': 39.5, 'l13': 42.6, 'l14': 49.55}
-DUR = 54.05
+         'l08': 18.8, 'l09': 21.0, 'l10': 23.4, 'l11': 28.9, 'l12': 31.1, 'l12b': 33.75, 'l12c': 35.65, 'l12d': 39.6, 'l12e': 43.2, 'l13': 46.4, 'l14': 53.35}
+DUR = 57.85
 DISP = {
  'l01': 'This bunker has room | for 100,000 people.',
  'l02': '100,000 beds, | and every single one | is empty.',
@@ -17,10 +17,11 @@ DISP = {
  'l09': 'At 10,000, | the air starts flowing.',
  'l10': 'And at 100,000, | the door seals, | and we wait out | the end of the world.',
  'l11': "But there's something | I haven't told you.",
- 'l12': 'This bunker | only has seven levels.',
- 'l12b': 'Bed 000 | is on the eighth.',
- 'l12c': "And it's locked | from the inside.",
- 'l12d': 'So we welded | the hatch shut.',
+ 'l12': 'We thought this bunker | had seven levels.',
+ 'l12b': 'Then we found | an eighth.',
+ 'l12c': 'There was only one bed | down there. | Bed 000.',
+ 'l12d': 'Its door was locked | from the inside.',
+ 'l12e': 'So we welded | the hatch shut.',
  'l13': 'Pick your spot | in the comments. | By the garden, | next to the armory, | or on B7, | right above bed 000.',
  'l14': 'Follow me, | and get inside | before the door closes.'}
 lines, caps = [], []

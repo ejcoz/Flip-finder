@@ -72,25 +72,32 @@
  },
  {
   "id": "l12",
-  "text": "This bunker only has seven levels.",
+  "text": "We thought this bunker had seven levels.",
   "voice": "am_michael",
   "speed": 0.98
  },
  {
   "id": "l12b",
-  "text": "Bed zero is on the eighth.",
+  "text": "Then we found an eighth.",
   "voice": "am_michael",
-  "speed": 0.95,
-  "asr": "Bed zero is on the 8th."
+  "speed": 0.92,
+  "asr": "Then we found an 8th."
  },
  {
   "id": "l12c",
-  "text": "And it's locked from the inside.",
+  "text": "There was only one bed down there. Bed zero.",
   "voice": "am_michael",
-  "speed": 0.95
+  "speed": 0.95,
+  "asr": "There was only one bed down there. Bed zero."
  },
  {
   "id": "l12d",
+  "text": "Its door was locked from the inside.",
+  "voice": "am_michael",
+  "speed": 0.92
+ },
+ {
+  "id": "l12e",
   "text": "So we welded the hatch shut.",
   "voice": "am_michael",
   "speed": 0.92
