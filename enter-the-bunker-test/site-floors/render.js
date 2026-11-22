@@ -2,15 +2,18 @@
 const { chromium } = require('playwright');
 const path = require('path');
 (async () => {
-  const floors = process.argv.slice(2).map(Number);
+  // args: 3 7  or  h:name:querystring (e.g. h:hall_blank:blank=1)
+  const jobs = process.argv.slice(2).map(a => { const [f, name, qs] = a.split(':'); return { f, name: name || 'b' + f, qs: qs || '' }; });
   const b = await chromium.launch();
-  const p = await b.newPage({ viewport: { width: 1080, height: 1080 }, deviceScaleFactor: 1 });
-  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
-  for (const f of floors) {
-    await p.goto('file://' + path.join(__dirname, 'floors.html') + '?f=' + f);
+  const errs = [];
+  for (const j of jobs) {
+    const q = new URLSearchParams(j.qs); const w = +(q.get('w') || 1080), h = +(q.get('h') || 1080);
+    const p = await b.newPage({ viewport: { width: w, height: h }, deviceScaleFactor: 1 });
+    p.on('pageerror', e => errs.push(e.message));
+    await p.goto('file://' + path.join(__dirname, 'floors.html') + '?f=' + j.f + (j.qs ? '&' + j.qs : ''));
     await p.waitForFunction('window.READY === true', null, { timeout: 60000 });
-    await p.locator('canvas').screenshot({ path: path.join(__dirname, 'out', `b${f}.png`) });
-    console.log('b' + f + '.png');
+    await p.locator('canvas').screenshot({ path: path.join(__dirname, 'out', j.name + '.png') });
+    console.log(j.name + '.png'); await p.close();
   }
   if (errs.length) console.log('ERRORS', errs);
   await b.close();
