@@ -19,11 +19,14 @@
 |---|---|---|---|---|---|
 | 2 | One Too Many | **Now** (1,000 passed) | **The lights come on. Bed numbers go out.** First roll call. B6 is full. | The counter counts heartbeats, and it's one over | "The armory's closed. Garden, pantry or B7?" |
 | short | Emergency: We Need an Overseer | 2 days after ep 2 | Overseer election (most-liked comment wins) | "The last Overseer never came back up." | Nominate someone |
-| 3 | The Tally | | "Your Overseer is @…" and their first (cosmetic) call | B8's scratches are tally marks | "What's the one item you're bringing?" |
-| 4 | The Blueprint | | Level leaderboard ("B6 has 400, the garden has 60") | The blueprint labels B8 "KEEPER" | "Which room do we open next: the archives or the radio room?" (both lead to the planned clue) |
-| 5 | Three Knocks | | Pets roll call; name the B6 dog | The knocks are words: DON'T. FILL. IT. | Theory: "What does it want?" |
-| 6 | The Logbook | 5,000 followers? | Founders Wall, the first 1,000 complete | Last entry: "100,001" | "Seal it or open it?" (a running vote) |
-| 7 | The Air | **10,000** | The air flows (milestone) | The heartbeat count goes to +2 | |
+| 3 | The Garden (B3) | | Garden survivors' roll call | The deepest roots grow down through the floor, toward something warm | Name one thing you'd grow, or pick your level |
+| 4 | Command (B2) | | "Your Overseer is @…" + B2 survivors | The blueprint labels B8 "KEEPER" | Theory: who was the Keeper? |
+| 5 | The Armory (B6) | | B6 survivors and their dogs; name the dog | The red crate holds old survivor tags: someone slept here before | Your one personal item |
+| 6 | The Pantry (B4) | 5,000 followers? | The B4 soccer match; Founders Wall | Decades-old eaten tins and tally marks under the tables | Seal it or open it? (a running vote) |
+| 7 | Engineering (B7) | | B7 survivors, the bed 100,000 holder | The knocks are words: DON'T. FILL. IT. | "Do we keep going?" |
+| 8 | The Air | **10,000** | The air flows (milestone) | The logbook: "100,001", and the heartbeat count goes to +2 | |
+
+Every episode follows the template in `13-episode-formula.md`: recruit new viewers, showcase members, explore one level, find one clue there.
 | … | | 25k / 50k | New Overseer election at each milestone | | |
 | Finale | The Door | **100,000** or a vote | Everyone's name on the wall | Seal it, or open bed 0 | The deciding vote |
 

@@ -26,6 +26,7 @@ A narrator invites viewers into a buried nuclear bunker with 100,000 beds. **Fol
 | `10-growth-strategy.md` | Shares, saves, cadence, other platforms, what not to do |
 | `11-brand-kit.md` | Name, voice, colours, fonts, bio, caption and pinned-comment templates |
 | `12-decisions-log.md` | What's been decided and why, plus open questions |
+| `13-episode-formula.md` | Episode 1's beats, and the template every episode follows |
 
 ## Tools already built
 - **Survivor Registry**, the tracker of every commenter and their spot: https://claude.ai/artifact/N6gR6PpmPkssaAT8XYJEmL

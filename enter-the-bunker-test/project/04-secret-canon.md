@@ -26,11 +26,12 @@
 | # | Trigger | Clue | What the audience thinks |
 |---|---|---|---|
 | 2 | Next post (1,000 passed) | The counter counts **heartbeats**, and it's one over | "Something alive is in bed 0" |
-| 3 | | With the lights on, B8's scratches are **tally marks**, thousands of them. They stop. | "Someone was trapped down there" |
-| 4 | | The B2 archives: the blueprint labels B8 **"KEEPER"** | "There was an Overseer before" |
-| 5 | | The knocks are three words: **DON'T. FILL. IT.** | "We shouldn't be doing this" |
-| 6 | | A found logbook. The last entry: **"100,001."** | "This happened before" |
-| 7 | **10,000** (the air flows) | The heartbeat count goes from **+1 to +2** | "It's spreading, or there's more than one" |
+| 3 · B3 | | The garden's deepest roots grow **down**, through the floor, toward something warm | "Something alive is under the bunker" |
+| 4 · B2 | | The archives: the blueprint labels B8 **"KEEPER"** | "There was an Overseer before" |
+| 5 · B6 | | The red crate holds **old survivor tags with bed numbers** | "People lived here before us" |
+| 6 · B4 | | Decades-old tins, eaten, and **tally marks** scratched under the tables | "They were down here a long time. Then they stopped counting." |
+| 7 · B7 | | Through the floor, the three knocks are words: **DON'T. FILL. IT.** | "We shouldn't be doing this" |
+| 8 | **10,000** (the air flows) | A found logbook, last entry **"100,001"**; the heartbeat count goes from **+1 to +2** | "This happened before, and it's happening again" |
 | Finale | **100,000**, or a vote | The door is about to seal. **Seal it, or open bed 0?** | The audience decides |
 
 Between clues, post the light episodes (bed numbers, roll calls, the Overseer, pets, the armory) so the mystery never runs every week.
