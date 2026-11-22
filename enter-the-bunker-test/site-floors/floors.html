@@ -119,6 +119,39 @@ function bunkWall(phiA, phiB, ys, seed, opt = {}) {
   });
   for (const y of ys) { const pts = []; for (let a = phiA; Math.sign(step) * (phiB - a) >= 0; a += step / 4) pts.push(wallP(a * D2R, y - .02, .06)); add(R + 5.9, c => line3(c, pts, P.green, .025, 'butt')); glowLine(pts, P.green, .16, .7); }
 }
+// the dormitory door: a big round vault door, swung slightly open onto the floor's bunk wing
+function dormDoor(phi, yc, r, openDeg = 28, seed = 1) {
+  const ph = phi * D2R, t = [Math.cos(ph), 0, -Math.sin(ph)], nIn = [-Math.sin(ph), 0, -Math.cos(ph)];
+  const Rd = rng(seed);
+  add(R + 4, c => {
+    // hazard frame and collar
+    wallDisc(c, ph, yc, r * 1.32, .01, '#2b2a20');
+    for (let i = 0; i < 28; i++) { const a0 = i / 28 * 2 * Math.PI, a1 = (i + 1) / 28 * 2 * Math.PI; const b = wallP(ph, yc, .015); const P4 = (a, rr) => [b[0] + t[0] * Math.cos(a) * rr, yc + Math.sin(a) * rr, b[2] + t[2] * Math.cos(a) * rr]; poly(c, [P4(a0, r * 1.18), P4(a1, r * 1.18), P4(a1, r * 1.3), P4(a0, r * 1.3)], i % 2 ? P.amber : '#15130c'); }
+    wallDisc(c, ph, yc, r * 1.12, .02, '#6c6a5b', '#22211a', 2);
+    // the opening: warm light and bunks inside (clipped to the doorway)
+    const q = []; const b0 = wallP(ph, yc, .03); for (let i = 0; i < 40; i++) { const a = i / 40 * 2 * Math.PI; const pp = pj(b0[0] + t[0] * Math.cos(a) * r, yc + Math.sin(a) * r, b0[2] + t[2] * Math.cos(a) * r); if (pp) q.push(pp); }
+    c.save(); c.beginPath(); q.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.clip();
+    const cx = q.reduce((a, p) => a + p[0], 0) / q.length, cy = q.reduce((a, p) => a + p[1], 0) / q.length, rr = Math.max(...q.map(p => Math.hypot(p[0] - cx, p[1] - cy)));
+    const gr = c.createRadialGradient(cx, cy + rr * .2, 0, cx, cy, rr * 1.2); gr.addColorStop(0, '#d9a75a'); gr.addColorStop(.6, '#6e4f2a'); gr.addColorStop(1, '#1a140c'); c.fillStyle = gr; c.fillRect(cx - rr * 1.5, cy - rr * 1.5, rr * 3, rr * 3);
+    // receding bunk tiers seen through the door
+    for (let k = 0; k < 6; k++) { const d = 1 - k * .13; const w = rr * 2.2 * d, x0 = cx - w / 2; for (let j = 0; j < 4; j++) { const y = cy - rr * .75 * d + j * rr * .42 * d; c.fillStyle = `rgba(20,16,10,${.55 + k * .06})`; c.fillRect(x0, y, w * .38, rr * .08 * d); c.fillRect(x0 + w * .62, y, w * .38, rr * .08 * d); c.fillStyle = `rgba(156,240,74,${.5 - k * .07})`; c.fillRect(x0, y + rr * .08 * d, w * .38, 1.2); c.fillRect(x0 + w * .62, y + rr * .08 * d, w * .38, 1.2); if (Rd() < .4) { c.fillStyle = 'rgba(255,214,140,.85)'; c.beginPath(); c.arc(x0 + w * (Rd() < .5 ? .2 : .8), y - rr * .04 * d, 1.6 + 2 * d, 0, 7); c.fill(); } } }
+    c.restore();
+    // the door leaf, hinged at its left edge, swung inward toward the room
+    const hs = phi > 0 ? 1 : -1, th = openDeg * D2R; const hinge = [b0[0] + hs * t[0] * r, yc, b0[2] + hs * t[2] * r];
+    const ax = [-hs * t[0] * Math.cos(th) + nIn[0] * Math.sin(th), 0, -hs * t[2] * Math.cos(th) + nIn[2] * Math.sin(th)];
+    const leaf = (rad, off) => { const pts = []; for (let i = 0; i < 40; i++) { const a = i / 40 * 2 * Math.PI; const u = r + Math.cos(a) * rad; pts.push([hinge[0] + ax[0] * u + nIn[0] * off * 0, yc + Math.sin(a) * rad, hinge[2] + ax[2] * u]); } return pts; };
+    poly(c, leaf(r * 1.02, 0), '#2e2d25', '#121109', 2); poly(c, leaf(r * .97, 0), '#77756a', '#2a291f', 2); poly(c, leaf(r * .8, 0), '#6a685c'); poly(c, leaf(r * .62, 0), '#605e52', 'rgba(0,0,0,.25)', 1.5);
+    // locking bolts and the wheel on the leaf
+    const fn = [-ax[2], 0, ax[0]].map(v => v * (phi > 0 ? 1 : -1)); const LP = (u, y, off) => [hinge[0] + ax[0] * u + fn[0] * off, y, hinge[2] + ax[2] * u + fn[2] * off];
+    for (let i = 0; i < 10; i++) { const a = i / 10 * 2 * Math.PI; const pp = pj(...LP(r + Math.cos(a) * r * .9, yc + Math.sin(a) * r * .9, .16)); if (pp) { c.fillStyle = '#3a392f'; c.beginPath(); c.arc(pp[0], pp[1], FOC * .045 / pp[2], 0, 7); c.fill(); } }
+    const wheel = []; for (let i = 0; i <= 24; i++) { const a = i / 24 * 2 * Math.PI; wheel.push(LP(r + Math.cos(a) * r * .34, yc + Math.sin(a) * r * .34, .3)); } line3(c, wheel, '#b8902c', .07);
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI; line3(c, [LP(r - Math.cos(a) * r * .34, yc - Math.sin(a) * r * .34, .3), LP(r + Math.cos(a) * r * .34, yc + Math.sin(a) * r * .34, .3)], '#9c7a25', .05); }
+    // trefoil plate above the door (symbol only)
+    const tp = pj(...wallP(ph, yc + r * 1.55, .03)); if (tp) { const rr2 = FOC * .22 / tp[2]; c.fillStyle = P.amber; c.beginPath(); c.arc(tp[0], tp[1], rr2, 0, 7); c.fill(); c.fillStyle = '#1a170d'; for (let k = 0; k < 3; k++) { const a = -Math.PI / 2 + k * 2 * Math.PI / 3; c.beginPath(); c.moveTo(tp[0], tp[1]); c.arc(tp[0], tp[1], rr2 * .86, a - .5, a + .5); c.fill(); } c.fillStyle = P.amber; c.beginPath(); c.arc(tp[0], tp[1], rr2 * .2, 0, 7); c.fill(); }
+  });
+  // warm spill of light from the doorway onto the floor
+  const b = wallP(ph, yc, .2); glow(b[0], yc, b[2], r * 2.4, '#ffc070', .16); glow(b[0] * .85, .05, b[2] * .85, r * 3.2, '#ffb060', .12);
+}
 // caged ceiling lamp with a light cone
 function lamp(x, z, col, a = 1, cone = .18, y = CEIL - .5) {
   add(z, c => { line3(c, [[x, CEIL, z], [x, y + .12, z]], '#0d0d09', .03); box(c, x, z, 0, .42, .42, .12, y, '#2a2a20'); });
@@ -163,7 +196,7 @@ SCENES[3] = () => {
     const n = Math.round(w * 3.2);
     for (let i = 0; i < n; i++) {
       const u = -w / 2 + .2 + (w - .4) * (i + .5) / n, v = (R3() - .5) * .4; const base = b.P3(u, v, .66);
-      const hgt = .25 + R3() * .45;
+      const hgt = .35 + R3() * .7;
       line3(c, [base, [base[0], base[1] + hgt + .25, base[2]]], '#6e5a3a', .025);   // stake
       for (let k = 0; k < 9; k++) { const yy = base[1] + R3() * hgt + .08, xx = base[0] + (R3() - .5) * .55, zz = base[2] + (R3() - .5) * .45; const p = pj(xx, yy, zz); if (!p) continue; const r = FOC * (.09 + R3() * .1) / p[2]; c.fillStyle = mix(['#3f8a2a', '#5fb036', '#2f6a22', '#86cc45', '#9CF04A'][k % 5], '#000', R3() * .2); c.beginPath(); c.ellipse(p[0], p[1], r * 1.2, r * .8, R3() * 3, 0, 7); c.fill(); }
       if (R3() < .55) for (let k = 0; k < 2 + R3() * 3; k++) { const p = pj(base[0] + (R3() - .5) * .35, base[1] + .2 + R3() * hgt * .8, base[2] + (R3() - .5) * .35); if (!p) continue; const r = FOC * .055 / p[2]; c.fillStyle = R3() < .7 ? '#d8452e' : '#e88a2a'; c.beginPath(); c.arc(p[0], p[1], r, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(p[0] - r * .3, p[1] - r * .3, r * .3, 0, 7); c.fill(); }
@@ -173,7 +206,7 @@ SCENES[3] = () => {
     for (const [r, a0, a1, w] of [[5.4, 34, 85, 2.3]]) for (let a = a0; a <= a1; a += (w / r) / D2R + 4) { const ph = side * a * D2R; const x = Math.sin(ph) * r, z = Math.cos(ph) * r; planter(x, z, ph, w); }
     planter(side * 3.2, -4.4, side * .12, 2.6); planter(side * 3.6, -2.0, side * .25, 2.6); planter(side * 3.9, .4, side * .35, 2.4); planter(side * 2.4, 2.8, side * .45, 1.6);
   }
-  bunkWall(-112, -46, [.32, 1.26, 2.2], 31); bunkWall(28, 112, [.32, 1.26, 2.2], 32);
+  dormDoor(38, 2.05, 1.75, 95, 3);
   // vines climbing wire above the bunks
   for (const side of [-1, 1]) for (let a = 32; a <= 105; a += 6) { const ph = side * a * D2R; add(R + 5, c => { line3(c, [wallP(ph, 3.15, .08), wallP(ph, 3.8, .08)], '#57564a', .015); for (let k = 0; k < 6; k++) { const y = 3.15 + R3() * .6; const p = pj(...wallP(ph + (R3() - .5) * .05, y, .12)); if (!p) continue; const r = FOC * (.08 + R3() * .07) / p[2]; c.fillStyle = ['#3d7428', '#56923a', '#2e5a20'][k % 3]; c.beginPath(); c.ellipse(p[0], p[1], r * 1.3, r * .8, R3() * 3, 0, 7); c.fill(); if (R3() < .25) { c.fillStyle = '#d4442c'; c.beginPath(); c.arc(p[0] + r, p[1] + r, r * .5, 0, 7); c.fill(); } } }); }
   // seed-vault door with a wheel handle, on the wall at the left
@@ -206,7 +239,7 @@ SCENES[7] = () => {
   // pipework along the walls and across the ceiling
   for (const [y, ins, w, col] of [[3.7, .25, .16, '#5a5244'], [3.35, .35, .11, '#6b5f45'], [.65, .3, .2, '#4b463a'], [2.2, .28, .08, '#7a3a24']]) { const pts = []; for (let a = -118; a <= 118; a += 3) pts.push(wallP(a * D2R, y, ins)); add(R + 8, c => { line3(c, pts, mix(col, '#000', .35), w * 1.25); line3(c, pts, col, w); line3(c, pts.map(p => [p[0], p[1] + w * .3, p[2]]), mix(col, '#fff', .18), w * .25); }); }
   for (const x of [-6, -3.2, 3.2, 6]) add(9, c => { line3(c, [[x, CEIL - .2, 1.5], [x, CEIL - .2, 9]], '#3b362a', .14); });
-  bunkWall(-52, -25, [.32, 1.26, 2.2], 71, { lampP: .5 }); bunkWall(26, 42, [.32, 1.26, 2.2], 72, { lampP: .5 });
+  dormDoor(-36, 2.0, 1.75, 72, 7);
   // generators: big housings on the left
   const gen = (x, z, yaw) => add(Math.hypot(x - CAM.x, z - CAM.z), c => {
     const b = box(c, x, z, yaw, 2.6, 1.7, 1.55, 0, '#4b4636');

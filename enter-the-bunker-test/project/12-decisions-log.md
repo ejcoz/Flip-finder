@@ -4,6 +4,7 @@ Newest first. Each line: what was decided, and why.
 
 | Date | Decision | Why |
 |---|---|---|
+| 22 Nov 2026 | Beds live in a dormitory wing behind a round vault door on each floor (B1–B4 10,000 each, B5 30,000, B6 and B7 15,000) | Keeps each floor's main area readable on the site, and matches the cutaway's rings of bunks |
 | 22 Nov 2026 | Episodes 2–7 are a recruitment drive: each re-pitches the deal, showcases members, explores one level and finds one clue there | 95% of viewers are new each time; levels give each episode a fresh setting |
 | 21 Nov 2026 | Roll call of real survivors in **every** episode | People come back to see themselves; it recognises the comments you can't reply to |
 | 21 Nov 2026 | The Overseer gets status, not power: cosmetic calls only, and the narrator can overrule | Protects the plot |

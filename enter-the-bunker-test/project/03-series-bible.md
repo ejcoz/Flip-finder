@@ -93,6 +93,9 @@ The **blast door won't seal until every bed is full**. The counter on the wall s
 - Gold `#FFC23A` means **you**. Red `#FF3B3B` means **bed 0 / the forbidden**. Green glow means the garden or the scanner.
 - Sky: rust smog `#140E0A` → `#5A3417`, with falling ash.
 
+## Where the beds are (decided 22 Nov 2026)
+Each floor's beds are in a **dormitory wing behind a big round vault door** on that floor. The rows of bunks in episode 1's cutaway are those wings, ringing each floor's outer edge behind the inner wall. The floor itself is the shared space: the garden, the generators, the mess hall. Beds per wing: B1–B4 10,000 each, B5 30,000, B6 15,000, B7 15,000 (100,000 in total). B8 has no wing; it has one bed, bed 0.
+
 ## Added after episode 1 (canon from the comments)
 - **One personal item per survivor.** Soccer balls, guitars and phones are approved (no signal, but the photos still work).
 - **Pets are allowed.** The armory has three dogs. Animals avoid certain floors.
