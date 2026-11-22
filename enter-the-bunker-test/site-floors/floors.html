@@ -98,6 +98,27 @@ function shell(o) {
   // stencil level marks high on the wall, off-centre (shapes only, no letters)
   for (const ph of o.marks || [-58, 58]) { wallRect(c, (ph - 4) * D2R, (ph + 4) * D2R, 3.25, 3.85, .02, hex(P.amber, .85)); for (let i = 0; i < 4; i++) wallRect(c, (ph - 3.3 + i * 1.8) * D2R, (ph - 2.3 + i * 1.8) * D2R, 3.36, 3.74, .025, '#1b190f'); }
 }
+// bunks built into the curved wall, as in episode 1's cutaway: tiers of recessed bays with a green light strip
+function bunkWall(phiA, phiB, ys, seed, opt = {}) {
+  const Rb = rng(seed), bayDeg = opt.bay || 11, h = opt.h || .78, blank = opt.blanket || ['#5d6e45', '#6e5a40', '#4d5f60', '#76694c', '#585a70', '#7a4a3a'];
+  const n = Math.max(1, Math.round(Math.abs(phiB - phiA) / bayDeg)), step = (phiB - phiA) / n;
+  add(R + 6, c => {
+    for (let i = 0; i < n; i++) for (const y of ys) {
+      const a0 = (phiA + step * i) * D2R, a1 = (phiA + step * (i + 1)) * D2R, g = .25 * D2R * Math.sign(step);
+      wallRect(c, a0, a1, y - .1, y + h + .08, .015, '#5f5b48', 'rgba(0,0,0,.35)', 1);              // concrete frame
+      wallRect(c, a0 + g * 1.2, a1 - g * 1.2, y, y + h, .03, '#0f100b');                                // dark recess
+      wallRect(c, a0 + g * 1.6, a1 - g * 1.6, y + h * .55, y + h - .04, .035, '#171811');               // back wall of the bay
+      const bl = blank[Math.floor(Rb() * blank.length)];
+      wallRect(c, a0 + g * 1.6, a1 - g * 1.6, y + .04, y + .3, .04, bl);                               // mattress + blanket
+      wallRect(c, a0 + g * 1.6, a1 - g * 1.6, y + .24, y + .3, .05, mix(bl, '#ffffff', .18));         // blanket fold
+      const pw = (a1 - a0) * .2; wallRect(c, a1 - g * 2 - pw, a1 - g * 2, y + .27, y + .45, .05, '#d6cfb4');   // pillow
+      wallRect(c, a0 + g, a1 - g, y - .06, y + .02, .05, '#2a2b22');                                    // bunk lip
+      if (y === ys[0] && i % 2 === 0) { const la = a0 + g * .6; line3(c, [wallP(la, 0, .12), wallP(la, ys[ys.length - 1] + h, .12)], '#6b6650', .03); }
+      if (Rb() < (opt.lampP ?? .45)) { const m = (a0 + a1) / 2 - (a1 - a0) * .25; const p = wallP(m, y + h - .14, .06); glow(...p, .7, '#FFD27A', .75); wallRect(c, m - g * 1.5, m + g * 1.5, y + h - .2, y + h - .1, .055, '#ffe3a6'); }
+    }
+  });
+  for (const y of ys) { const pts = []; for (let a = phiA; Math.sign(step) * (phiB - a) >= 0; a += step / 4) pts.push(wallP(a * D2R, y - .02, .06)); add(R + 5.9, c => line3(c, pts, P.green, .025, 'butt')); glowLine(pts, P.green, .16, .7); }
+}
 // caged ceiling lamp with a light cone
 function lamp(x, z, col, a = 1, cone = .18, y = CEIL - .5) {
   add(z, c => { line3(c, [[x, CEIL, z], [x, y + .12, z]], '#0d0d09', .03); box(c, x, z, 0, .42, .42, .12, y, '#2a2a20'); });
@@ -142,18 +163,19 @@ SCENES[3] = () => {
     const n = Math.round(w * 3.2);
     for (let i = 0; i < n; i++) {
       const u = -w / 2 + .2 + (w - .4) * (i + .5) / n, v = (R3() - .5) * .4; const base = b.P3(u, v, .66);
-      const hgt = .5 + R3() * .9;
+      const hgt = .25 + R3() * .45;
       line3(c, [base, [base[0], base[1] + hgt + .25, base[2]]], '#6e5a3a', .025);   // stake
-      for (let k = 0; k < 9; k++) { const yy = base[1] + R3() * hgt + .1, xx = base[0] + (R3() - .5) * .5, zz = base[2] + (R3() - .5) * .5; const p = pj(xx, yy, zz); if (!p) continue; const r = FOC * (.09 + R3() * .1) / p[2]; c.fillStyle = mix(['#3f8a2a', '#5fb036', '#2f6a22', '#86cc45', '#9CF04A'][k % 5], '#000', R3() * .2); c.beginPath(); c.ellipse(p[0], p[1], r * 1.2, r * .8, R3() * 3, 0, 7); c.fill(); }
+      for (let k = 0; k < 9; k++) { const yy = base[1] + R3() * hgt + .08, xx = base[0] + (R3() - .5) * .55, zz = base[2] + (R3() - .5) * .45; const p = pj(xx, yy, zz); if (!p) continue; const r = FOC * (.09 + R3() * .1) / p[2]; c.fillStyle = mix(['#3f8a2a', '#5fb036', '#2f6a22', '#86cc45', '#9CF04A'][k % 5], '#000', R3() * .2); c.beginPath(); c.ellipse(p[0], p[1], r * 1.2, r * .8, R3() * 3, 0, 7); c.fill(); }
       if (R3() < .55) for (let k = 0; k < 2 + R3() * 3; k++) { const p = pj(base[0] + (R3() - .5) * .35, base[1] + .2 + R3() * hgt * .8, base[2] + (R3() - .5) * .35); if (!p) continue; const r = FOC * .055 / p[2]; c.fillStyle = R3() < .7 ? '#d8452e' : '#e88a2a'; c.beginPath(); c.arc(p[0], p[1], r, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(p[0] - r * .3, p[1] - r * .3, r * .3, 0, 7); c.fill(); }
     }
   });
   for (const side of [-1, 1]) {
-    for (const [r, a0, a1, w] of [[7.6, 30, 75, 2.6], [5.2, 40, 85, 2.3]]) for (let a = a0; a <= a1; a += (w / r) / D2R + 4) { const ph = side * a * D2R; const x = Math.sin(ph) * r, z = Math.cos(ph) * r; planter(x, z, ph, w); }
+    for (const [r, a0, a1, w] of [[5.4, 34, 85, 2.3]]) for (let a = a0; a <= a1; a += (w / r) / D2R + 4) { const ph = side * a * D2R; const x = Math.sin(ph) * r, z = Math.cos(ph) * r; planter(x, z, ph, w); }
     planter(side * 3.2, -4.4, side * .12, 2.6); planter(side * 3.6, -2.0, side * .25, 2.6); planter(side * 3.9, .4, side * .35, 2.4); planter(side * 2.4, 2.8, side * .45, 1.6);
   }
-  // vines climbing wire on the wall
-  for (const side of [-1, 1]) for (let a = 32; a <= 95; a += 7) { const ph = side * a * D2R; add(R + 10, c => { line3(c, [wallP(ph, .3, .08), wallP(ph, 3.6, .08)], '#57564a', .015); for (let k = 0; k < 14; k++) { const y = .4 + R3() * 3.0; const p = pj(...wallP(ph + (R3() - .5) * .05, y, .12)); if (!p) continue; const r = FOC * (.08 + R3() * .07) / p[2]; c.fillStyle = ['#3d7428', '#56923a', '#2e5a20'][k % 3]; c.beginPath(); c.ellipse(p[0], p[1], r * 1.3, r * .8, R3() * 3, 0, 7); c.fill(); if (R3() < .25) { c.fillStyle = '#d4442c'; c.beginPath(); c.arc(p[0] + r, p[1] + r, r * .5, 0, 7); c.fill(); } } }); }
+  bunkWall(-112, -46, [.32, 1.26, 2.2], 31); bunkWall(28, 112, [.32, 1.26, 2.2], 32);
+  // vines climbing wire above the bunks
+  for (const side of [-1, 1]) for (let a = 32; a <= 105; a += 6) { const ph = side * a * D2R; add(R + 5, c => { line3(c, [wallP(ph, 3.15, .08), wallP(ph, 3.8, .08)], '#57564a', .015); for (let k = 0; k < 6; k++) { const y = 3.15 + R3() * .6; const p = pj(...wallP(ph + (R3() - .5) * .05, y, .12)); if (!p) continue; const r = FOC * (.08 + R3() * .07) / p[2]; c.fillStyle = ['#3d7428', '#56923a', '#2e5a20'][k % 3]; c.beginPath(); c.ellipse(p[0], p[1], r * 1.3, r * .8, R3() * 3, 0, 7); c.fill(); if (R3() < .25) { c.fillStyle = '#d4442c'; c.beginPath(); c.arc(p[0] + r, p[1] + r, r * .5, 0, 7); c.fill(); } } }); }
   // seed-vault door with a wheel handle, on the wall at the left
   add(R + 5, c => {
     const ph = -36 * D2R; wallDisc(c, ph, 1.45, 1.22, .02, '#5e5d51', '#22211a', 3); wallDisc(c, ph, 1.45, 1.05, .05, '#7d7b6b', '#2e2d24', 2); wallDisc(c, ph, 1.45, .9, .07, '#6c6a5b');
@@ -165,7 +187,7 @@ SCENES[3] = () => {
     for (let i = 0; i < 16; i++) wallRect(c, ph - 9 * D2R + i * 1.1 * D2R, ph - 9 * D2R + (i + 1) * 1.1 * D2R, 2.72, 2.85, .03, i % 2 ? P.amber : '#16140c');
   });
   // grow-light bars hanging over the planters (pink-violet)
-  for (const side of [-1, 1]) for (const [r, a0, a1] of [[7.6, 32, 80], [5.2, 42, 88]]) for (let a = a0; a <= a1; a += 14) {
+  for (const side of [-1, 1]) for (const [r, a0, a1] of [[5.4, 36, 88]]) for (let a = a0; a <= a1; a += 14) {
     const ph = side * a * D2R, x = Math.sin(ph) * r, z = Math.cos(ph) * r, y = 2.55; const t = [Math.cos(ph), 0, -Math.sin(ph)];
     const p0 = [x - t[0] * .9, y, z - t[2] * .9], p1 = [x + t[0] * .9, y, z + t[2] * .9];
     add(Math.hypot(x - CAM.x, z - CAM.z) - .5, c => { line3(c, [[p0[0], CEIL, p0[2]], p0], '#111', .015); line3(c, [[p1[0], CEIL, p1[2]], p1], '#111', .015); line3(c, [p0, p1], '#3a2f3d', .14, 'butt'); line3(c, [[p0[0], y - .06, p0[2]], [p1[0], y - .06, p1[2]]], '#ffd2f6', .05, 'butt'); });
@@ -184,6 +206,7 @@ SCENES[7] = () => {
   // pipework along the walls and across the ceiling
   for (const [y, ins, w, col] of [[3.7, .25, .16, '#5a5244'], [3.35, .35, .11, '#6b5f45'], [.65, .3, .2, '#4b463a'], [2.2, .28, .08, '#7a3a24']]) { const pts = []; for (let a = -118; a <= 118; a += 3) pts.push(wallP(a * D2R, y, ins)); add(R + 8, c => { line3(c, pts, mix(col, '#000', .35), w * 1.25); line3(c, pts, col, w); line3(c, pts.map(p => [p[0], p[1] + w * .3, p[2]]), mix(col, '#fff', .18), w * .25); }); }
   for (const x of [-6, -3.2, 3.2, 6]) add(9, c => { line3(c, [[x, CEIL - .2, 1.5], [x, CEIL - .2, 9]], '#3b362a', .14); });
+  bunkWall(-52, -25, [.32, 1.26, 2.2], 71, { lampP: .5 }); bunkWall(26, 42, [.32, 1.26, 2.2], 72, { lampP: .5 });
   // generators: big housings on the left
   const gen = (x, z, yaw) => add(Math.hypot(x - CAM.x, z - CAM.z), c => {
     const b = box(c, x, z, yaw, 2.6, 1.7, 1.55, 0, '#4b4636');
@@ -210,7 +233,7 @@ SCENES[7] = () => {
   });
   glow(4.62, 1.3, 3.18, 1.3, '#ff8a2a', .9); glow(6.0, 1.2, 4.0, 6, '#ff6a1a', .28);
   // air scrubber fans on the right wall
-  for (const [a, y] of [[48, 2.5], [60, 2.5]]) add(R + 4, c => { const ph = a * D2R; wallDisc(c, ph, y, .75, .03, '#2a271e', '#5d5745', 3); wallDisc(c, ph, y, .62, .05, '#0f0e0a'); const t = [Math.cos(ph), 0, -Math.sin(ph)], b = wallP(ph, y, .07); for (let i = 0; i < 6; i++) { const q = i / 6 * 2 * Math.PI + .3; const tip = [b[0] + t[0] * Math.cos(q) * .58, y + Math.sin(q) * .58, b[2] + t[2] * Math.cos(q) * .58]; const tip2 = [b[0] + t[0] * Math.cos(q + .5) * .58, y + Math.sin(q + .5) * .58, b[2] + t[2] * Math.cos(q + .5) * .58]; poly(c, [b, tip, tip2], '#4c463a'); } wallDisc(c, ph, y, .1, .08, '#6c6450'); for (let i = -4; i <= 4; i++) line3(c, [[b[0] + t[0] * i * .14, y - .7, b[2] + t[2] * i * .14], [b[0] + t[0] * i * .14, y + .7, b[2] + t[2] * i * .14]], 'rgba(120,110,90,.35)', .012); });
+  for (const [a, y] of [[54, 3.15], [64, 3.15]]) add(R + 4, c => { const ph = a * D2R; wallDisc(c, ph, y, .75, .03, '#2a271e', '#5d5745', 3); wallDisc(c, ph, y, .62, .05, '#0f0e0a'); const t = [Math.cos(ph), 0, -Math.sin(ph)], b = wallP(ph, y, .07); for (let i = 0; i < 6; i++) { const q = i / 6 * 2 * Math.PI + .3; const tip = [b[0] + t[0] * Math.cos(q) * .58, y + Math.sin(q) * .58, b[2] + t[2] * Math.cos(q) * .58]; const tip2 = [b[0] + t[0] * Math.cos(q + .5) * .58, y + Math.sin(q + .5) * .58, b[2] + t[2] * Math.cos(q + .5) * .58]; poly(c, [b, tip, tip2], '#4c463a'); } wallDisc(c, ph, y, .1, .08, '#6c6450'); for (let i = -4; i <= 4; i++) line3(c, [[b[0] + t[0] * i * .14, y - .7, b[2] + t[2] * i * .14], [b[0] + t[0] * i * .14, y + .7, b[2] + t[2] * i * .14]], 'rgba(120,110,90,.35)', .012); });
   // control console left of centre, low
   add(8.8, c => { const x = -2.9, z = 8.5, b = box(c, x, z, yawAt(x, z), 1.6, .7, 1.0, 0, '#3d3a2d'); for (let i = 0; i < 8; i++) { const p = b.P3(-.6 + i * .17, -.36, .8); const q = pj(...p); if (q) { const col = ['#ffbb4a', '#9CF04A', '#ff6a2a'][i % 3]; c.fillStyle = col; c.fillRect(q[0] - 2, q[1] - 2, 4, 4); glow(...p, .2, col, .9); } } });
   // steam plumes
