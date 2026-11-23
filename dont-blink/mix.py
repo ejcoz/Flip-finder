@@ -4,6 +4,8 @@ All sounds synthesised: chip tick + heart thump per count, inside-the-body bed, 
 import json, os, sys
 import numpy as np, soundfile as sf
 sys.path.insert(0, os.path.join(os.environ['LIB'], 'core', 'audio'))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from groove import music
 from sfx import SR, t_, env_exp, lp, hp, bp, noise, norm, brown, thump, whoosh, add, limit
 
 ev_path, out = sys.argv[1], sys.argv[2]
@@ -23,6 +25,8 @@ def note(f, d, duty=.25, v=1.0, dec=None):
     return lp(x, 6500) * v
 def hz(m): return 440 * 2 ** ((m - 69) / 12)
 
+def ping(f=3600):   # bright count ping
+    d = .09; tt = t_(d); x = (np.sin(2*np.pi*f*tt) + .4*np.sign(np.sin(2*np.pi*f*tt))*.5) * np.exp(-tt/.025); return x
 def tick(p=1.0):   # the count tick: a short square click with a pitch drop
     d = .045; n = ns(d); f = 1900 * p * np.exp(-np.arange(n) / SR * 30)
     ph = np.cumsum(f / SR) % 1; return np.where(ph < .5, 1., -1.) * env_exp(d, .009)[:n] * .8
@@ -50,11 +54,11 @@ for e in EV:
             drone = (np.where(ph < .5, 1., -1.) * .5 + np.sin(2 * np.pi * ph) * .5) * (0.02 + .1 * p ** 1.5)
             hum = hum + lp(drone, 1200)
         fade = np.minimum(1, tt / .4) * np.minimum(1, (d - tt) / .05)
-        add(buf, hum * fade, t, .4, -.2); add(buf, hum * fade, t, .4, .2)
+        add(buf, hum * fade, t, .14, -.2); add(buf, hum * fade, t, .14, .2)
     elif ty == 'hook': add(buf, arp([72, 76, 79, 84], .05, .5, .6), t, .3)
     elif ty == 'tick':
         add(buf, tick(1.0 if e['n'] > 3 else 1.25), t, .55 if e.get('loud') else .4)
-        add(buf, note(hz(60 if e['n'] > 3 else 72), .08, .5, .5, dec=.03), t, .15)
+        add(buf, ping(3520 if e['n'] > 3 else 4186), t, .22, .15)
     elif ty == 'crackle':
         x = hp(noise(.12), 3000) * (np.random.default_rng(int(t * 100)).random(ns(.12)) > .985) * 3
         add(buf, x, t, .25 * (.3 + e['v']), (t * 7 % 2) - 1)
@@ -68,7 +72,9 @@ for e in EV:
     elif ty == 'blip': add(buf, blip(), t, .22)
     elif ty == 'reveal': add(buf, arp([60, 64, 67, 72, 76, 79, 84], .045, .25, .6), t, .35)
     elif ty == 'whoosh': add(buf, np.round(whoosh(.35) * 16) / 16, t, .25)
-    elif ty == 'melody':
+    elif ty == 'music':
+        M = music(e['sections'], DUR); buf[:len(M)] += M * .9
+    elif ty == 'melody_old':
         b = 60 / 150
         lead = [(76, 1), (79, 1), (84, 1), (83, 1), (81, 2), (79, 2), (77, 1), (76, 1), (74, 1), (76, 1), (72, 4)]
         bass = [(45, 4), (41, 4), (43, 4), (48, 4)]
@@ -85,7 +91,7 @@ for a, b2 in silences: buf[int(a * SR):int(b2 * SR)] = 0   # true zero, tails in
 buf = buf[:int(DUR * SR)]
 buf[-ns(.25):] *= np.linspace(1, 0, ns(.25))[:, None]
 buf = buf / max(1e-9, np.abs(buf).max())
-buf = np.stack([limit(buf[:, 0], .4), limit(buf[:, 1], .4)], 1) * 2.2
+buf = np.stack([limit(buf[:, 0], .62), limit(buf[:, 1], .62)], 1) * 1.45
 for a, b2 in silences: buf[int(a * SR):int(b2 * SR)] = 0
 sf.write(out, buf.astype(np.float32), SR)
 print('mix', out, f'{DUR:.2f}s')

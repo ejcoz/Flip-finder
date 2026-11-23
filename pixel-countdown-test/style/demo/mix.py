@@ -4,6 +4,8 @@ All sounds synthesised: chip tick + heart thump per count, inside-the-body bed, 
 import json, os, sys
 import numpy as np, soundfile as sf
 sys.path.insert(0, os.path.join(os.environ['LIB'], 'core', 'audio'))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from groove import music
 from sfx import SR, t_, env_exp, lp, hp, bp, noise, norm, brown, thump, whoosh, add, limit
 
 ev_path, out = sys.argv[1], sys.argv[2]
@@ -44,7 +46,7 @@ for e in EV:
         hum = lp(brown(d), 160) * .5 + np.sin(2 * np.pi * 55 * tt) * .05
         swish = bp(noise(d), 300, 1200) * .04 * (0.6 + 0.4 * np.sin(2 * np.pi * .2 * tt))
         fade = np.minimum(1, tt / .5) * np.minimum(1, (d - tt) / .3)
-        add(buf, (hum + swish) * fade, t, .32, -.2); add(buf, (hum * .8 + swish) * fade, t, .32, .2)
+        add(buf, (hum + swish) * fade, t, .1, -.2); add(buf, (hum * .8 + swish) * fade, t, .1, .2)
     elif ty == 'beat':
         add(buf, beat_sound(), t, .75); add(buf, tick(1 + (e['n'] % 2) * .06), t, .38)
     elif ty == 'beat_soft': add(buf, beat_sound(.6), t, .55, e.get('pan', 0)); add(buf, tick(.9), t, .18, e.get('pan', 0))
@@ -58,7 +60,9 @@ for e in EV:
     elif ty == 'silence': silences.append((t, t + e['dur']))
     elif ty == 'reveal': add(buf, arp([60, 64, 67, 72, 76, 79, 84], .045, .25, .6), t, .35)
     elif ty == 'whoosh': add(buf, np.round(whoosh(.35) * 16) / 16, t, .25)
-    elif ty == 'melody':
+    elif ty == 'music':
+        M = music(e['sections'], DUR); buf[:len(M)] += M * .9
+    elif ty == 'melody_old':
         # original end phrase, C major, 150 bpm: lead (pulse 25%), triangle bass, noise hats
         b = 60 / 150
         lead = [(76, 1), (79, 1), (84, 2), (83, 1), (79, 1), (81, 2), (79, 1), (76, 1), (77, 1), (74, 1), (72, 4)]
@@ -76,7 +80,7 @@ for a, b2 in silences: buf[int(a * SR):int(b2 * SR)] = 0   # true zero, tails in
 buf = buf[:int(DUR * SR)]
 buf[-ns(.25):] *= np.linspace(1, 0, ns(.25))[:, None]
 buf = buf / max(1e-9, np.abs(buf).max())
-buf = np.stack([limit(buf[:, 0], .4), limit(buf[:, 1], .4)], 1) * 2.2
+buf = np.stack([limit(buf[:, 0], .62), limit(buf[:, 1], .62)], 1) * 1.45
 for a, b2 in silences: buf[int(a * SR):int(b2 * SR)] = 0
 sf.write(out, buf.astype(np.float32), SR)
 print('mix', out, f'{DUR:.2f}s')

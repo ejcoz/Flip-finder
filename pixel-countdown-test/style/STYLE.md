@@ -70,13 +70,21 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 
 ## 7. Sound palette
 
+The genre's sound is **a continuous beat-driven chip track from the first frame**, not ambience. (Measured on the references: 120–128 bpm, ~65 % of the energy below 100 Hz in pitched bass and kick, tonal content in ~80 % of frames, 3–4 onsets a second, near-mono.)
+
 - **No voice.** Captions carry the words.
-- **The tick**: a short square-wave or woodblock click on every count, the steadiest sound in the film. The count's real tempo (real seconds, a real heart rate) sets the tick's tempo.
-- **Ambient bed** that sets the place: night (crickets, wind noise), inside the body (low muffled hum, slow pulse), sky (rain hiss). Low and continuous.
-- **Chip blips and stingers**: pulse-wave blips on caption changes, a rising arpeggio for the pay-off, a descending "bwoop" for a myth, a short noise burst for an impact.
-- **One hard silence** (0.3–0.8 s, true zero) right before the pay-off.
-- **End melody**: a short original chiptune phrase (pulse 25 % lead, triangle bass, light noise hats) under the call to action.
-- **Mix**: tick on top, then blips, then bed; −14 LUFS, true peak ≤ −1 dB, grain 0.
+- **The groove** (`demo/groove.py`), running under every second except the hard silence:
+  - **kick**: a sine with a fast pitch drop (≈ 216 → 46 Hz), on every beat (or every other beat in a half-time section);
+  - **chip bass**: square + 4-bit triangle on the chord root, one note per beat, gated (~80 %), with a rest on the last 8th of every bar so the track breathes. It is side-chained to the kick;
+  - **pumping chords**: 25 % pulse triads, 8th-gated, slightly detuned, low-passed ~4.8 kHz, with a breath at the bar end;
+  - **hats** on the off-beats (an open hat closing each bar), a **16th arp** (12.5 % pulse) in denser sections, and a bit-crushed **snare** on 2 and 4 in full sections;
+  - a one-chord-per-bar progression (four bars, original), restarting on the pay-off.
+- **Tempo locks to the count.** One count per second → 120 bpm (a count every 2 beats); a 72 bpm heartbeat → 144 bpm with the heart as the kick. The count ticks always land on beats.
+- **Arc:** groove from frame 1 → add hats, then arps, as the count goes on → a **snare roll + noise riser** over the last bar → **hard silence** (0.3–0.8 s, true zero, music included) → an **impact + crash** and the full groove on the pay-off → **half-time** for a calm comparison or a camera pull-back → **impact + lead melody** (pulse 25 %, one echo tap) under the call to action.
+- **Count sounds on top**: a short square click plus a bright 3.5–4.2 kHz ping on every count, alternating pitch. This is the steadiest, brightest sound in the film.
+- **Topic foley on the grid**: the hero's own sounds (a thump, a lid tick, a drip, a whoosh), bit-crushed and placed on or between beats.
+- **Ambient bed**: only a faint layer (≤ −20 dB under the groove) for place; never a noise wash that fills the low end.
+- **Mix**: groove + ticks on top, near-mono (S/M ≈ 0.05), light limiting (keep the bar-end breaths audible), −14 LUFS, true peak ≤ −1 dB, grain 0.
 
 ## 8. Native moves
 
@@ -98,12 +106,14 @@ A menu: use the ones your topic needs.
 - Sub-pixel motion shimmers → round every position to whole native pixels.
 - Glow as an alpha blur turns the frame to mush → dithered rings; bloom only on the brightest tones, ≤ 20 %.
 - A count tick that drifts from the number's change reads as a mistake → generate both from the same event list.
+- A noise bed instead of music makes the film feel empty next to the genre → always run the groove; ambience stays faint.
+- Over-limiting flattens the pump → limit lightly so the bar-end rests stay audible.
 - Facts in a counting film must be true and sourced → write the source next to each caption in the treatment.
 - Negative modulo indexes `undefined` → `((n % m) + m) % m`.
 
 ## 10. Engine
 
-In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, integer zoom, RGB bloom), `font.js` (bold 5×7 pixel font, scales, ink shadow/outline, `*highlight*` markup), `hero.js` (the demo's heart: implicit shape, 3-tone shading, face and expressions), `scene.js` (ground, cells, ribcage setting, gauge prop, ECG mode-7 plane), `mix.py` (all sound, from the page's events), `main.js` (shots, counts, captions, sound events). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
+In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, integer zoom, RGB bloom), `font.js` (bold 5×7 pixel font, scales, ink shadow/outline, `*highlight*` markup), `hero.js` (the demo's heart: implicit shape, 3-tone shading, face and expressions), `scene.js` (ground, cells, ribcage setting, gauge prop, ECG mode-7 plane), `groove.py` (the music engine: kick, gated bass, pumping chords, hats, arps, builds, impacts, lead), `mix.py` (all sound, from the page's events), `main.js` (shots, counts, captions, sound events). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
 
 ## 11. Variation space
 

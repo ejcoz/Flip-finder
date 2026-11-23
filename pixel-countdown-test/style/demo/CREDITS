@@ -3,7 +3,7 @@ Count Your Pulse — Pixel Countdown Science demo · credits & licences
 ORIGINAL (made for this film, by code in this folder)
 - All pixel art: the heart character, ribcage, pulse gauge, cell ground, ECG plane (hero.js, scene.js, main.js).
 - Captions, counter and gauge digits (font.js, scene.js).
-- Music and sound effects: synthesised with numpy (mix.py); the end melody is original.
+- Music and sound effects: synthesised with numpy (groove.py, mix.py); the end melody is original.
 
 CODE ADAPTED FROM LEMO-OPUSCAR (MIT licence, github.com/lemomo-ai/lemo-opuscar)
 - px.js (indexed framebuffer, Bayer dither, LUTs) and the 5×7 glyph table in font.js,

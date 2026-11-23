@@ -27,7 +27,7 @@ ENDESGA-32, plus a teal-navy ground ramp (`#0b1a2e #0f2740 #13344f #1a4560 #235a
 
 ## Score & sound
 
-There's no voice. A chip tick plus a lub-dub thump on each beat, an inside-the-body bed (low brown-noise hum and a breathing swish), pulse blips on every caption change and a "GO" fanfare. "STOP" is a crushed noise hit followed by 0.48 s of true silence. The reveal is a rising arpeggio, the split plays its two rhythms panned left and right, and the CTA gets an original 8-bar C-major phrase (pulse 25 % lead, 4-bit triangle bass, noise hats). Mixed to −14 LUFS with no grain.
+There's no voice. During the count, a chip groove runs at 144 bpm, two beats per heartbeat, so the heart's lub-dub plays the kick. It carries gated bass, pumping chords and off-beat hats, then adds arps and a snare roll with a riser over the last bar. "STOP" brings 0.48 s of true silence. The reveal re-enters at 120 bpm with an impact, crash and the full groove (kick, snare, arps). The split goes half-time, and the CTA gets an impact plus an original lead phrase. The count click and the heart thumps sit on top. Mixed to −14 LUFS with no grain. Everything is in `demo/groove.py` and `demo/mix.py`.
 
 ## Build notes
 
@@ -38,6 +38,7 @@ demo/
   hero.js   heart: implicit mask → distance field → 3-tone shading, rim, outline, specular; face + expressions
   scene.js  ground with cell rings, ribcage, gauge post, ECG trace, mode-7 plane
   main.js   TL timings, captions (CAPS), beats, sound events (window.EV), TEXTS for readcheck
+  groove.py music engine (sections come from main.js)
   mix.py    all sound from events.json
   build.sh  events → mix → frames → mux (OUT=… to choose the output folder)
 ```

@@ -2,7 +2,7 @@ Don't Blink — a Pixel Countdown Science film · credits & licences
 
 ORIGINAL (made for this film, by code in this folder)
 - All pixel art: the eye, lids and lashes, the tear-drop character, the TEAR FILM gauge, the ground (eye.js, scene.js, main.js).
-- Captions and counters (font.js). Music and sound effects synthesised with numpy (mix.py); the end melody is original.
+- Captions and counters (font.js). Music and sound effects synthesised with numpy (groove.py, mix.py); the end melody is original.
 
 CODE ADAPTED FROM LEMO-OPUSCAR (MIT licence, github.com/lemomo-ai/lemo-opuscar)
 - px.js and the 5×7 glyph table in font.js (from styles/pixel-rpg/demo); sound helpers from core/audio/sfx.py.

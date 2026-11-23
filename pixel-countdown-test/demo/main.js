@@ -44,7 +44,18 @@ REST.forEach(t => EV.push({ t, type: 'beat_soft', pan: -.5 }));
 SPRINT.forEach(t => EV.push({ t, type: 'beat_fast', pan: .5 }));
 EV.push({ t: TL.split, type: 'whoosh' });
 EV.push({ t: TL.tilt, type: 'whoosh' });
-EV.push({ t: TL.tilt + .3, type: 'melody' });
+// music: chip groove at 144 bpm during the count (2 beats per heartbeat; the heart's thump is the kick), cut for the silence
+const P1 = [[57, 'min'], [53, 'maj'], [48, 'maj'], [55, 'maj']], P2 = [[48, 'maj'], [55, 'maj'], [57, 'min'], [53, 'maj']];
+const o144 = TL.firstBeat - 8 * 60 / 144;
+EV.push({ t: 0, type: 'music', sections: [
+  { t0: 0, t1: TL.go, origin: o144, bpm: 144, prog: P1, layers: ['bass', 'pad'] },
+  { t0: TL.go, t1: 11.0, origin: o144, bpm: 144, prog: P1, layers: ['bass', 'pad', 'hat'] },
+  { t0: 11.0, t1: TL.stop, origin: o144, bpm: 144, prog: P1, layers: ['bass', 'pad', 'hat', 'arp', 'build'] },
+  { t0: TL.eq, t1: TL.split, origin: TL.eq, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'arp'] },
+  { t0: TL.split, t1: TL.tilt, origin: TL.eq, prog: P2, layers: ['half', 'kick', 'bass', 'pad', 'arp'] },
+  { t0: TL.tilt, t1: TL.dur - .4, origin: TL.tilt + .3, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'lead'],
+    lead: [[76, 1], [79, 1], [84, 2], [83, 1], [79, 1], [81, 1], [79, 1]] },
+] });
 window.EV = EV; window.DUR = TL.dur;
 
 // pump amount 0..1 from a beat list: fast squeeze, slower release
