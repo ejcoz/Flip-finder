@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.environ['LIB'], 'core', 'audio'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from groove import music
 import score
+import studio  # noqa
 from sfx import SR, t_, env_exp, lp, hp, bp, noise, norm, brown, thump, whoosh, add, limit
 
 ev_path, out = sys.argv[1], sys.argv[2]
@@ -55,11 +56,11 @@ for e in EV:
             drone = (np.where(ph < .5, 1., -1.) * .5 + np.sin(2 * np.pi * ph) * .5) * (0.02 + .1 * p ** 1.5)
             hum = hum + lp(drone, 1200)
         fade = np.minimum(1, tt / .4) * np.minimum(1, (d - tt) / .05)
-        add(buf, hum * fade, t, .14, -.2); add(buf, hum * fade, t, .14, .2)
-    elif ty == 'hook': add(buf, arp([72, 76, 79, 84], .05, .5, .6), t, .3)
+        add(buf, hum * fade, t, .06, -.2); add(buf, hum * fade, t, .06, .2)
+    elif ty == 'hook': pass   # scored
     elif ty == 'tick':
-        add(buf, tick(1.0 if e['n'] > 3 else 1.25), t, .55 if e.get('loud') else .4)
-        add(buf, ping(3520 if e['n'] > 3 else 4186), t, .22, .15)
+        add(buf, tick(1.0 if e['n'] > 3 else 1.25), t, .3 if e.get('loud') else .22)
+        pass   # the count's pitch is in the score
     elif ty == 'crackle':
         x = hp(noise(.12), 3000) * (np.random.default_rng(int(t * 100)).random(ns(.12)) > .985) * 3
         add(buf, x, t, .25 * (.3 + e['v']), (t * 7 % 2) - 1)
@@ -70,11 +71,11 @@ for e in EV:
         add(buf, lp(bw, 5000), t, .35); add(buf, lidsound(1), t, .6); add(buf, thump(.8, 90), t, .4)
     elif ty == 'relief': pass   # scored in score.py
     elif ty == 'lid': add(buf, lidsound(.8), t, .35, e.get('pan', 0))
-    elif ty == 'blip': add(buf, blip(), t, .22)
+    elif ty == 'blip': add(buf, blip(), t, .1)
     elif ty == 'reveal': add(buf, arp([60, 64, 67, 72, 76, 79, 84], .045, .25, .6), t, .35)
     elif ty == 'whoosh': add(buf, np.round(whoosh(.35) * 16) / 16, t, .25)
     elif ty == 'score':
-        M = score.build(e, DUR); buf[:len(M)] += M * .9
+        M = score.build(e, DUR); buf[:len(M)] += M * .8
     elif ty == 'music':
         M = music(e['sections'], DUR); buf[:len(M)] += M * .9
     elif ty == 'melody_old':

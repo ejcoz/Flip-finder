@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.environ['LIB'], 'core', 'audio'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from groove import music
 import score
+import studio  # noqa
 from sfx import SR, t_, env_exp, lp, hp, bp, noise, norm, brown, thump, whoosh, add, limit
 
 ev_path, out = sys.argv[1], sys.argv[2]
@@ -51,31 +52,31 @@ for e in EV:
         roar = lp(brown(d), 140) * (0.8 + 0.2 * np.sin(2 * np.pi * .3 * tt))
         hiss = bp(noise(d), 2000, 6000) * .025
         fade = np.minimum(1, tt / .4) * np.minimum(1, (d - tt) / .05)
-        add(buf, (roar + hiss) * fade, t, .12, -.25); add(buf, (roar * .9 + hiss) * fade, t, .12, .25)
-    elif ty == 'hook': add(buf, arp([67, 72, 76, 79], .05, .5, .6), t, .3)
+        add(buf, (roar + hiss) * fade, t, .06, -.25); add(buf, (roar * .9 + hiss) * fade, t, .06, .25)
+    elif ty == 'hook': pass   # scored
     elif ty == 'tick':
-        add(buf, tick(1.0), t, .45); add(buf, ping(3520 if e['n'] % 2 else 4186), t, .22, .15)
+        add(buf, tick(1.0), t, .22)   # the count's pitch is in the score
     elif ty == 'thunk':
         add(buf, thump(.9, 80), t, .45); x = np.round(lp(noise(.05), 1800) * env_exp(.05, .012) * 6) / 6; add(buf, x, t, .25)
     elif ty == 'stop':
         x = hp(noise(.12), 1500) * env_exp(.12, .03) * .6; x = np.round(x * 8) / 8
         add(buf, x, t, .4); add(buf, arp([79, 72], .06, .5, .6), t, .3)
     elif ty == 'silence': silences.append((t, t + e['dur']))
-    elif ty == 'reveal': add(buf, arp([60, 64, 67, 72, 76, 79, 84], .045, .25, .6), t, .35)
+    elif ty == 'reveal': pass   # scored (the drop)
     elif ty == 'whoosh': add(buf, np.round(whoosh(.35) * 16) / 16, t, .25)
-    elif ty == 'photon':   # thin rising pulse travelling left to right
+    elif ty == 'photon_old':   # thin rising pulse travelling left to right
         d = e['dur']; n = ns(d); f = 600 * 2 ** (np.arange(n) / n * 1.5); ph = np.cumsum(f / SR) % 1
         x = lp(np.where(ph < .125, 1., -1.) * .25 * np.minimum(1, np.arange(n) / ns(.2)), 5000)
         for k, pan in enumerate(np.linspace(-.8, .8, 8)):
             add(buf, x[k * n // 8:(k + 1) * n // 8], t + k * d / 8, .35, pan)
-    elif ty == 'arrive': add(buf, arp([84, 91], .05, .5, .5), t, .35); add(buf, thump(.5, 120), t, .3)
+    elif ty == 'arrive': pass   # scored
     elif ty == 'bounce':
         m = 62 + [0, 3, 5, 7, 10][int(t * 137) % 5] + 12 * int(e['k'] * 2.5)
         add(buf, note(hz(m), .05, .25, .5, dec=.025), t, .12 + .14 * e['k'], ((t * 7) % 2) - 1)
     elif ty == 'escape': add(buf, arp([72, 79, 84, 88], .04, .25, .6), t, .3)
-    elif ty == 'blip': add(buf, blip(), t, .22)
+    elif ty == 'blip': add(buf, blip(), t, .1)
     elif ty == 'score':
-        M = score.build(e, DUR); buf[:len(M)] += M * .9
+        M = score.build(e, DUR); buf[:len(M)] += M * .8
     elif ty == 'music':
         M = music(e['sections'], DUR); buf[:len(M)] += M * .9
     elif ty == 'melody_old':

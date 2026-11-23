@@ -73,6 +73,12 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 The genre's sound is **a continuous beat-driven chip track from the first frame**, not ambience. (Measured on the references: 120–128 bpm, ~65 % of the energy below 100 Hz in pitched bass and kick, tonal content in ~80 % of frames, 3–4 onsets a second, near-mono.)
 
 - **No voice.** Captions carry the words.
+- **The soundtrack is the film's main driver: premium chiptune.** 8-bit voices, produced like a modern track (`demo/studio.py`):
+  - **an earworm theme per film**: a singable 2-bar phrase plus an answer, stated in the hook, developed through the film (soured, fragmented, sequenced upward under tension), **dropped huge on the pay-off** (an octave up, doubled, with a third), and resolved under the CTA;
+  - **the count plays music**: each count is a pitched ping stepping up the key's scale, so the visuals perform the melody, and the pay-off lands on the top note;
+  - **a real drop**: build (snare roll 8ths → 16ths, uplifter, reverse cymbal, tom fill) → true silence → impact + sub drop + crash + full arrangement;
+  - **instruments**: PWM chip lead with glides and delayed vibrato, chip "choir" (formant vowels ah/oo/ee), detuned chip chords, chip bass with a sine sub, layered kick/snare/clap, hats with velocity and 16th variation, pitched toms;
+  - **mix**: buses with sends to a stereo reverb and a dotted-8th ping-pong delay, chorus on chords and choir, side-chain pump from the kick, mono bass, glue compression and soft saturation, a touch of air. Stereo width S/M ≈ 0.3–0.4 (still mono-safe).
 - **Every film gets its own score, written cue by cue against its picture** (`score.py`, fed the film's timings from `main.js`). The groove below is the shared instrument kit and grammar, not a loop to paste under every film. For each caption beat, ask what is happening on screen and give the music that job:
   - **the topic sets the palette and key**: water → pitch-drop "drop" arps; the Sun → choir swells, heroic brass motif; weights → a march; a computer → a flat square hum;
   - **the hero's state sets harmony and texture**: calm → major, open; drying or stress → the bass walks down, echoes dry out, a bit-crush deepens, tritones and a nervous trill appear; panic → 8th kicks, an accelerating roll, everything gliding up; relief → a major bloom;
@@ -120,7 +126,7 @@ A menu: use the ones your topic needs.
 
 ## 10. Engine
 
-In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, integer zoom, RGB bloom), `font.js` (bold 5×7 pixel font, scales, ink shadow/outline, `*highlight*` markup), `hero.js` (the demo's heart: implicit shape, 3-tone shading, face and expressions), `scene.js` (ground, cells, ribcage setting, gauge prop, ECG mode-7 plane), `groove.py` (the music engine: kick, gated bass, pumping chords, hats, arps, builds, impacts, lead), `mix.py` (all sound, from the page's events), `main.js` (shots, counts, captions, sound events). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
+In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, integer zoom, RGB bloom), `font.js` (bold 5×7 pixel font, scales, ink shadow/outline, `*highlight*` markup), `hero.js` (the demo's heart: implicit shape, 3-tone shading, face and expressions), `scene.js` (ground, cells, ribcage setting, gauge prop, ECG mode-7 plane), `studio.py` (premium-chiptune instruments and mix: buses, reverb, delay, chorus, pump, glue), `groove.py` (simpler groove kit), `mix.py` (all sound, from the page's events), `main.js` (shots, counts, captions, sound events). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
 
 ## 11. Variation space
 
