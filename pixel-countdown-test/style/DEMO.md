@@ -2,45 +2,46 @@
 
 One example among many. Don't reuse its story, arc, shots, props or timings.
 
-Demo: *Count Your Pulse* (29.5 s, 1080×1920, 30 fps) · `test.mp4` · source in [`demo/`](demo/)
+Demo: *Paper to the Moon* (37.5 s, 1080×1920, 30 fps) · `test.mp4` · source in [`demo/`](demo/)
 
 ## Story & structure
 
-The viewer finds their pulse and counts along with a heart character for 15 seconds, then turns the count into beats per minute.
+Fold a sheet of paper in half 42 times and it reaches the Moon. The viewer counts the folds; each fold is a note one semitone up and a lurch of the scenery, so exponential growth is seen and heard. Two climaxes (the Moon at fold 42, the visible universe at fold 103), a reality check between them (the record is 12 folds), and a dare to finish ("can you pass 7 folds?").
 
 | Time | Beat | Native move |
 |---|---|---|
-| 0–3.4 | A heart asleep in a ribcage wakes up. "FIND YOUR **PULSE**" | Opening with the hero asleep |
-| 3.4–18.4 | GO: a 15 s timer runs, the big yellow counter and the gauge rise +1 on each beat at 72 bpm. Facts change every ~3.8 s; push-in on "THAT SURGE IS THE PULSE", with pressure rings | Count along |
-| 18.4–18.9 | **STOP!**, then a hard silence | — |
-| 18.9–21.8 | White flash: "**18** BEATS × 4 = **72** BPM", the heart smiles | Equation reveal |
-| 21.8–25.4 | The heart splits in two: resting (66 bpm) vs sprinting (180 bpm, sweating), live mini counters | Split verdict |
-| 25.4–29.5 | Pixel 3D tilt down onto a mode-7 ECG paper plane; the heart sits on the horizon. "COUNT YOURS **BEFORE BED**" over the end melody | CTA |
+| 0–3.5 | The sheet character on a desk: "FOLD A PAPER 42 TIMES. HOW TALL?" | The challenge stated |
+| 3.5–21 | Folds 1–41 in five 3.5 s windows (5, 7, 9, 10, 10 folds), past a coin, a mug, you, a house, 30 floors, the tallest building, Everest, jets, the edge of space, the space station | Count along |
+| 21–21.5 | The frame dims; true silence | — |
+| 21.5–25.5 | Fold 42: Earth, the Moon and a line of paper between them | Equation reveal (the number becomes a picture) |
+| 25.5–29.5 | A straining 12-fold block: "THE REAL RECORD: 12 FOLDS" | Split verdict, as one beat |
+| 29.5–33.5 | Folds 43–103 in 1.75 s, to the edge of sight | Count along, second climax |
+| 33.5–37.5 | Back on the desk: "GRAB A PAPER. CAN YOU PASS 7 FOLDS?" | The CTA return |
 
 ## Shots & camera
 
-Locked centre (heart left of centre, gauge post on the right); a push-in by redrawing the heart and ribs larger (118 → 158 px); a pull-back on the reveal; a split; a tilt into the mode-7 plane (horizon 520 → 250 native over 1.4 s).
+Three views. **The desk portrait** (hook, record, CTA). **The log-altitude view**: every screen row is an altitude, 70 px per ×10, with the tower top fixed at y = 300, so landmarks enter from the top and slide down past the hero as it reaches them; the sky zones (room → day sky → dusk → space with stars → deep space) live on the same axis and scroll with the folds. **The Earth–Moon portrait** for the pay-off.
 
 ## Palette
 
-ENDESGA-32, plus a teal-navy ground ramp (`#0b1a2e #0f2740 #13344f #1a4560 #235a72`), heart extras (`#ff8a8a #7a1f33 #4a1226`), a protected yellow ramp (`#fff6b0 #fee761 #feae34 #b8701c`) and ECG paper (`#2a0f22 #4a1a3a #7a2e5a`, trace `#3dff9a`). Halo rings: ground → plum → crimson → clay → orange.
+ENDESGA-32 plus an indigo ground ramp, the protected yellow ramp, and a few Earth and Sun tones. Paper is white with a silver shade; yellow is only the counter and key words.
 
 ## Score & sound
 
-There's no voice. During the count, a chip groove runs at 144 bpm, two beats per heartbeat, so the heart's lub-dub plays the kick. It carries gated bass, pumping chords and off-beat hats, then adds arps and a snare roll with a riser over the last bar. "STOP" brings 0.48 s of true silence. The reveal re-enters at 120 bpm with an impact, crash and the full groove (kick, snare, arps). The split goes half-time, and the CTA gets an impact plus an original lead phrase. The count click and the heart thumps sit on top. Mixed to −14 LUFS with no grain. Everything is in `demo/groove.py` and `demo/mix.py`.
+There's no voice. The score follows STYLE.md §7. Each fold is a ping one semitone up (A3 at fold 0 to D#7 at fold 42). Between folds a filler stream thickens window by window (none → 8ths → 16ths → 16ths doubled → 32nds) over a choir that darkens (fifth → minor → added 2nd → cluster) and a trill. A synth slide and an uplifter run into 0.48 s of true silence. Fold 42 lands as a huge slow C-major swell with a lyrical line. The record beat is a slide down and a few dry plucks. The universe burst is a 32nd stream racing up with a slide, into the biggest swell (F), which resolves home to C under the CTA with high arpeggios. Paper foley (a dry crease) sits on every fold. Mixed to −14 LUFS with no grain.
 
 ## Build notes
 
 ```
 demo/
-  px.js     270×480 indexed framebuffer, palette, LUTs, Bayer, glow rings, bloom on brightest tones
-  font.js   5×7 caps, regular weight, ink outline + shadow, *highlight* markup, bigNum counter
-  hero.js   heart: implicit mask → distance field → 3-tone shading, rim, outline, specular; face + expressions
-  scene.js  ground with cell rings, ribcage, gauge post, ECG trace, mode-7 plane
-  main.js   TL timings, captions (CAPS), beats, sound events (window.EV), TEXTS for readcheck
-  groove.py music engine (sections come from main.js)
-  mix.py    all sound from events.json
+  px.js     270×480 indexed framebuffer, palette, LUTs, Bayer, bloom on brightest tones
+  font.js   5×7 caps, ink outline + shadow, *highlight* markup, bigNum counter
+  world.js  the three views: logScene (sky zones, landmarks, stars, tower, hero), deskScene, moonShot; face()
+  main.js   TL timings, fold schedule, captions (CAPS), counter, sound events (window.EV), TEXTS for readcheck
+  studio.py instruments and mix: ping, gliss, swell, choir, reverb, delay, glue
+  score.py  this film's score, cue by cue, fed TL and the fold times
+  mix.py    score + paper foley + the true silence
   build.sh  events → mix → frames → mux (OUT=… to choose the output folder)
 ```
 
-`node core/render/readcheck.mjs demo --size 1080x1920` passes; "STOP!" is a one-word stinger marked `pass`.
+`node core/render/readcheck.mjs demo --size 1080x1920` passes with every caption timed.

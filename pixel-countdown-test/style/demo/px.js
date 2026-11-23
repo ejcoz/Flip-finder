@@ -8,12 +8,16 @@ const HEX = [
   '#e43b44', '#f77622', '#feae34', '#fee761', '#63c74d', '#3e8948', '#265c42', '#193c3e',
   '#124e89', '#0099db', '#2ce8f5', '#ffffff', '#c0cbdc', '#8b9bb4', '#5a6988', '#3a4466',
   '#262b44', '#181425', '#ff0044', '#68386c', '#b55088', '#f6757a', '#e8b796', '#c28569',
-  // 32–39 teal-navy ground ramp + heart extras
-  '#0b1a2e', '#0f2740', '#13344f', '#1a4560', '#235a72', '#ff8a8a', '#7a1f33', '#4a1226',
+  // 32–39 deep-violet ground ramp + extras
+  '#0b0a1c', '#12112e', '#1a1942', '#252458', '#353372', '#ff8a8a', '#7a1f33', '#4a1226',
   // 40–43 protected yellow (counter / key words): light, body, shade, deep
   '#fff6b0', '#fee761', '#feae34', '#b8701c',
   // 44–47 ECG paper (mode-7 plane)
   '#2a0f22', '#4a1a3a', '#7a2e5a', '#3dff9a',
+  // 48–52 sun ramp (deliberately not yellow): peach, orange, flame, deep, ember
+  '#ffc58a', '#ff8c2e', '#e8571d', '#b8361a', '#7a1f14',
+  // 53–55 earth
+  '#3a7bd5', '#2f9e5a', '#e8f4ff',
 ];
 export const C = {
   rust: 0, clay: 1, sand: 2, tan: 3, brown: 4, dbrown: 5, umber: 6, crimson: 7, red: 8, orange: 9, amber: 10, yellow: 11,
@@ -21,6 +25,7 @@ export const C = {
   dslate: 23, night: 24, ink: 25, hot: 26, plum: 27, rose: 28, pink: 29, skin: 30, skinS: 31,
   g0: 32, g1: 33, g2: 34, g3: 35, g4: 36, hpink: 37, hdeep: 38, hink: 39,
   yL: 40, yB: 41, yS: 42, yD: 43, e0: 44, e1: 45, e2: 46, eT: 47,
+  sL: 48, sB: 49, sM: 50, sD: 51, sE: 52, earthB: 53, earthG: 54, cloud: 55,
 };
 export const NPAL = HEX.length;
 const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];

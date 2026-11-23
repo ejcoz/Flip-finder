@@ -115,7 +115,7 @@ A menu: use the ones your topic needs.
 
 ## 10. Engine
 
-In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, integer zoom, RGB bloom), `font.js` (bold 5×7 pixel font, scales, ink shadow/outline, `*highlight*` markup), `hero.js` (the demo's heart: implicit shape, 3-tone shading, face and expressions), `scene.js` (ground, cells, ribcage setting, gauge prop, ECG mode-7 plane), `studio.py` (premium-chiptune instruments and mix: buses, reverb, delay, chorus, pump, glue), `groove.py` (simpler groove kit), `mix.py` (all sound, from the page's events), `main.js` (shots, counts, captions, sound events). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
+In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, RGB bloom), `font.js` (5×7 pixel font, scales, ink outline, `*highlight*` markup, `bigNum`), `world.js` (the demo's views, landmarks, hero and `face()`), `main.js` (timings, counts, captions, sound events), `studio.py` (instruments and mix: `ping`, `gliss`, `swell`, choir, reverb, delay, glue), `score.py` (the film's score, cue by cue), `mix.py` (score + foley + the true silence). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
 
 ## 11. Variation space
 

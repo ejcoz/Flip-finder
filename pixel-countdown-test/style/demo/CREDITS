@@ -1,20 +1,15 @@
-Count Your Pulse — Pixel Countdown Science demo · credits & licences
+Paper to the Moon — a Pixel Countdown Science film · credits & licences
 
 ORIGINAL (made for this film, by code in this folder)
-- All pixel art: the heart character, ribcage, pulse gauge, cell ground, ECG plane (hero.js, scene.js, main.js).
-- Captions, counter and gauge digits (font.js, scene.js).
-- Music and sound effects: synthesised with numpy (groove.py, mix.py); the end melody is original.
+- All pixel art: the paper character, tower, landmarks, Earth, Moon, sky and desk (world.js, main.js).
+- Captions and counters (font.js). Music synthesised with numpy (score.py, studio.py); paper foley in mix.py.
 
 CODE ADAPTED FROM LEMO-OPUSCAR (MIT licence, github.com/lemomo-ai/lemo-opuscar)
-- px.js (indexed framebuffer, Bayer dither, LUTs) and the 5×7 glyph table in font.js,
-  adapted from styles/pixel-rpg/demo. Sound helpers from core/audio/sfx.py (used via LIB).
+- px.js and the 5×7 glyph table in font.js (from styles/pixel-rpg/demo); sound helpers from core/audio/sfx.py.
 
 PALETTE
-- ENDESGA 32 by ENDESGA (public palette, lospec.com/palette-list/endesga-32), plus custom ground/yellow/ECG tones.
+- ENDESGA 32 by ENDESGA (lospec.com/palette-list/endesga-32), plus custom tones.
 
-FACTS (captions)
-- Resting adult heart rate 60–100 bpm (American Heart Association). 15-second count × 4 = beats per minute.
-- Resting stroke volume ≈ 70 mL per beat (standard physiology texts).
-- Near-maximal heart rate during sprinting for a young adult ≈ 180–200 bpm (≈ 220 − age, a rough estimate).
+FACTS: see TREATMENT.md for the figures and sources.
 
-No third-party images, fonts, samples or recordings are used. No voice.
+No third-party images, fonts, samples or recordings. No voice.

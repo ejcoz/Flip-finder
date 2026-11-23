@@ -1,0 +1,15 @@
+Paper to the Moon — a Pixel Countdown Science film · credits & licences
+
+ORIGINAL (made for this film, by code in this folder)
+- All pixel art: the paper character, tower, landmarks, Earth, Moon, sky and desk (world.js, main.js).
+- Captions and counters (font.js). Music synthesised with numpy (score.py, studio.py); paper foley in mix.py.
+
+CODE ADAPTED FROM LEMO-OPUSCAR (MIT licence, github.com/lemomo-ai/lemo-opuscar)
+- px.js and the 5×7 glyph table in font.js (from styles/pixel-rpg/demo); sound helpers from core/audio/sfx.py.
+
+PALETTE
+- ENDESGA 32 by ENDESGA (lospec.com/palette-list/endesga-32), plus custom tones.
+
+FACTS: see TREATMENT.md for the figures and sources.
+
+No third-party images, fonts, samples or recordings. No voice.
