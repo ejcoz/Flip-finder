@@ -1,135 +1,97 @@
-"""score.py — "Don't Blink": original premium-chiptune score, cue by cue against the picture.
-F major / D minor, 120 bpm (one count second = 2 beats). THEME: a sneaky, bouncy "staring contest" tune.
-Stated bright over water drops, soured into D minor as the eye dries, broken into a rising motif sequence as it stings
-and panics, then dropped huge on BLINK!, whispered as a music box while the music itself "blinks", split talking-left /
-screen-right, and paid off under the CTA. The 15 countdown pings climb two octaves of F major as the tension rises."""
+"""score.py — "Don't Blink": sonified build + cinematic swells (the 7M-view model).
+120 bpm grid (one count second = 2 beats). Almost no drums: the energy is note density and rising pitch.
+  · the countdown is a stream of pings: each second is a note one semitone up (E5 → G6); between seconds the stream
+    thickens as the eye dries (8ths → 16ths as it stings → 32nds in the panic), with cracks as extra high pings
+  · under it a choir that turns more dissonant; a synth slide into the silence; BLINK! lands as a huge slow C-major
+    swell — relief — with a falling cascade of drops; then evolving swells, a lyrical line, the brain-hides blink-outs,
+    a talking-left / screen-right stream, and the biggest swell under the CTA."""
 import numpy as np
-from studio import (Studio, groove, q32, choir, chordtone, arp, bass, bell, drop, pluck, trill, drone, lead,
-                    k_crash, k_revcymbal, k_uplift, k_subdrop, k_impact, k_tom, SR, ns, hz, lp, blep_pulse)
-
-A  = [(72, .5), (None, .25), (69, .25), (72, .5), (74, .5), (72, .5), (69, .5), (65, 1), (None, .5), (67, .5), (69, .5), (70, .5), (69, .5), (67, 1)]
-A2 = [(72, .5), (None, .25), (69, .25), (72, .5), (77, .5), (76, .5), (74, .5), (72, 1), (None, .5), (70, .5), (69, .5), (67, .5), (65, 1.5), (None, .5)]
-AM = [(69, .5), (None, .25), (65, .25), (69, .5), (70, .5), (69, .5), (65, .5), (62, 1), (None, .5), (64, .5), (65, .5), (67, .5), (65, .5), (64, 1)]
-MOTIF = [(72, .5), (None, .25), (69, .25), (72, .5), (None, .5)]          # 2 beats: the theme's head
-CH = {'F': [65, 69, 72], 'Dm': [62, 65, 69], 'Bb': [58, 62, 65], 'C': [60, 64, 67], 'Gm': [55, 58, 62], 'A': [57, 61, 64], 'Bbsus': [58, 63, 65], 'Csus': [60, 65, 67]}
-ROOT = {'F': 53, 'Dm': 50, 'Bb': 46, 'C': 48, 'Gm': 43, 'A': 45, 'Bbsus': 46, 'Csus': 48}
-P_MAJ = ['F', 'Dm', 'Bb', 'C']; P_MIN = ['Dm', 'Bb', 'Gm', 'A']; P_SUS = ['Bbsus', 'Csus']
-FMAJ = [65, 67, 69, 70, 72, 74, 76, 77, 79, 81, 82, 84, 86, 88, 89]          # countdown pings, 15 → 1, rising
-
-def G(st, *a, **k): groove(st, *a[:4], CH, ROOT, **k)
-def nxt(st, t, origin): return origin + np.ceil((t - origin) / st.b - 1e-6) * st.b      # next beat at/after t
-
-def crushed(x, bits): q = 2 ** bits; return np.round(x * q) / q
+from studio import (Studio, swell, ping, gliss, sine_bass, choir, chordtone, bell, lead, drone, drop, trill,
+                    k_uplift, k_subdrop, k_crash, SR, ns, lp, blep_pulse)
 
 def build(e, dur):
     T = e['TL']; CALM = e['CALM']; TALK = e['TALK']; SCR = e['SCREEN']
-    st = Studio(dur, 140); b = st.b
-    o1 = T['silence']                                  # pre-drop grid: the panic slams exactly into the silence
+    st = Studio(dur, 120, rt=2.6, sends={'chords': (.42, .08), 'choir': (.55, .0), 'fx': (.4, .22), 'lead': (.38, .25)})
+    st.narrow = .5
+    b = .5; go = T['go']; sil = T['silence']; o = T['blink']
 
-    # ① HOOK 0–3.0 · "DON'T BLINK": the dare. "dun-dun-DUN!" stab, then a sneaky driving bass + tick-tock clock
-    for at, m, d in [(.05, 72, .18), (.27, 72, .18), (.49, 77, .8)]:
-        st.put('lead', lead(m, d), at, .8); st.put('chords', chordtone([m - 12, m - 8, m - 5], d * .9, duty=.5), at, .45)
-    st.put('drums', k_crash(.5), .49, .5); st.put('fx', k_subdrop(.6), .49, .7)
-    st.put('choir', choir([65, 69, 72], 2.4, 'oo', att=.3), .5, .6)
-    h0 = nxt(st, 1.0, o1)
-    G(st, h0, T['go'] - 1e-3, o1, ['F'], kick='two', clap=False, hats='none', bassline='drive', chords='none', fills=False, g=.85)
-    for k, tb in enumerate(np.arange(h0, T['go'] - 1e-3, b)): st.put('fx', pluck(96 if k % 2 else 101, .03, duty=.5, tau=.01), tb, .35, .35 if k % 2 else -.35)
-    st.put('fx', k_uplift(1.0, f0=500, octs=3), T['go'] - 1.0, .5)
+    # ① HOOK 0–3.0 · "DON'T BLINK FOR 15 SECONDS": a slide up, a held breath (a soft open fifth), a few clock pings
+    st.put('lead', gliss(64, 88, 1.4), .05, .45)
+    st.put('choir', choir([64, 71], go, 'oo', att=.8), .3, .55)
+    st.put('bass', drone(52, go), 0, .2)
+    for i, t in enumerate([1.5, 2.0, 2.5, 2.75]): st.put('fx', ping((76, 83, 76, 83)[i], .55), t, .5, (i % 2 - .5) * .5)
 
-    # ② TEAR FILM 3.0–6.8: watery, bright, already driving. The theme over echoing water-drop 8ths
-    st.put('drums', k_crash(.5), T['go'], .55)
-    t2 = nxt(st, T['go'], o1); t3 = nxt(st, 6.8, o1)
-    G(st, T['go'], t3 - 1e-3, o1, P_MAJ, kick='four', clap=False, hats='8', bassline='drive', chords='pad', fills=False, g=.92)
-    st.melody(A, t2, g=.62)
-    t = t2; i = 0
-    while t < t3 - 1e-3:
-        c = P_MAJ[int((t - o1) // (4 * b)) % 4]; ms = [m + 12 for m in CH[c]] + [CH[c][0] + 24]
-        st.put('fx', drop(ms[i % 4] + 12), t, .45, .4 if i % 2 else -.4); t += b / 2; i += 1
+    # ② COUNTDOWN 3.0–17.5: each second = a ping one semitone up; between seconds the stream thickens as the eye dries
+    t = go; i = 0
+    while t < sil - 1e-6:
+        step = b / 2 if t < 10.6 else b / 4 if t < 14.4 else b / 8
+        cp = 76 + int(np.floor(t - go)); on_count = abs((t - go) - round(t - go)) < 1e-6
+        m = cp if on_count else cp + [7, 12, 5, 12, 3, 7, 1, 12][i % 8]
+        lvl = .85 if on_count else .28 + .3 * (t - go) / (sil - go)
+        st.put('fx', ping(m, lvl), t, .55, 0 if on_count else (.25 if i % 2 else -.25))
+        if on_count: st.put('fx', bell(cp + 12, .5), t, .22, .2)
+        t += step; i += 1
+    # "tear film": watery drops under the first section
+    for j, t in enumerate(np.arange(go, 6.8, b)): st.put('fx', drop(88 + (0, 4, 7, 12)[j % 4]), t + b / 4, .3, (j % 2 - .5) * .4)
+    # cracks (10.6–14.4): extra bright, off-grid pings, more and more
+    rng = np.random.default_rng(3)
+    for t in np.sort(rng.uniform(10.6, sil, 26)): st.put('fx', ping(int(rng.integers(96, 104)), .25, d=.12), t, .3, rng.uniform(-.3, .3))
+    # the choir under it turns dissonant: open fifth → minor → add a minor 2nd → a cluster; a trill appears as it stings
+    st.put('choir', choir([64, 71], 6.8 - go, 'oo', att=.5), go, .55)
+    st.put('choir', choir([64, 67, 71], 10.6 - 6.8, 'oo', att=.4), 6.8, .6)
+    st.put('choir', choir([64, 65, 71, 76], 14.4 - 10.6, 'ah', att=.3), 10.6, .65)
+    st.put('choir', choir([64, 65, 70, 71, 76], sil - 14.4, 'ah', att=.2), 14.4, .7)
+    st.put('lead', trill(88, 14.4 - 10.6), 10.6, .18, .2)
+    st.put('bass', drone(52, sil - go), go, .22)
+    st.put('lead', gliss(76, 100, sil - 15.5, duty=.25), 15.5, .5)                      # the slide into the silence
+    st.put('fx', k_uplift(2.0, f0=400, octs=5), sil - 2.0, .45)
+    # (true silence sil → blink is carved in mix.py)
 
-    # ③ DRYING 6.8–10.6 · "LASTS ABOUT 10 SECONDS": the theme sours into D minor, the bass walks down, drops dry up
-    t4 = nxt(st, 10.6, o1)
-    G(st, t3, t4 - 1e-3, o1, P_MIN, kick='four', clap=True, hats='8', bassline='none', chords='pad', fills=False, g=.92)
-    for j, tb in enumerate(np.arange(t3, t4 - 1e-3, b / 2)): st.put('bass', bass(53 - j // 2, b / 2 * .8), tb, .55)
-    tt = t3
-    for m, d in AM:
-        if tt >= t4 - 1e-3: break
-        if m is not None: st.put('lead', lead(m, d * b * .9), tt, .58)
-        tt += d * b
-    for j, tb in enumerate(np.arange(t3, t4 - 1e-3, b / 2)):
-        dry = (tb - t3) / (t4 - t3)
-        if j % (1 + int(dry * 3)) == 0: st.put('chords', drop(81 - int(dry * 9)), tb, .35 * (1 - .5 * dry), .3)
-
-    # ④ STING 10.6–14.4 · "BREAKS UP AND STARTS TO STING": the theme's head climbs a semitone each bar over a
-    #    D pedal with tritone 16ths, a nervous trill and a worsening bit-crush
-    t5 = nxt(st, 14.4, o1)
-    G(st, t4, t5 - 1e-3, o1, ['Dm'], kick='four', clap=True, hats='16', bassline='none', chords='none', fills=False, g=.98)
-    for tb in np.arange(t4, t5 - 1e-3, b / 4):
-        j = int(round((tb - t4) / (b / 4))); bits = 6 - 2.5 * (tb - t4) / (t5 - t4)
-        st.put('chords', crushed(arp([62, 68][j % 2] + (12 if j % 4 > 1 else 0), b / 4 * .85), bits), tb, .5, .3 if j % 2 else -.3)
-        if j % 2 == 0: st.put('bass', bass(38, b / 2 * .9), tb, .55)
-    for n, bar in enumerate(np.arange(t4, t5 - 1e-3, 2 * b)): st.melody(MOTIF, bar, g=.66, transpose=n)
-    st.put('lead', trill(93, t5 - t4), t4, .25, .2)
-
-    # ⑤ HOLD IT 14.4–17.5: panic. 8th kicks, accelerating roll, the head climbing every beat, rising bass, uplifter,
-    #    reverse cymbal and a tom fill slamming into the silence
-    G(st, t5, o1 - 1e-3, o1, ['Dm'], kick='eighths', clap=False, hats='16', bassline='none', chords='none', fills=False, g=1.0)
-    for j, tb in enumerate(np.arange(t5, o1 - 1e-3, b / 2)): st.put('bass', bass(38 + j // 2, b / 2 * .8), tb, .55)
-    for n, bar in enumerate(np.arange(t5, o1 - 1e-3, b)): st.melody([(72, .5), (69, .5)], bar, g=.62, transpose=4 + n)
-    for tb in np.arange(o1 - 4 * b, o1 - 1e-3, b / 4): st.snare(tb, .25 + .35 * (tb - o1 + 4 * b) / (4 * b))
-    st.put('fx', k_uplift(o1 - 14.4, f0=300, octs=5), 14.4, .75)
-    st.put('fx', k_revcymbal(1.4), o1 - 1.4, .6)
-    for j, m in enumerate([55, 52, 48, 45]): st.put('drums', k_tom(m), o1 - b + j * b / 4, .7, (j % 2 - .5) * .6)
-    for i in range(15): st.put('fx', bell(FMAJ[i] + 12, .4), q32(st, T['go'] + i, o1), .34, .15)    # countdown climbs
-    # (true silence T['silence'] → T['blink'] is carved in mix.py)
-
-    # ⑥ BLINK! DROP 18.0–22.2: the theme slams in over the full groove, arps + choir; a splash cascade; blinks ring
-    o2 = T['blink']
-    st.put('fx', k_impact(1.0), o2, 1.0); st.put('drums', k_crash(1.0), o2, .95)
-    for j, m in enumerate([96, 93, 91, 89, 86, 84, 81, 79, 77]): st.put('fx', drop(m), o2 + .04 + j * .035, .4, (j % 3 - 1) * .5)
-    G(st, o2, T['hour'] - 1e-3, o2, P_MAJ, kick='four', clap=True, hats='16', bassline='drive', chords='8', arps=True, g=1.08)
-    st.put('choir', choir([65, 69, 72, 77], T['hour'] - o2, 'ah', att=.08), o2, .6)
-    st.melody(A, o2, g=.9, transpose=12); st.melody(A, o2, g=.32, pan=-.35)
-    st.melody([(m - 3 if m else None, d) for m, d in A], o2, g=.22, transpose=12, pan=.35)
-    st.melody(A2, o2 + 8 * b, g=.9, transpose=12); st.melody(A2, o2 + 8 * b, g=.32, pan=-.35)
+    # ③ BLINK! 18.0–22.2 · relief. A huge slow C-major swell, a falling cascade of drops, then G/B; each blink = a soft bell
+    st.put('fx', k_subdrop(.8, 2.0), o, .4); st.put('drums', k_crash(.45, 3.0), o, .4)
+    for j, m in enumerate([100, 96, 93, 91, 88, 84, 81, 79, 76]): st.put('fx', drop(m), o + .04 + j * .05, .45, (j % 3 - 1) * .3)
+    swell(st, [48, 55, 60, 64, 67, 72], o, 2.1, g=1.15, att=.06, bassnote=36)
+    swell(st, [47, 55, 59, 62, 67, 71], o + 2.1, T['hour'] - o - 2.1 + .3, g=1.0, att=.4, bassnote=35)
+    tt = o + .6
+    for m, d in [(76, 1.0), (79, .5), (77, .5), (76, 1.0), (72, 1.2)]: st.put('lead', lead(m, d * .95, vib=.015), tt, .42); tt += d
     for bt in CALM:
-        if bt < T['hour']: st.put('fx', bell(89, .3), bt, .4, .3); st.put('fx', bell(96, .45), bt + .08, .4, .3)
+        if bt < T['hour']: st.put('fx', bell(91, .6), bt, .3, .2)
 
-    # ⑦ "YOUR BRAIN HIDES IT" 22.2–26.4: mysterious but moving. Sus chords, 'ee' choir, steady kick, the theme as a
-    #    music box, and the whole track blinks out for 130 ms on every on-screen blink
-    G(st, T['hour'], T['split'] - 1e-3, o2, P_SUS, kick='four', clap=False, hats='8', bassline='8', chords='pad', fills=False, g=.8)
-    st.put('choir', choir([70, 75, 77], T['split'] - T['hour'], 'ee', att=.4), T['hour'], .5)
-    tt = nxt(st, T['hour'], o2)
-    for rep in range(2):
-        for m, d in A:
-            if m is not None and tt < T['split'] - .05: st.put('fx', bell(m + 12, max(.35, d * b * 1.6)), tt, .42, .15)
-            tt += d * b
+    # ④ "~1 HOUR A DAY · YOUR BRAIN HIDES IT" 22.2–26.4: wonder. Am → Fmaj7 swells with a high 16th arpeggio,
+    #    and the whole track blinks out for 130 ms on every on-screen blink
+    h = T['hour']; sp = T['split']
+    swell(st, [45, 57, 60, 64, 69], h, 2.1, att=.4, vowel='oo', bassnote=33)
+    swell(st, [41, 57, 60, 64, 65, 69], h + 2.1, sp - h - 2.1 + .3, att=.4, vowel='oo', bassnote=29)
+    t = h; i = 0
+    while t < sp - .05:
+        ch = [81, 84, 88, 93] if t < h + 2.1 else [77, 81, 84, 88]
+        st.put('fx', ping(ch[i % 4] + (12 if (i // 4) % 2 else 0), .35), t, .4, (.25 if i % 2 else -.25)); t += b / 4; i += 1
     for bt in CALM:
-        if T['hour'] <= bt < T['split']: st.gate(bt, bt + .13)
+        if h <= bt < sp: st.gate(bt, bt + .13)
 
-    # ⑧ SPLIT 26.4–30.0 · "ON SCREENS YOU BLINK 3× LESS": left = the theme as a chatty bouncy tune (talking),
-    #    right = a flat computer hum with key taps and one lonely beep
-    G(st, T['split'], T['cta'] - 1e-3, o2, P_MAJ, kick='four', clap=False, hats='none', bassline='bounce', chords='none', fills=False, g=.8, pan=-.6)
-    tt = nxt(st, T['split'], o2)
-    for rep in range(3):
-        for m, d in A:
-            if m is not None and tt < T['cta'] - .05: st.put('fx', pluck(m + 12, d * b * .8, duty=.5, tau=.08), tt, .5, -.85)
-            tt += d * b
-    for bt in TALK: st.put('fx', bell(89, .25), bt, .35, -.85); st.put('fx', bell(96, .35), bt + .08, .35, -.85)
-    n = ns(T['cta'] - T['split']); t = np.arange(n) / SR
-    hum = (blep_pulse(np.full(n, 120.), np.full(n, .5)) * .4 + np.sin(2 * np.pi * 60 * t)) * np.minimum(1, t / .3) * np.minimum(1, (t[-1] - t) / .1)
-    st.put('fx', lp(hum, 700), T['split'], .35, .9)
-    for tb in np.arange(T['split'] + .11, T['cta'], b * .75): st.put('fx', pluck(100, .012, tau=.004), tb, .2, .9)
-    for bt in SCR: st.put('fx', bell(84, .6), bt, .45, .9)
-    for j in range(8): st.snare(T['cta'] - 2 * b + j * b / 4, .3 + .05 * j)
-    st.put('fx', k_revcymbal(1.0), T['cta'] - 1.0, .5)
+    # ⑤ SPLIT 26.4–30.0 · "ON SCREENS YOU BLINK 3× LESS": left = a lively stream (talking, blinking), right = a flat hum
+    #    with one lonely ping; soft Dm → G swells in the middle
+    c = T['cta']
+    swell(st, [50, 57, 62, 65, 69], sp, 1.8, g=.7, att=.4, vowel='oo', bassnote=38)
+    swell(st, [43, 55, 59, 62, 67], sp + 1.8, c - sp - 1.8 + .2, g=.7, att=.4, vowel='oo', bassnote=31)
+    t = sp; i = 0
+    while t < c - .05:
+        st.put('fx', ping([74, 77, 81, 86, 81, 77][i % 6] + 12, .45), t, .45, -.85); t += b / 2; i += 1
+    for bt in TALK: st.put('fx', bell(93, .5), bt, .35, -.85)
+    n = ns(c - sp); tt_ = np.arange(n) / SR
+    hum = (blep_pulse(np.full(n, 120.), np.full(n, .5)) * .4 + np.sin(2 * np.pi * 240 * tt_) * .5) * np.minimum(1, tt_ / .3) * np.minimum(1, (tt_[-1] - tt_) / .1)
+    st.put('fx', lp(hum, 900), sp, .25, .9)
+    for bt in SCR: st.put('fx', ping(86, .6, d=.6), bt, .5, .9)
+    st.put('lead', gliss(72, 96, 1.4, duty=.25), c - 1.4, .4)
 
-    # ⑨ CTA 30.0–34.2 · "DID YOU MAKE IT?": the dare stab, then the theme's answer, full with arps; a wink bell
-    o3 = T['cta']
-    st.put('fx', k_impact(.9), o3, .95); st.put('drums', k_crash(.9), o3, .85)
-    for at, m, d in [(o3 + .02, 72, .18), (o3 + .02 + b / 2, 72, .18), (o3 + .02 + b, 77, .35)]: st.put('lead', lead(m + 12, d), at, .7)
-    G(st, o3 + 2 * b, dur - .3, o3, P_MAJ, kick='four', clap=True, hats='16', bassline='drive', chords='8', arps=True, g=1.05)
-    st.put('choir', choir([65, 69, 72, 77], dur - o3 - 2 * b, 'ah', att=.15), o3 + 2 * b, .55)
-    st.melody(A2, o3 + 2 * b, g=.9, transpose=12); st.melody(A2, o3 + 2 * b, g=.32, pan=-.35)
-    st.put('fx', bell(101, .9), o3 + 1.2, .5, .4)
-    st.put('drums', k_crash(.8, 1.5), dur - 1.2, .6); st.put('chords', chordtone([65, 69, 72, 77], 1.2, a=.005, r=.5), dur - 1.2, .5)
+    # ⑥ CTA 30.0–34.2 · "DID YOU MAKE IT?": the biggest swell — F → C — high arpeggios, the opening slide's answer, ring out
+    st.put('fx', k_subdrop(.7, 2.0), c, .35); st.put('drums', k_crash(.45, 3.0), c, .4)
+    swell(st, [41, 53, 57, 60, 65, 69, 72], c, 1.6, g=1.15, att=.06, bassnote=29)
+    swell(st, [48, 55, 60, 64, 67, 72, 76], c + 1.6, dur - c - 1.6, g=1.2, att=.3, bassnote=36)
+    st.melody([(72, 2), (79, 2), (84, 4.4)], c + .1, g=.55, legato=.98)
+    t = c + .5; i = 0
+    while t < dur - .4:
+        ch = [77, 81, 84, 89] if t < c + 1.6 else [76, 79, 84, 88]
+        st.put('fx', ping(ch[i % 4] + 12 * ((i // 4) % 2), .38), t, .38, (.25 if i % 2 else -.25)); t += b / 4; i += 1
+    st.put('fx', bell(100, 1.0), c + 1.2, .4, .3)                                      # the tear's wink
     return st.mixdown()

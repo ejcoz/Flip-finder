@@ -52,12 +52,12 @@ for e in EV:
         roar = lp(brown(d), 140) * (0.8 + 0.2 * np.sin(2 * np.pi * .3 * tt))
         hiss = bp(noise(d), 2000, 6000) * .025
         fade = np.minimum(1, tt / .4) * np.minimum(1, (d - tt) / .05)
-        add(buf, (roar + hiss) * fade, t, .06, -.25); add(buf, (roar * .9 + hiss) * fade, t, .06, .25)
+        add(buf, (roar + hiss) * fade, t, .015, -.25); add(buf, (roar * .9 + hiss) * fade, t, .015, .25)
     elif ty == 'hook': pass   # scored
     elif ty == 'tick':
         add(buf, tick(1.0), t, .22)   # the count's pitch is in the score
     elif ty == 'thunk':
-        add(buf, thump(.9, 80), t, .45); x = np.round(lp(noise(.05), 1800) * env_exp(.05, .012) * 6) / 6; add(buf, x, t, .25)
+        add(buf, thump(.9, 80), t, .1); x = np.round(lp(noise(.05), 1800) * env_exp(.05, .012) * 6) / 6; add(buf, x, t, .25)
     elif ty == 'stop':
         x = hp(noise(.12), 1500) * env_exp(.12, .03) * .6; x = np.round(x * 8) / 8
         add(buf, x, t, .4); add(buf, arp([79, 72], .06, .5, .6), t, .3)
@@ -71,9 +71,11 @@ for e in EV:
             add(buf, x[k * n // 8:(k + 1) * n // 8], t + k * d / 8, .35, pan)
     elif ty == 'arrive': pass   # scored
     elif ty == 'bounce':
+        continue
+    elif ty == 'bounce_old':
         m = 62 + [0, 3, 5, 7, 10][int(t * 137) % 5] + 12 * int(e['k'] * 2.5)
         add(buf, note(hz(m), .05, .25, .5, dec=.025), t, .12 + .14 * e['k'], ((t * 7) % 2) - 1)
-    elif ty == 'escape': add(buf, arp([72, 79, 84, 88], .04, .25, .6), t, .3)
+    elif ty == 'escape': pass   # scored
     elif ty == 'blip': add(buf, blip(), t, .1)
     elif ty == 'score':
         M = score.build(e, DUR); buf[:len(M)] += M * .8

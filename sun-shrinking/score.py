@@ -1,117 +1,98 @@
-"""score.py — "The Sun Is Shrinking": original premium-chiptune score, cue by cue against the picture.
-D major, 120 bpm (one count = 2 beats). THEME: a rising fifth → octave ("sunrise"), stated as a call in the hook,
-carried by the count, dropped huge on the reveal, whispered as a music box at "relax", turned minor in the core,
-and paid off in full under the CTA. The count itself climbs the D major scale one note per count."""
+"""score.py — "The Sun Is Shrinking": sonified build + cinematic swells (the 7M-view model).
+120 bpm grid (one count = 2 beats). Almost no drums: the energy is note density and rising pitch.
+  · the count is a stream of pings: every count is a note one step up; between counts the stream gets denser
+    (8ths → 16ths → 32nds) and climbs, as the mass loss piles up; each pyramid landing is a deep choir stab
+  · a synth slide fires into STOP; true silence; the reveal lands as a huge slow D-minor swell
+  · "relax" resolves to D major; the photon's flight is a single accelerating, rising stream panning left → right;
+    the core's random walk is a random stream that climbs as the photon gets out; the CTA is the biggest swell."""
 import numpy as np
-from studio import (Studio, groove, q32, choir, chordtone, arp, bass, bell, drop, pluck, trill, drone, lead,
-                    k_crash, k_revcymbal, k_uplift, k_subdrop, k_impact, k_tom, k_snare, SR, ns, hz)
-
-A  = [(62, 1), (69, 1), (74, 1.5), (73, .5), (71, .5), (69, .5), (66, 1), (69, 2)]          # theme, phrase A
-A2 = [(62, 1), (69, 1), (74, 1.5), (76, .5), (78, 1), (76, .5), (74, .5), (74, 2)]          # theme, answer
-CH = {'D': [62, 66, 69], 'Bm': [59, 62, 66], 'G': [55, 59, 62], 'A': [57, 61, 64], 'Dm': [62, 65, 69], 'Bb': [58, 62, 65], 'C': [60, 64, 67]}
-ROOT = {'D': 50, 'Bm': 47, 'G': 43, 'A': 45, 'Dm': 50, 'Bb': 46, 'C': 48}
-PROG = ['D', 'Bm', 'G', 'A']
-SCALE = [74, 76, 78, 79, 81, 83, 85, 86, 88, 90, 93]        # count pings: D5 → … (one per count), top note on the drop
-
-def fill(st, t_end, beats_=1):
-    b = st.b
-    for j, m in enumerate([52, 50, 47, 45, 43, 40, 38, 36][:beats_ * 4]):
-        st.put('drums', k_tom(m), t_end - beats_ * b + j * b / 4, .7, (j % 2 - .5) * .6)
-
-def G(st, *a, **k): groove(st, *a[:4], CH, ROOT, **k)
-def nxt(st, t, origin): return origin + np.ceil((t - origin) / st.b - 1e-6) * st.b      # next beat at/after t
+from studio import (Studio, swell, ping, gliss, sine_bass, choir, chordtone, bell, lead, drone, arp,
+                    k_uplift, k_revcymbal, k_subdrop, k_impact, k_crash, SR, ns, _rng)
 
 def build(e, dur):
     T = e['TL']; PYR = e['PYR']; PH = e['PHOTON']; WK = e['WALK']
-    st = Studio(dur, 140); b = st.b
-    o1 = T['stop']                                     # pre-drop grid: the build slams exactly into STOP
+    st = Studio(dur, 120, rt=2.6, sends={'chords': (.42, .08), 'choir': (.55, .0), 'fx': (.4, .22), 'lead': (.38, .25)})
+    st.narrow = .5
+    b = .5; go = T['go']; stop = T['stop']
 
-    # ① HOOK 0–3.6 · "THE SUN IS SHRINKING": the sunrise call over a choir + sub, a pulsing bass, sparkle, lift
-    st.put('fx', k_subdrop(.9, 2.0), 0, 1.0)
-    st.put('choir', choir([50, 57, 62, 66], 3.7, 'ah', att=.6), 0, .9)
-    t0 = nxt(st, .05, o1)
-    st.melody([(62, 1), (69, 1), (74, 3), (76, .5), (78, .5)], t0, g=.9, legato=.98)
-    st.melody([(50, 1), (57, 1), (62, 4)], t0, g=.35, pan=-.2, legato=.98)
-    G(st, nxt(st, 1.2, o1), T['go'] - 1e-3, o1, ['D'], kick='none', clap=False, hats='none', bassline='drive', chords='none', fills=False, g=.75)
-    for j, m in enumerate([86, 90, 93, 98]): st.put('fx', bell(m, 1.0), t0 + 4 * b + j * b / 4, .35, (j - 1.5) * .3)
-    st.put('fx', k_uplift(1.4, f0=400, octs=4), T['go'] - 1.4, .55); st.put('fx', k_revcymbal(1.2), T['go'] - 1.2, .55)
+    # ① HOOK 0–3.6 · "THE SUN IS SHRINKING": a slide up out of nothing, the Sun's low hum, the first sparse pings
+    st.put('lead', gliss(62, 86, 1.6), .05, .45)
+    st.put('bass', drone(50, go + .2), 0, .25)
+    st.put('choir', choir([62, 69], go, 'oo', att=1.0), .4, .55)
+    for i, t in enumerate([1.8, 2.3, 2.8, 3.05, 3.3]): st.put('fx', ping(74 + (0, 7, 12, 7, 12)[i], .7), t, .5, (i % 2 - .5) * .6)
 
-    # ② COUNT 3.6–13.6: a driving march. Theme A → at "MASS BECOMES LIGHT" the full groove + arps + theme A2 an octave up
-    #    → last bar: roll, toms, uplifter into STOP. Each count steps up the scale.
-    st.put('drums', k_crash(.7), T['go'], .7)
-    tl = nxt(st, 7.0, o1); tb_ = o1 - 4 * b
-    G(st, T['go'], tl - 1e-3, o1, PROG, kick='four', clap=False, hats='8', bassline='drive', chords='pad', fills=False, g=.95)
-    G(st, tl, tb_ - 1e-3, o1, PROG, kick='four', clap=True, hats='16', bassline='drive', chords='8', arps=True, g=1.0)
-    G(st, tb_, o1 - 1e-3, o1, PROG, kick='four', clap=False, hats='16', bassline='drive', chords='8', arps=True, fills=False, g=1.0)
-    st.put('drums', k_crash(.6), tl, .55)
-    st.melody(A, nxt(st, T['go'], o1), g=.6)
-    st.melody(A2, tl, g=.62, transpose=12); st.melody(A2, tl, g=.2, pan=-.3)
-    st.melody(A[:4], tl + 8 * b, g=.6, transpose=12)
-    for i, p in enumerate(PYR):
-        c = PROG[int((p + .5 - o1) // (4 * b)) % 4]; st.put('drums', k_tom(ROOT[c] - 2), q32(st, p + .5, o1), .55, -.3)
-    for i in range(9):
-        tq = q32(st, T['go'] + 1 + i, o1)
-        st.put('fx', bell(SCALE[i], .45), tq, .45, .15); st.put('fx', pluck(SCALE[i], .1, duty=.25), tq, .28)
-    for j in range(4): st.snare(tb_ + j * b / 2, .3 + .04 * j)
-    for j in range(8): st.snare(tb_ + 2 * b + j * b / 4, .45 + .05 * j)
-    st.put('fx', k_uplift(2.0, f0=300, octs=5), o1 - 2.0, .75); st.put('fx', k_revcymbal(1.4), o1 - 1.4, .5)
-    fill(st, o1, 1)
-    # (true silence T['stop'] → T['reveal'] is carved in mix.py)
+    # ② COUNT 3.6–13.6: each count = a ping one semitone up (D5 → C6); between counts the stream thickens and climbs:
+    #    8ths, then 16ths from "MASS BECOMES LIGHT" (7.0), then 32nds from "A PYRAMID'S WORTH" (10.3)
+    def count_pitch(t): return 74 + int(np.floor(t - go))                                # semitone per count
+    t = go; i = 0
+    while t < stop - 1e-6:
+        step = b / 2 if t < 7.0 else b / 4 if t < 10.3 else b / 8
+        cp = count_pitch(t); on_count = abs((t - go) - round(t - go)) < 1e-6
+        m = cp if on_count else cp + [0, 7, 12, 5, 7, 12, 3, 7][i % 8]
+        lvl = .85 if on_count else .32 + .25 * (t - go) / 10
+        st.put('fx', ping(m, lvl), t, .55, 0 if on_count else (.25 if i % 2 else -.25))
+        if on_count: st.put('fx', bell(cp + 12, .6), t, .25, .2)
+        t += step; i += 1
+    # the Sun under it: a drone + a choir that grows and darkens (a fifth, then an added minor 2nd)
+    st.put('bass', drone(50, stop - go), go, .22)
+    st.put('choir', choir([62, 69], 7.0 - go, 'oo', att=.6), go, .6)
+    st.put('choir', choir([62, 69, 74], 10.3 - 7.0, 'ah', att=.4), 7.0, .65)
+    st.put('choir', choir([62, 63, 69, 74], stop - 10.3, 'ah', att=.3), 10.3, .7)
+    st.put('chords', chordtone([74, 81, 86], stop - 7.0, a=1.0, r=.1, cut=4500, duty=.5), 7.0, .25)          # "light" shimmer
+    for k, p in enumerate(PYR):                                                            # pyramid landings: deep stabs, stepping up
+        r = 50 + [0, 2, 3, 5, 7, 8, 10][k]
+        st.put('choir', choir([r - 12, r - 5], .5, 'ah', att=.01), p + .5, .55); st.put('bass', sine_bass(r - 12, .5, att=.005), p + .5, .3)
+    st.put('lead', gliss(74, 98, stop - 11.6, duty=.25), 11.6, .5)                         # the slide into STOP
+    st.put('fx', k_uplift(2.0, f0=400, octs=5), stop - 2.0, .5)
+    # (true silence stop → reveal is carved in mix.py)
 
-    # ③ DROP 14.1–18.0 · "43 MILLION TONNES GONE": the theme slams in an octave up, doubled + a third, full groove + arps
-    o2 = T['reveal']
-    st.put('fx', k_impact(1.0), o2, 1.0); st.put('drums', k_crash(1.0), o2, .95); st.put('fx', bell(SCALE[10] + 5, 1.6), o2, .45)
-    G(st, o2, T['fuel'] - 1e-3, o2, PROG, kick='four', clap=True, hats='16', bassline='drive', chords='8', arps=True, g=1.08)
-    st.put('choir', choir([62, 66, 69, 74], T['fuel'] - o2, 'ah', att=.08), o2, .6)
-    st.melody(A, o2, g=.9, transpose=12); st.melody(A, o2, g=.32, pan=-.35)
-    st.melody([(m + 4 if m else None, d) for m, d in A], o2, g=.22, transpose=12, pan=.35)
-    st.melody(A[:2], o2 + 8 * b, g=.85, transpose=12)
+    # ③ REVEAL 14.1–18.0 · "43 MILLION TONNES GONE": the explosion. A huge slow D-minor swell, sub, a high bell
+    o = T['reveal']
+    st.put('fx', k_subdrop(.9, 2.5), o, .45); st.put('drums', k_crash(.5, 3.0), o, .45); st.put('fx', bell(98, 2.5), o, .35)
+    swell(st, [50, 57, 62, 65, 69], o, 2.0, g=1.1, att=.08, bassnote=38)
+    swell(st, [46, 53, 58, 62, 65], o + 2.0, T['fuel'] - o - 2.0 + .3, g=1.0, att=.4, bassnote=34)     # → Bb
 
-    # ④ "FUEL FOR 5 BILLION YEARS" 18.0–21.8: lighter but still moving. Steady kick, 8th hats, the theme as a music box
-    G(st, T['fuel'], T['light'] - 1e-3, o2, PROG, kick='four', clap=False, hats='8', bassline='8', chords='pad', fills=False, g=.75)
-    st.put('choir', choir([62, 66, 69], T['light'] - T['fuel'], 'oo', att=.3), T['fuel'], .5)
-    tt = nxt(st, T['fuel'], o2)
-    for m, d in A2:
-        st.put('fx', bell(m + 12, max(.4, d * b * 1.5)), tt, .42, .1); st.put('fx', bell(m + 24, .3), tt, .12, -.3); tt += d * b
+    # ④ RELAX 18.0–21.8 · "FUEL FOR 5 BILLION YEARS": resolves warm into D major; a slow lyrical line
+    f0 = T['fuel']
+    swell(st, [50, 57, 62, 66, 69], f0, 1.9, att=.5, vowel='oo', bassnote=38)
+    swell(st, [49, 57, 61, 64, 69], f0 + 1.9, T['light'] - f0 - 1.9 + .3, att=.5, vowel='oo', bassnote=33)  # A/C#
+    tt = f0 + .2
+    for m, d in [(78, 1.0), (76, .5), (74, .5), (73, 1.0), (69, 1.2)]: st.put('lead', lead(m, d * .95, vib=.015), tt, .42); tt += d
 
-    # ⑤ LIGHT 21.8–26.0 · "LEFT IT 8 MIN AGO": the photon flies: rising 16th arp panning left → right over a riding hat,
-    #    then the groove kicks back in the moment it lands on Earth
-    st.put('choir', choir([74, 78, 81, 86], T['core'] - T['light'], 'ah', att=.4), T['light'], .45)
-    st.put('fx', k_subdrop(.5, 1.0), T['light'], .5)
-    G(st, T['light'], PH[0] - 1e-3, o2, PROG, kick='none', clap=False, hats='8', bassline='long', chords='none', fills=False, g=.7)
-    n16 = int((PH[1] - PH[0]) / (b / 4)); notes = [62, 66, 69, 74, 78, 81, 86, 90, 93, 98]
-    for j in range(n16):
-        at = PH[0] + j * b / 4; pr = j / n16
-        st.put('fx', arp(notes[min(len(notes) - 1, int(pr * len(notes)))] + (0 if j % 2 else -12), b / 4 * .8), at, .42, -.95 + 1.9 * pr)
-        st.hat(at, .15 + .4 * pr, pan=-.95 + 1.9 * pr)
-        if j % 4 == 0: st.kick(at, .35 + .4 * pr, pump=.5)
-    st.put('fx', bell(98, 1.8), PH[1], .5, .75); st.put('fx', bell(93, 1.8), PH[1] + .07, .35, .75)
-    st.put('drums', k_crash(.6), PH[1], .55)
-    G(st, PH[1], T['core'] - 1e-3, PH[1], ['D', 'G'], kick='four', clap=True, hats='16', bassline='drive', chords='8', fills=False, g=.95)
+    # ⑤ LIGHT 21.8–26.0 · "LEFT IT 8 MIN AGO": the photon's flight = one stream that accelerates and climbs while it
+    #    pans left → right; it lands on Earth as a bright swell
+    l0 = T['light']
+    swell(st, [62, 69, 74, 76], l0, PH[1] - l0, g=.6, att=.6, vowel='oo', bassnote=38)
+    t = PH[0]; i = 0; span = PH[1] - PH[0]
+    while t < PH[1]:
+        pr = (t - PH[0]) / span; step = b / 2 * (1 - pr) + b / 8 * pr
+        m = 62 + int(pr * 30) + [0, 7, 12][i % 3]
+        st.put('fx', ping(m, .45 + .4 * pr), t, .5, -.95 + 1.9 * pr); t += step; i += 1
+    st.put('fx', bell(98, 2.0), PH[1], .5, .75); st.put('drums', k_crash(.4, 2.0), PH[1], .4)
+    swell(st, [62, 66, 69, 74, 78], PH[1], T['core'] - PH[1] + .3, g=1.0, att=.05, bassnote=38)
 
-    # ⑥ CORE 26.0–30.6 · "~100,000 YEARS TO ESCAPE": dark drive. Low drone, minor choir, the theme in minor, a heartbeat
-    #    kick that accelerates into 16ths, then the roll + uplifter + reverse cymbal into the final drop
-    o3 = T['cta']
-    st.put('bass', drone(38, o3 - T['core']), T['core'], .8)
-    st.put('choir', choir([50, 53, 57], o3 - T['core'], 'oo', att=.6), T['core'], .6)
-    st.melody([(62, 2), (69, 2), (74, 2), (72, 1), (70, 1)], T['core'] + .1, g=.5, legato=.97)
-    t = T['core'] + .2; gap = .86
-    while t < o3 - 4 * b: st.kick(t, .8, pump=.4); st.hat(t + gap / 2, .3); t += gap; gap = max(b / 2, gap * .87)
-    for j in range(4): st.kick(o3 - 4 * b + j * b, .85)
-    for j in range(4): st.snare(o3 - 4 * b + j * b / 2, .3 + .04 * j)
-    for j in range(8): st.snare(o3 - 2 * b + j * b / 4, .45 + .05 * j)
-    st.put('fx', k_uplift(2.0), o3 - 2.0, .7); st.put('fx', k_revcymbal(1.4), o3 - 1.4, .6)
-    fill(st, o3, 1)
+    # ⑥ CORE 26.0–30.6 · "~100,000 YEARS": the random walk = a random stream in D minor that gets denser and climbs
+    #    as the photon nears the surface, over a dark drone; a slide up into the finale
+    c0 = T['core']; o3 = T['cta']
+    st.put('bass', drone(50, o3 - c0), c0, .3)
+    swell(st, [50, 53, 57, 62], c0, o3 - c0, g=.7, att=1.0, vowel='oo')
+    pent = [0, 3, 5, 7, 10]; t = WK[0]; i = 0; rng = np.random.default_rng(5)
+    while t < WK[1]:
+        pr = (t - WK[0]) / (WK[1] - WK[0]); step = b / 2 * (1 - pr) + b / 8 * pr
+        m = 62 + int(pr * 24) + pent[rng.integers(5)] + 12 * rng.integers(0, 2) - 6
+        st.put('fx', ping(m, .3 + .45 * pr), t, .5, rng.uniform(-.35, .35)); t += step; i += 1
+    st.put('lead', gliss(62, 98, 1.8, duty=.25), o3 - 1.8, .5)
+    st.put('fx', k_uplift(1.8, f0=400, octs=5), o3 - 1.8, .45)
 
-    # ⑦ FINAL DROP 30.6–35.4 · "NEXT SUNRISE…": the full answer with harmony, choir, arps; the last chord rings out
-    st.put('fx', k_impact(1.0), o3, 1.0); st.put('drums', k_crash(1.0), o3, .95)
-    G(st, o3, o3 + 8 * b - 1e-3, o3, ['D', 'Bm', 'G', 'A'], kick='four', clap=True, hats='16', bassline='drive', chords='8', arps=True, g=1.08)
-    st.put('choir', choir([62, 66, 69, 74], 8 * b, 'ah', att=.08), o3, .6)
-    st.melody(A2, o3, g=.9, transpose=12); st.melody(A2, o3, g=.32, pan=-.35)
-    st.melody([(m - 3 if m else None, d) for m, d in A2], o3, g=.22, transpose=12, pan=.35)
-    end = o3 + 8 * b
-    st.kick(end, 1.0); st.put('drums', k_crash(1.0, 2.5), end, .8); st.put('fx', k_subdrop(.8), end, .7)
-    st.put('chords', chordtone([62, 66, 69, 74, 78], dur - end, a=.005, r=.6, cut=5000), end, .55)
-    st.put('choir', choir([50, 57, 62, 66], dur - end, 'ah', att=.05), end, .6)
-    st.put('lead', lead(86, dur - end - .05), end, .5)
+    # ⑦ CTA 30.6–35.4 · "NEXT SUNRISE…": the biggest swell — D major, then G, then home — with high arpeggios and the
+    #    sunrise call (a rising fifth → octave) on top, ringing out
+    st.put('fx', k_subdrop(.8, 2.0), o3, .4); st.put('drums', k_crash(.5, 3.0), o3, .45)
+    swell(st, [50, 57, 62, 66, 69, 74], o3, 1.6, g=1.15, att=.06, bassnote=38)
+    swell(st, [43, 55, 59, 62, 67, 71], o3 + 1.6, 1.2, g=1.05, att=.3, bassnote=31)
+    swell(st, [50, 57, 62, 66, 69, 74, 78], o3 + 2.8, dur - o3 - 2.8, g=1.15, att=.35, bassnote=38)
+    st.melody([(74, 2), (81, 2), (86, 6)], o3 + .1, g=.55, legato=.98)
+    t = o3 + .8; i = 0
+    while t < dur - .5:
+        chord = [74, 78, 81, 86] if t < o3 + 1.6 or t >= o3 + 2.8 else [74, 79, 83, 86]
+        st.put('fx', ping(chord[i % 4] + 12 * ((i // 4) % 2), .4), t, .38, (.25 if i % 2 else -.25)); t += b / 4; i += 1
     return st.mixdown()

@@ -56,7 +56,7 @@ for e in EV:
             drone = (np.where(ph < .5, 1., -1.) * .5 + np.sin(2 * np.pi * ph) * .5) * (0.02 + .1 * p ** 1.5)
             hum = hum + lp(drone, 1200)
         fade = np.minimum(1, tt / .4) * np.minimum(1, (d - tt) / .05)
-        add(buf, hum * fade, t, .06, -.2); add(buf, hum * fade, t, .06, .2)
+        add(buf, hum * fade, t, .015, -.2); add(buf, hum * fade, t, .015, .2)
     elif ty == 'hook': pass   # scored
     elif ty == 'tick':
         add(buf, tick(1.0 if e['n'] > 3 else 1.25), t, .3 if e.get('loud') else .22)

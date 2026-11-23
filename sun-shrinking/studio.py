@@ -121,7 +121,9 @@ def k_impact(v=1.0):
 class Studio:
     BUSES = ('drums', 'bass', 'chords', 'lead', 'fx', 'choir')
     SENDS = {'drums': (.10, .0), 'bass': (0, 0), 'chords': (.22, .10), 'lead': (.22, .28), 'fx': (.35, .25), 'choir': (.45, .05)}
-    def __init__(self, dur, bpm=120):
+    def __init__(self, dur, bpm=120, rt=1.8, sends=None):
+        self.rt = rt; self.narrow = 1.0
+        if sends: self.SENDS = {**self.SENDS, **sends}
         self.dur = dur; self.N = ns(dur) + 2 * SR; self.b = 60 / bpm
         self.bus = {k: np.zeros((self.N, 2)) for k in self.BUSES}
         self.duck = np.ones(self.N); self.gates = []
@@ -198,7 +200,8 @@ class Studio:
         fx = hp(B['fx'], 120)
         dry = drums + bass_ + chords + lead_ + choir_ + fx
         send_r = sum(hp(B[k], 200) * self.SENDS[k][0] for k in B); send_d = sum(B[k] * self.SENDS[k][1] for k in B)
-        wet = reverb(send_r) * .8 + pingpong(send_d) * .45
+        wet = reverb(send_r, rt=self.rt) * .8 + pingpong(send_d) * .45
+        wet = wet.mean(1, keepdims=True) * (1 - self.narrow) + wet * self.narrow
         mix = dry + hp(wet, 200)
         mix = np.tanh(comp(mix, .55, 2.0, .01, .2) * 1.1)                           # glue + gentle saturation
         mix = mix + .12 * (hp(mix, 9000))                                            # a touch of air
@@ -246,3 +249,25 @@ def groove(st, t0, t1, origin, prog, CH, ROOT, kick='four', clap=True, hats='16'
         if arps:
             ms = [m + 24 for m in CH[c]] + [CH[c][0] + 36]
             for j in range(4): st.put('fx', arp(ms[(k * 4 + j) % 4 if j % 2 == 0 else (k * 4 + j * 3) % 4], b / 4 * .8), tb + j * b / 4, .26 * g, (.45 if j % 2 else -.45) + pan)
+
+
+# ———————— sonification + cinematic kit (the 7M-view model) ————————
+def ping(m, v=1.0, d=.28):
+    """One on-screen event = one note: a bright pulse pluck with a bell shimmer."""
+    n = ns(d); t = np.arange(n) / SR
+    x = blep_pulse(np.full(n, hz(m)), np.full(n, .5)) * np.exp(-t / .05) * .6 + np.sin(2 * np.pi * hz(m) * t) * np.exp(-t / .12) * .7
+    x += .25 * np.sin(2 * np.pi * hz(m) * 2.01 * t) * np.exp(-t / .03)
+    return lp(x, 9000) * adsr(n, .001, .01, 1, .02) * v
+def gliss(m0, m1, d, v=1.0, duty=.5):
+    """A synth slide (exponential in pitch), the reference's signature riser."""
+    n = ns(d); t = np.arange(n) / SR; f = hz(m0) * (hz(m1) / hz(m0)) ** (t / d) ** 1.6
+    return lp(blep_pulse(f, np.full(n, duty)), 6000) * adsr(n, .02, .1, .9, .05) * np.minimum(1, (t / d) * 1.5 + .2) * v
+def sine_bass(m, d, v=1.0, att=.3):
+    n = ns(d); t = np.arange(n) / SR
+    return (np.sin(2 * np.pi * hz(m) * t) + .25 * np.sin(2 * np.pi * hz(m) * 2 * t)) * adsr(n, att, .2, .9, min(.8, d * .3)) * v
+def swell(st, ms, at, d, g=1.0, att=.35, vowel='ah', bassnote=None):
+    """Cinematic chord swell: chip choir + two stacked detuned chord layers (+ an octave) + a soft sine bass."""
+    st.put('choir', choir(ms, d, vowel, att=att), at, .75 * g)
+    st.put('chords', chordtone(ms, d, a=att, r=min(1.2, d * .4), cut=3200, duty=.5), at, .55 * g, -.15)
+    st.put('chords', chordtone([m + 12 for m in ms], d, a=att * 1.3, r=min(1.2, d * .4), cut=5000, duty=.25), at, .28 * g, .15)
+    if bassnote is not None: st.put('bass', sine_bass(bassnote + 12, d, att=att), at, .22 * g)

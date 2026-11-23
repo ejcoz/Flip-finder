@@ -70,34 +70,21 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 
 ## 7. Sound palette
 
-The genre's sound is **a continuous beat-driven chip track from the first frame**, not ambience. (Measured on the references: 120–128 bpm, ~65 % of the energy below 100 Hz in pitched bass and kick, tonal content in ~80 % of frames, 3–4 onsets a second, near-mono.)
+**The soundtrack is the film's main driver, and it works by sonifying what is on screen, then paying it off with a cinematic swell.** This is the model of a genre video with 7M views whose top comment ("insane soundtrack") had 60k likes. Measured on it: almost no drums (8 % of the energy below 100 Hz), 88 % of the energy in 100 Hz–2 kHz, 95 % of frames tonal, near-mono, −14 LUFS. Code: `demo/studio.py`; one `score.py` per film, fed the film's timings from `main.js`.
 
 - **No voice.** Captions carry the words.
-- **The soundtrack is the film's main driver: premium chiptune.** 8-bit voices, produced like a modern track (`demo/studio.py`):
-  - **an earworm theme per film**: a singable 2-bar phrase plus an answer, stated in the hook, developed through the film (soured, fragmented, sequenced upward under tension), **dropped huge on the pay-off** (an octave up, doubled, with a third), and resolved under the CTA;
-  - **the count plays music**: each count is a pitched ping stepping up the key's scale, so the visuals perform the melody, and the pay-off lands on the top note;
-  - **a real drop**: build (snare roll 8ths → 16ths, uplifter, reverse cymbal, tom fill) → true silence → impact + sub drop + crash + full arrangement;
-  - **instruments**: PWM chip lead with glides and delayed vibrato, chip "choir" (formant vowels ah/oo/ee), detuned chip chords, chip bass with a sine sub, layered kick/snare/clap, hats with velocity and 16th variation, pitched toms;
-  - **mix**: buses with sends to a stereo reverb and a dotted-8th ping-pong delay, chorus on chords and choir, side-chain pump from the kick, mono bass, glue compression and soft saturation, a touch of air. Stereo width S/M ≈ 0.3–0.4 (still mono-safe).
-- **Every film gets its own score, written cue by cue against its picture** (`score.py`, fed the film's timings from `main.js`). The groove below is the shared instrument kit and grammar, not a loop to paste under every film. For each caption beat, ask what is happening on screen and give the music that job:
-  - **the topic sets the palette and key**: water → pitch-drop "drop" arps; the Sun → choir swells, heroic brass motif; weights → a march; a computer → a flat square hum;
-  - **the hero's state sets harmony and texture**: calm → major, open; drying or stress → the bass walks down, echoes dry out, a bit-crush deepens, tritones and a nervous trill appear; panic → 8th kicks, an accelerating roll, everything gliding up; relief → a major bloom;
-  - **on-screen events become musical notes**: each pyramid that lands plays the next bass note; each blink plays a two-note "bl-ink"; a photon crossing the frame is an arpeggio panning left → right; a random walk is random notes in the key; a wink is a bell;
-  - **a fact can be played, not only shown**: "your brain hides blinks" → the music itself cuts out for 130 ms on every blink; "screens: 3× less" → talking on the left channel, a dull hum on the right;
-  - **a motif bookends the film**: the hook's sting or theme returns, resolved, under the CTA.
-- **The groove** (`demo/groove.py`), running under every second except the hard silence:
-  - **kick**: a sine with a fast pitch drop (≈ 216 → 46 Hz), on every beat (or every other beat in a half-time section);
-  - **chip bass**: square + 4-bit triangle on the chord root, one note per beat, gated (~80 %), with a rest on the last 8th of every bar so the track breathes. It is side-chained to the kick;
-  - **pumping chords**: 25 % pulse triads, 8th-gated, slightly detuned, low-passed ~4.8 kHz, with a breath at the bar end;
-  - **hats** on the off-beats (an open hat closing each bar), a **16th arp** (12.5 % pulse) in denser sections, and a bit-crushed **snare** on 2 and 4 in full sections;
-  - a one-chord-per-bar progression (four bars, original), restarting on the pay-off.
-- **Tempo: 140 bpm, high energy** (the default for this style). Real-time counts don't fall on a 140 grid (3 s = 7 beats), so: every **drop and hard stop sits exactly on the grid** (the pre-drop grid is anchored to the silence, each drop starts its own grid), and every **count ping snaps to the next 1/32 note** after its second (≤ 54 ms late, about 1.5 frames). A count that is a pulse (a heartbeat) may instead set the tempo itself.
-- **Energy:** four-on-the-floor in nearly every section, a driving offbeat bass (8ths with an octave pop on the last 16th), 16th hats with open hats on the offbeats, running 16th arps in the big sections, a snare fill at the end of every 4-bar phrase, a hard kick pump. Breakdowns lighten (fewer layers) but keep the kick moving.
-- **Default arc** (bend it to the picture): groove from frame 1 → add hats, then arps, as the count goes on → a **snare roll + noise riser** over the last bar → **hard silence** (0.3–0.8 s, true zero, music included) → an **impact + crash** and the full groove on the pay-off → **half-time** for a calm comparison or a camera pull-back → **impact + lead melody** (pulse 25 %, one echo tap) under the call to action.
-- **Count sounds on top**: a short square click plus a bright 3.5–4.2 kHz ping on every count, alternating pitch. This is the steadiest, brightest sound in the film.
-- **Topic foley on the grid**: the hero's own sounds (a thump, a lid tick, a drip, a whoosh), bit-crushed and placed on or between beats.
-- **Ambient bed**: only a faint layer (≤ −20 dB under the groove) for place; never a noise wash that fills the low end.
-- **Mix**: groove + ticks on top, near-mono (S/M ≈ 0.05), light limiting (keep the bar-end breaths audible), −14 LUFS, true peak ≤ −1 dB, grain 0.
+- **Sonify the process.** Every on-screen event the film counts is a note (`ping`): a split, a second, a tonne, a blink, a step of a random walk. On a 120 bpm grid (one count per second = 2 beats):
+  - **density follows the process**: the stream between counts goes 8ths → 16ths → 32nds as the thing grows, dries or speeds up;
+  - **pitch follows the process**: each count steps a semitone up, so the number climbing on screen is a melody climbing in the ear;
+  - **side events are extra notes**: a crack is a high off-grid ping, a pyramid landing a deep choir stab, a photon a stream panning left → right.
+- **A held tension underneath**: a soft drone (mid register, not sub) and a chip choir that turns more dissonant as the build goes on (fifth → minor → added minor 2nd → cluster); a nervous trill when it hurts.
+- **The synth slide (`gliss`)**: a rising pulse glissando opens the film and fires into every pay-off.
+- **True silence** (0.3–0.8 s, music included) right before the pay-off.
+- **The pay-off is a cinematic swell (`swell`)**, not a drum drop: chip choir + two stacked detuned chord layers + a soft sine bass, slow attack, big reverb (RT ≈ 2.6 s). The key turns on the pay-off (dark build → bright relief, or minor awe → major warmth); the harmony then moves slowly (one chord per ~2 s). A lyrical lead line (long notes, delayed vibrato) and a high 16th arpeggio come in after it.
+- **Facts can be played**: "your brain hides blinks" → the track cuts out for 130 ms on every blink; "screens: 3× less" → a lively stream on the left, a flat hum and one lonely ping on the right.
+- **The CTA is the biggest swell**, with the opening slide's answer on top, ringing out.
+- **Drums**: only accents (a crash, a soft sub drop at a swell, a faint count click). No groove, no four-on-the-floor.
+- **Mix**: mid-range forward, low end small (≤ 10 % below 100 Hz), reverb mostly centred (`narrow`), near-mono (S/M ≈ 0.2–0.35), −14 LUFS, true peak ≤ −1 dB, grain 0.
 
 ## 8. Native moves
 
@@ -121,6 +108,7 @@ A menu: use the ones your topic needs.
 - A count tick that drifts from the number's change reads as a mistake → generate both from the same event list.
 - A noise bed instead of music makes the film feel empty next to the genre → always run the groove; ambience stays faint.
 - One generic loop under every film feels lacklustre → score each film to its own picture (see §7).
+- A drum groove under the count fights the sonification → let density and pitch carry the energy; save the weight for the swell.
 - Over-limiting flattens the pump → limit lightly so the bar-end rests stay audible.
 - Facts in a counting film must be true and sourced → write the source next to each caption in the treatment.
 - Negative modulo indexes `undefined` → `((n % m) + m) % m`.
