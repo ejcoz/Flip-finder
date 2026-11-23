@@ -43,10 +43,12 @@ export function room(fb, t) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const d = Math.hypot((x - CXR) / 150, (y - CYR - 6) / 165);
     const v = clamp(1.15 - d * 1.05 - (y < 110 ? (110 - y) / 110 * .35 : 0), 0, .999) * 3, k = Math.floor(v);
-    fb.px(x, y, [C.g0, C.g1, C.g2, C.g3][Math.min(3, k + (bayer(x, y) < v - k ? 1 : 0))]);
+    let q = Math.min(3, k + (bayer(x, y) < v - k ? 1 : 0));
+    if (d < .95 && y > 170) { const ray = Math.sin(5 * Math.atan2(y - CYR, x - CXR) + t * .9); if (ray > .55 && bayer(x, y) < (ray - .55) * 1.6) q = Math.min(4, q + 1); }
+    fb.px(x, y, [C.g0, C.g1, C.g2, C.g3, C.g4][q]);
   }
-  for (let i = 0; i < 46; i++) {       // slow confetti in the air
-    const x = Math.round(mod(hash(i, 1) * W + Math.sin(t * .7 + i) * 6, W)), y = Math.round(mod(hash(i, 2) * H + t * (5 + hash(i, 3) * 8), H));
+  for (let i = 0; i < 90; i++) {       // confetti in the air
+    const x = Math.round(mod(hash(i, 1) * W + Math.sin(t * .7 + i) * 6, W)), y = Math.round(mod(hash(i, 2) * H + t * (14 + hash(i, 3) * 22), H));
     if (y < 168) continue;
     fb.px(x, y, [C.g4, C.rose, C.cyan, C.g4, C.pink, C.g4][i % 6]); if (i % 5 === 0) fb.px(x + 1, y, C.g4);
   }
@@ -54,23 +56,51 @@ export function room(fb, t) {
 
 export const slot = (i, N) => { const a = -Math.PI / 2 + 2 * Math.PI * i / N; return [CXR + Math.cos(a) * RAD, CYR + Math.sin(a) * RAD]; };
 
-// the web: lines[k] = {i, j, t0}; colour by age; `hot` = [i, j] of the matching pair (drawn last, thick)
+// the web: lines[k] = {i, j, ts, th}: the line shoots from guest j to guest i between ts and th, then stays.
 export function web(fb, t, lines, N, o = {}) {
+  const pos = o.pos || (i => slot(i, N));
   for (let k = 0; k < lines.length; k++) {
-    const L = lines[k]; if (t < L.t0) continue;
-    const [x0, y0] = slot(L.i, N), [x1, y1] = slot(L.j, N), age = t - L.t0;
-    let c = age < .12 ? C.white : age < .35 ? C.pink : age < .8 ? C.rose : C.g4;
+    const L = lines[k]; if (t < L.ts) continue;
+    const [x1, y1] = pos(L.j), [x0, y0] = pos(L.i);
+    if (t < L.th) {                                               // travelling beam with a bright head
+      const u = (t - L.ts) / (L.th - L.ts), hx = lerp(x1, x0, u), hy = lerp(y1, y0, u);
+      fb.line(x1, y1, hx, hy, C.pink); fb.disc(hx, hy, 1.6, C.white); continue;
+    }
+    const age = t - L.th;
+    let c = age < .1 ? C.white : age < .3 ? C.pink : age < .7 ? C.rose : C.g4;
     if (o.wave !== undefined) { const ph = mod(k / lines.length - o.wave, 1); if (ph < .08) c = C.cyan; else if (ph < .16) c = C.rose; }
     fb.line(x0, y0, x1, y1, c);
   }
+  for (let k = 0; k < lines.length; k++) {                        // signals running along the formed lines
+    const L = lines[k]; if (t < L.th || hash(k, 5) > (lines.length > 400 ? .05 : .16)) continue;
+    const [x1, y1] = pos(L.j), [x0, y0] = pos(L.i), u = mod(t * (.5 + hash(k, 6) * .6) + hash(k, 7), 1);
+    fb.px(lerp(x0, x1, u), lerp(y0, y1, u), C.white);
+  }
   if (o.hot) {
-    const [x0, y0] = slot(o.hot[0], N), [x1, y1] = slot(o.hot[1], N), c = ((t * 12) | 0) % 2 ? C.white : C.cyan;
+    const [x0, y0] = pos(o.hot[0]), [x1, y1] = pos(o.hot[1]), c = ((t * 12) | 0) % 2 ? C.white : C.cyan;
     for (const [dx, dy] of [[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]]) fb.line(x0 + dx, y0 + dy, x1 + dx, y1 + dy, dx || dy ? C.cyan : c);
   }
 }
 
+// landing juice: an expanding ring (white → cyan → pink) and sparks
+export function burst(fb, x, y, age, big = 1) {
+  if (age < 0 || age > .34) return;
+  const r = 4 + age / .3 * 20 * big, c = age < .08 ? C.white : age < .18 ? C.cyan : C.pink;
+  for (let a = 0; a < 6.283; a += .09) if (bayer((x + Math.cos(a) * r) | 0, (y + Math.sin(a) * r) | 0) < 1.1 - age / .34) fb.px(x + Math.cos(a) * r, y + Math.sin(a) * r, c);
+  for (let i = 0; i < 9; i++) { const a = i / 9 * 6.283 + .3, d = 8 + age * 90 * big; fb.px(x + Math.cos(a) * d, y + Math.sin(a) * d - 20 * age + 60 * age * age, i % 2 ? C.white : C.cyan); fb.px(x + Math.cos(a) * (d - 2), y + Math.sin(a) * (d - 2) - 20 * age + 60 * age * age, C.pink); }
+}
+export function shock(fb, x, y, age) {                             // a shockwave across the room
+  if (age < 0 || age > .6) return; const r = age / .6 * 170;
+  for (let a = 0; a < 6.283; a += .012) { const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r; if (py > 168 && bayer(px | 0, py | 0) < 1 - age / .6) { fb.px(px, py, C.white); fb.px(px + Math.cos(a) * 2, py + Math.sin(a) * 2, C.cyan); } }
+}
+export function shift(fb, dx, dy) {                                // screen shake: move the whole picture by whole pixels
+  if (!dx && !dy) return; const s = fb.d.slice(), w = fb.w, h = fb.h;
+  for (let y = 0; y < h; y++) { const sy = clamp(y - dy, 0, h - 1); for (let x = 0; x < w; x++) fb.d[y * w + x] = s[sy * w + clamp(x - dx, 0, w - 1)]; }
+}
+
 export function guest(fb, x, y, r, i, t, o = {}) {
   x = Math.round(x); y = Math.round(y - (o.jump || 0));
+  if (o.glow) for (let a = 0; a < 6.283; a += .12) { const gr = r + 5 + Math.sin(t * 9 + a * 3) * 1.5; fb.px(x + Math.cos(a) * gr, y + Math.sin(a) * gr, ((t * 10) | 0) % 2 ? C.white : C.cyan); }
   const col = SKIN[i % SKIN.length];
   fb.disc(x, y, r + 1, C.ink); fb.disc(x, y, r, col);
   for (let j = 1; j <= r; j++) for (let k = -r; k <= r; k++) if (k * k + j * j <= r * r && j > r * .45 && bayer(x + k, y + j) < .55) fb.px(x + k, y + j, C.hink);

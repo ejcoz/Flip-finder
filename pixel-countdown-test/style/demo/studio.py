@@ -119,8 +119,8 @@ def k_impact(v=1.0):
 
 # ———————— the studio ————————
 class Studio:
-    BUSES = ('drums', 'bass', 'chords', 'lead', 'fx', 'choir')
-    SENDS = {'drums': (.10, .0), 'bass': (0, 0), 'chords': (.22, .10), 'lead': (.22, .28), 'fx': (.35, .25), 'choir': (.45, .05)}
+    BUSES = ('drums', 'bass', 'chords', 'lead', 'fx', 'choir', 'hits')
+    SENDS = {'drums': (.10, .0), 'bass': (0, 0), 'chords': (.22, .10), 'lead': (.22, .28), 'fx': (.35, .25), 'choir': (.45, .05), 'hits': (.07, .10)}
     def __init__(self, dur, bpm=120, rt=1.8, sends=None):
         self.rt = rt; self.narrow = 1.0
         if sends: self.SENDS = {**self.SENDS, **sends}
@@ -198,7 +198,7 @@ class Studio:
         lead_ = hp(B['lead'], 180) * (.75 + .25 * duck)
         choir_ = hp(chorus(B['choir'], .006, .4), 160) * (.6 + .4 * duck) * .45
         fx = hp(B['fx'], 120)
-        dry = drums + bass_ + chords + lead_ + choir_ + fx
+        dry = drums + bass_ + chords + lead_ + choir_ + fx + hp(B['hits'], 140) * 1.15
         send_r = sum(hp(B[k], 200) * self.SENDS[k][0] for k in B); send_d = sum(B[k] * self.SENDS[k][1] for k in B)
         wet = reverb(send_r, rt=self.rt) * .8 + pingpong(send_d) * .45
         wet = wet.mean(1, keepdims=True) * (1 - self.narrow) + wet * self.narrow
@@ -271,3 +271,12 @@ def swell(st, ms, at, d, g=1.0, att=.35, vowel='ah', bassnote=None):
     st.put('chords', chordtone(ms, d, a=att, r=min(1.2, d * .4), cut=3200, duty=.5), at, .55 * g, -.15)
     st.put('chords', chordtone([m + 12 for m in ms], d, a=att * 1.3, r=min(1.2, d * .4), cut=5000, duty=.25), at, .28 * g, .15)
     if bassnote is not None: st.put('bass', sine_bass(bassnote + 12, d, att=att), at, .22 * g)
+
+
+def zap(m, v=1.0, d=.38, drop_=5.0):
+    """A punchy, dry hit: a fast downward pitch zap into a clear ringing tone (the reference's note shape)."""
+    n = ns(d); t = np.arange(n) / SR; f = hz(m) * (1 + drop_ * np.exp(-t / .011))
+    ph = np.cumsum(f / SR)
+    x = np.sin(2 * np.pi * ph) * .85 + blep_pulse(f, np.full(n, .5)) * .3 + .2 * np.sin(4 * np.pi * ph) * np.exp(-t / .05)
+    env = np.exp(-t / (d / 2.6)); env[:ns(.0015)] *= np.linspace(0, 1, ns(.0015))
+    return np.tanh(lp(x, 11000) * env * 1.3) * v

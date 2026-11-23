@@ -46,6 +46,13 @@ Not 16-bit Pixel RPG (no dialog boxes, menus, portraits or save files; no story 
 
 ## 5. Motion quality
 
+**Feel comes first: nothing stands still, and every event is a small animation.** (Measured: the genre's best videos have under 25 % of frames with no motion; a film that only changes on its events sits near 50 % and feels like a slideshow.)
+
+- **Constant life** (target: < 20 % still frames). Every character idles out of phase (a 1–2 px bob), the hero breathes, light rays or parallax drift in the ground, signals run along any lines, numbers ease to their new value instead of jumping, a glint crosses the gauge, captions drop in over 3 frames.
+- **Every event has three parts.** *Wind-up*: the thing drops, charges or glows for ~0.15 s before it lands. *Hit*: squash, an expanding ring (white → cyan → pink), sparks, a 1 px screen shake, the counter slams one size up. *Aftermath*: consequences travel (lines shoot out with a bright head, targets hop when reached), then settle.
+- **Big hits** (the pay-offs): a 3-2-1 px shake, a 3-frame flash, a shockwave across the frame, confetti or debris, the matching things glow and jump.
+- **Sound lands on the same frame** as the picture's hit: generate both from one event list, including each travelling line's arrival time.
+
 - Output **30 fps**. Sprites step at **12 fps**; camera and parallax move on ones at integer native pixels.
 - **The count is the clock**: every count is a visible event (number pops, the hero reacts, a `+1` rises 6 px and vanishes over 0.4 s) and an audible tick.
 - **Hero acting**: blinks every 2–4 s (2 frames), squash and stretch on each beat (1–2 native px), eyes follow the counter, sweat drops when under pressure, a happy squint on the pay-off.
@@ -73,7 +80,8 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 **The soundtrack is the film's main driver, and it works by sonifying what is on screen, then paying it off with a cinematic swell.** This is the model of a genre video with 7M views whose top comment ("insane soundtrack") had 60k likes. Measured on it: almost no drums (8 % of the energy below 100 Hz), 88 % of the energy in 100 Hz–2 kHz, 95 % of frames tonal, near-mono, −14 LUFS. Code: `demo/studio.py`; one `score.py` per film, fed the film's timings from `main.js`.
 
 - **No voice.** Captions carry the words.
-- **Sonify the process.** Every on-screen event the film counts is a note (`ping`): a split, a second, a tonne, a blink, a step of a random walk. On a 120 bpm grid (one count per second = 2 beats):
+- **Notes are punchy and dry (`zap`)**: a fast downward pitch zap (about 10 ms) into a clear ringing tone, loud, on a bus with almost no reverb, over a bed kept quiet enough that there is dark space around every note. A soft ping buried in pad and reverb sounds like background, not like something happening.
+- **Sonify the process.** Every on-screen event the film counts is a note (`zap`, or the softer `ping`): a split, a second, a tonne, a blink, a step of a random walk. On a 120 bpm grid (one count per second = 2 beats):
   - **density follows the process**: the stream between counts goes 8ths → 16ths → 32nds as the thing grows, dries or speeds up;
   - **pitch follows the process**: each count steps a semitone up, so the number climbing on screen is a melody climbing in the ear;
   - **side events are extra notes**: a crack is a high off-grid ping, a pyramid landing a deep choir stab, a photon a stream panning left → right.
@@ -108,6 +116,8 @@ A menu: use the ones your topic needs.
 - A count tick that drifts from the number's change reads as a mistake → generate both from the same event list.
 - A noise bed instead of music makes the film feel empty next to the genre → always run the groove; ambience stays faint.
 - One generic loop under every film feels lacklustre → score each film to its own picture (see §7).
+- A film that only moves on its events feels like a slideshow → constant idle life and three-part events (§5).
+- Notes smeared in reverb and pad have no punch → dry `zap` hits over a quiet bed (§7).
 - A drum groove under the count fights the sonification → let density and pitch carry the energy; save the weight for the swell.
 - Over-limiting flattens the pump → limit lightly so the bar-end rests stay audible.
 - Facts in a counting film must be true and sourced → write the source next to each caption in the treatment.

@@ -25,7 +25,6 @@ for e in EV:
     t, ty = e['t'], e['type']
     if ty == 'score':
         M = score.build(e, DUR); buf[:len(M)] += M * .8
-    elif ty == 'pop': add(buf, pop(), t, .22, (e['n'] % 2 - .5) * .3)
     elif ty == 'confetti': add(buf, confetti(), t, .2)
     elif ty == 'blip': add(buf, blip(), t, .06)
     elif ty == 'whoosh': add(buf, np.round(whoosh(.35) * 16) / 16, t, .14)
