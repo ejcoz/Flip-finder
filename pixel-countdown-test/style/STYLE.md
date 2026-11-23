@@ -127,6 +127,19 @@ A menu: use the ones your topic needs.
 
 In `demo/` (this style's own code, adapted from `$LIB/styles/pixel-rpg/demo/`): `px.js` (270×480 indexed framebuffer, palette, LUTs, Bayer dither, glow rings, RGB bloom), `font.js` (5×7 pixel font, scales, ink outline, `*highlight*` markup, `bigNum`), `world.js` (the demo's views, landmarks, hero and `face()`), `main.js` (timings, counts, captions, sound events), `studio.py` (instruments and mix: `ping`, `gliss`, `swell`, choir, reverb, delay, glue), `score.py` (the film's score, cue by cue), `mix.py` (score + foley + the true silence). Build steps: [DEMO.md](DEMO.md) "Build notes". Then `$LIB/styles/pixel-rpg/DEMO.md` for the base techniques.
 
+## 10b. Built for an action (topic choice)
+
+A film can be interesting and still give nobody a reason to act. Choose topics where the viewer learns something about **themselves**, and design the reason for each action before writing the treatment:
+
+| Action | Give them |
+|---|---|
+| Comment | a personal result to report (a score, a camp, a date, "which one are you?") |
+| Share | a challenge to do with or against a specific friend |
+| Like | a moment of being seen, surprised or flattered |
+| Follow | an obvious next part (number the series) |
+
+Prefer tests the viewer performs during the film (a 3-2-1 "try it now"), with the share of people who can shown as a crowd. Facts about distant things (a deck, a sheet of paper, the Sun) are a weaker choice unless the viewer is put inside them.
+
 ## 11. Variation space
 
 Free in every film: the topic, the hero object, the count, the mood ground, the facts, the opening and the CTA. Far from the demo:
