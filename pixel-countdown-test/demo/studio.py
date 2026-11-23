@@ -204,3 +204,45 @@ class Studio:
         mix = mix + .12 * (hp(mix, 9000))                                            # a touch of air
         for t0, t1 in self.gates: mix[int(t0 * SR):int(t1 * SR)] = 0
         return mix[:ns(self.dur)]
+
+# ———————— shared high-energy groove (140 bpm era) ————————
+def q32(st, t, origin):
+    """Snap a real-time event to the next 1/32 note of the grid (≤ ~54 ms late at 140 bpm)."""
+    s = st.b / 8; k = np.ceil((t - origin) / s - 1e-6); return origin + k * s
+
+def groove(st, t0, t1, origin, prog, CH, ROOT, kick='four', clap=True, hats='16', bassline='drive', chords='8',
+           arps=False, fills=True, g=1.0, pan=0.0):
+    b = st.b
+    k0 = int(np.ceil((t0 - origin) / b - 1e-6)); k1 = int(np.floor((t1 - origin) / b - 1e-6))
+    for k in range(k0, k1 + 1):
+        tb = origin + k * b; beat = k % 4; bar = k // 4; c = prog[bar % len(prog)]; r = ROOT[c]
+        last_beat_of_phrase = beat == 3 and bar % 4 == 3
+        if kick == 'four' or (kick == 'half' and beat == 0) or (kick == 'two' and beat in (0, 2)): st.kick(tb, .95 * g, pump=.18)
+        if kick == 'eighths': st.kick(tb, .9 * g, pump=.18); st.kick(tb + b / 2, .6 * g, pump=.4)
+        if clap and beat in (1, 3): st.snare(tb, .55 * g); st.clap(tb, .38 * g)
+        if hats in ('8', '16'):
+            st.hat(tb + b / 2, .32 * g, open_=True)                                   # open hat on every offbeat
+            if hats == '16':
+                for j in (1, 3): st.hat(tb + j * b / 4 + .006, .28 * g, pan=-.25)
+                st.hat(tb, .18 * g, pan=.3)
+        if fills and last_beat_of_phrase and clap:
+            for j in range(4): st.snare(tb + j * b / 4, (.3 + .1 * j) * g)
+        if bassline == 'drive':      # offbeat-pumping 8ths with an octave pop on the last 16th
+            st.put('bass', bass(r, b / 2 * .7), tb, .5 * g, pan * .3)
+            st.put('bass', bass(r, b / 4 * .8), tb + b / 2, .55 * g, pan * .3)
+            st.put('bass', bass(r + 12, b / 4 * .7), tb + 3 * b / 4, .45 * g, pan * .3)
+        elif bassline == '8':
+            st.put('bass', bass(r, b / 2 * .8), tb, .55 * g, pan * .3); st.put('bass', bass(r + (12 if beat % 2 else 7), b / 2 * .6), tb + b / 2, .42 * g, pan * .3)
+        elif bassline == 'bounce':
+            st.put('bass', bass(r + (0, 12, 7, 12)[beat], b * .4), tb, .55 * g, pan * .3)
+        elif bassline == 'long' and beat == 0:
+            st.put('bass', bass(r, 4 * b * .95), tb, .5 * g)
+        if chords == '8':
+            for j in range(2):
+                if beat == 3 and j and not arps: continue
+                st.put('chords', chordtone([m + 12 for m in CH[c]], b / 2 * .6, duty=.5), tb + j * b / 2, .5 * g, (.2 if j else -.2) + pan)
+        elif chords == 'pad' and beat == 0:
+            st.put('chords', chordtone([m + 12 for m in CH[c]], 4 * b, a=.12, r=.4, cut=3500), tb, .42 * g, pan)
+        if arps:
+            ms = [m + 24 for m in CH[c]] + [CH[c][0] + 36]
+            for j in range(4): st.put('fx', arp(ms[(k * 4 + j) % 4 if j % 2 == 0 else (k * 4 + j * 3) % 4], b / 4 * .8), tb + j * b / 4, .26 * g, (.45 if j % 2 else -.45) + pan)
