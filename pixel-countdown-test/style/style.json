@@ -1,0 +1,12 @@
+{
+ "slug": "pixel-countdown",
+ "en": "Pixel Countdown Science",
+ "cn": "像素倒数科普",
+ "based_on": "pixel-rpg",
+ "borrows": [],
+ "size": "1080x1920",
+ "library_version": "f9e2042",
+ "created": "2026-11-23",
+ "line": "Vertical 8-bit science shorts: a cute-faced hero object, a big yellow count you follow, one fact per caption, a call to action.",
+ "line_cn": "竖屏 8-bit 科普短片：带表情的主角物体、跟着数的黄色大数字、每条字幕一个知识点、结尾行动号召。"
+}
