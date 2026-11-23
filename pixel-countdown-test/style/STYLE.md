@@ -73,6 +73,12 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 The genre's sound is **a continuous beat-driven chip track from the first frame**, not ambience. (Measured on the references: 120–128 bpm, ~65 % of the energy below 100 Hz in pitched bass and kick, tonal content in ~80 % of frames, 3–4 onsets a second, near-mono.)
 
 - **No voice.** Captions carry the words.
+- **Every film gets its own score, written cue by cue against its picture** (`score.py`, fed the film's timings from `main.js`). The groove below is the shared instrument kit and grammar, not a loop to paste under every film. For each caption beat, ask what is happening on screen and give the music that job:
+  - **the topic sets the palette and key**: water → pitch-drop "drop" arps; the Sun → choir swells, heroic brass motif; weights → a march; a computer → a flat square hum;
+  - **the hero's state sets harmony and texture**: calm → major, open; drying or stress → the bass walks down, echoes dry out, a bit-crush deepens, tritones and a nervous trill appear; panic → 8th kicks, an accelerating roll, everything gliding up; relief → a major bloom;
+  - **on-screen events become musical notes**: each pyramid that lands plays the next bass note; each blink plays a two-note "bl-ink"; a photon crossing the frame is an arpeggio panning left → right; a random walk is random notes in the key; a wink is a bell;
+  - **a fact can be played, not only shown**: "your brain hides blinks" → the music itself cuts out for 130 ms on every blink; "screens: 3× less" → talking on the left channel, a dull hum on the right;
+  - **a motif bookends the film**: the hook's sting or theme returns, resolved, under the CTA.
 - **The groove** (`demo/groove.py`), running under every second except the hard silence:
   - **kick**: a sine with a fast pitch drop (≈ 216 → 46 Hz), on every beat (or every other beat in a half-time section);
   - **chip bass**: square + 4-bit triangle on the chord root, one note per beat, gated (~80 %), with a rest on the last 8th of every bar so the track breathes. It is side-chained to the kick;
@@ -80,7 +86,7 @@ The genre's sound is **a continuous beat-driven chip track from the first frame*
   - **hats** on the off-beats (an open hat closing each bar), a **16th arp** (12.5 % pulse) in denser sections, and a bit-crushed **snare** on 2 and 4 in full sections;
   - a one-chord-per-bar progression (four bars, original), restarting on the pay-off.
 - **Tempo locks to the count.** One count per second → 120 bpm (a count every 2 beats); a 72 bpm heartbeat → 144 bpm with the heart as the kick. The count ticks always land on beats.
-- **Arc:** groove from frame 1 → add hats, then arps, as the count goes on → a **snare roll + noise riser** over the last bar → **hard silence** (0.3–0.8 s, true zero, music included) → an **impact + crash** and the full groove on the pay-off → **half-time** for a calm comparison or a camera pull-back → **impact + lead melody** (pulse 25 %, one echo tap) under the call to action.
+- **Default arc** (bend it to the picture): groove from frame 1 → add hats, then arps, as the count goes on → a **snare roll + noise riser** over the last bar → **hard silence** (0.3–0.8 s, true zero, music included) → an **impact + crash** and the full groove on the pay-off → **half-time** for a calm comparison or a camera pull-back → **impact + lead melody** (pulse 25 %, one echo tap) under the call to action.
 - **Count sounds on top**: a short square click plus a bright 3.5–4.2 kHz ping on every count, alternating pitch. This is the steadiest, brightest sound in the film.
 - **Topic foley on the grid**: the hero's own sounds (a thump, a lid tick, a drip, a whoosh), bit-crushed and placed on or between beats.
 - **Ambient bed**: only a faint layer (≤ −20 dB under the groove) for place; never a noise wash that fills the low end.
@@ -107,6 +113,7 @@ A menu: use the ones your topic needs.
 - Glow as an alpha blur turns the frame to mush → dithered rings; bloom only on the brightest tones, ≤ 20 %.
 - A count tick that drifts from the number's change reads as a mistake → generate both from the same event list.
 - A noise bed instead of music makes the film feel empty next to the genre → always run the groove; ambience stays faint.
+- One generic loop under every film feels lacklustre → score each film to its own picture (see §7).
 - Over-limiting flattens the pump → limit lightly so the bar-end rests stay audible.
 - Facts in a counting film must be true and sourced → write the source next to each caption in the treatment.
 - Negative modulo indexes `undefined` → `((n % m) + m) % m`.

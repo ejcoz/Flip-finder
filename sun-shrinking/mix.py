@@ -6,6 +6,7 @@ import numpy as np, soundfile as sf
 sys.path.insert(0, os.path.join(os.environ['LIB'], 'core', 'audio'))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from groove import music
+import score
 from sfx import SR, t_, env_exp, lp, hp, bp, noise, norm, brown, thump, whoosh, add, limit
 
 ev_path, out = sys.argv[1], sys.argv[2]
@@ -69,10 +70,12 @@ for e in EV:
             add(buf, x[k * n // 8:(k + 1) * n // 8], t + k * d / 8, .35, pan)
     elif ty == 'arrive': add(buf, arp([84, 91], .05, .5, .5), t, .35); add(buf, thump(.5, 120), t, .3)
     elif ty == 'bounce':
-        m = 72 + int((t * 137) % 12)
-        add(buf, note(hz(m), .03, .5, .4, dec=.01), t, .05 + .07 * e['k'], ((t * 7) % 2) - 1)
+        m = 62 + [0, 3, 5, 7, 10][int(t * 137) % 5] + 12 * int(e['k'] * 2.5)
+        add(buf, note(hz(m), .05, .25, .5, dec=.025), t, .12 + .14 * e['k'], ((t * 7) % 2) - 1)
     elif ty == 'escape': add(buf, arp([72, 79, 84, 88], .04, .25, .6), t, .3)
     elif ty == 'blip': add(buf, blip(), t, .22)
+    elif ty == 'score':
+        M = score.build(e, DUR); buf[:len(M)] += M * .9
     elif ty == 'music':
         M = music(e['sections'], DUR); buf[:len(M)] += M * .9
     elif ty == 'melody_old':

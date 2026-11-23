@@ -123,3 +123,56 @@ def music(sections, dur):
                 tt += d
     mix = drums + bass * duck[:, None] + keys * (.55 + .45 * duck[:, None])
     return mix[:ns(dur)]
+
+# ———————— Instrument kit for per-film scores ————————
+def drop(m, v=1.0):        # water bloop: sine with a fast upward-then-settling pitch, short decay
+    d = .16; t = np.arange(ns(d)) / SR; f = hz(m) * (1 + 1.2 * np.exp(-t / .012))
+    return np.sin(2 * np.pi * np.cumsum(f / SR)) * np.exp(-t / .05) * v
+def pluck(m, d=.18, duty=.25, v=1.0, tau=.06):
+    x = pulse(hz(m), d, duty) * np.exp(-np.arange(ns(d)) / SR / tau); return lp(x, 6000) * env(len(x), .002, .01) * v
+def bell(m, d=.8, v=1.0):  # chip bell: sine + inharmonic partial
+    t = np.arange(ns(d)) / SR; f = hz(m)
+    return (np.sin(2 * np.pi * f * t) + .5 * np.sin(2 * np.pi * f * 2.76 * t) * np.exp(-t / .08)) * np.exp(-t / (d / 3)) * v
+def brass(m, d, v=1.0, att=.06):  # pulse 50% with slow attack + vibrato (heroic motif)
+    n = ns(d); t = np.arange(n) / SR; vib = 1 + .007 * np.sin(2 * np.pi * 5.2 * t) * np.clip((t - .2) / .3, 0, 1)
+    ph = np.cumsum(hz(m) * vib / SR) % 1; x = np.where(ph < .5, 1., -1.) + .6 * np.where((ph * 2) % 1 < .5, 1., -1.)
+    return lp(x, 3500) * env(n, att, .08) * v
+def swell(ms, d, v=1.0, att=.6, cut=2500):  # detuned pulse "choir" chord, slow attack
+    n = ns(d); x = np.zeros(n)
+    for m in ms:
+        for det in (-.004, 0, .005): x += pulse(hz(m), d, .5, det)[:n]
+    return lp(x / (3 * len(ms)), cut) * env(n, att, min(d * .4, .8)) * v
+def trill(m, d, v=1.0, rate=9, depth=.03):  # tense vibrato pulse
+    n = ns(d); t = np.arange(n) / SR; f = hz(m) * (1 + depth * np.sin(2 * np.pi * rate * t))
+    ph = np.cumsum(f / SR) % 1; return lp(np.where(ph < .25, 1., -1.), 5000) * env(n, .05, .05) * v
+def bassnote(m, d, v=1.0, cut=900):
+    x = pulse(hz(m), d, .5) * .6 + tri(hz(m), d) * .5; return lp(x, cut) * env(len(x), .004, .03) * v
+def chord8(ms, d, v=1.0, cut=4800, duty=.25):
+    x = sum(pulse(hz(m), d, duty, det) for m in ms for det in (0, .004)) / (2 * len(ms)); return lp(x, cut) * env(len(x), .002, .03) * v
+def crush(x, bits):  # bit-crush (bits may vary per sample)
+    q = 2 ** np.asarray(bits); return np.round(x * q) / q
+def riser(d, v=1.0, f0=300, oct_=4):
+    n = ns(d); t = np.arange(n) / SR; x = _rng.standard_normal(n); y = np.zeros(n)
+    for i in range(0, n, 2400):
+        f = f0 * 2 ** (i / n * oct_); y[i:i + 2400] = bp(x[i:i + 2400], f, min(f * 1.6, 20000))
+    return y * (t / d) ** 2 * v
+def drone(m, d, v=1.0, lfo=.25):
+    n = ns(d); t = np.arange(n) / SR; x = pulse(hz(m), d, .5)[:n] * .5 + pulse(hz(m + 7), d, .5, .003)[:n] * .3
+    w = .5 * (1 + np.sin(2 * np.pi * lfo * t)); return (lp(x, 350) * (1 - w) + lp(x, 1100) * w) * env(n, .5, .5) * v
+
+class Score:
+    """Mono-compatible stereo score buffer with a separate drum bus and side-chain ducking."""
+    def __init__(self, dur):
+        self.N = ns(dur) + SR; self.dur = dur
+        self.mus = np.zeros((self.N, 2)); self.drm = np.zeros((self.N, 2)); self.duck = np.ones(self.N)
+    def add(self, x, at, g=1.0, pan=0.0, drum=False): place(self.drm if drum else self.mus, x, at, g, pan)
+    def kick(self, at, g=.75, dk=.35):
+        place(self.drm, kick(), at, g); n0 = int(at * SR); n = ns(.22)
+        if 0 <= n0 < self.N: m = min(n, self.N - n0); self.duck[n0:n0 + m] = np.minimum(self.duck[n0:n0 + m], dk + (1 - dk) * np.linspace(0, 1, m) ** 1.5)
+    def mute(self, t0, t1):  # hard gate of the whole score (e.g. the music "blinks")
+        a, b = int(t0 * SR), int(t1 * SR); self.mus[a:b] = 0; self.drm[a:b] = 0
+    def render(self):
+        return (self.drm + self.mus * self.duck[:, None])[:ns(self.dur)]
+def beats(t0, t1, origin, b=.5):
+    k0 = int(np.ceil((t0 - origin) / b - 1e-6)); k1 = int(np.floor((t1 - origin) / b - 1e-6))
+    return [(origin + k * b, k) for k in range(k0, k1 + 1)]

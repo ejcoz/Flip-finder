@@ -46,18 +46,8 @@ EV.push({ t: TL.split, type: 'whoosh' });
 TALK_BL.forEach(t => EV.push({ t, type: 'lid', pan: -.5 }));
 SCREEN_BL.forEach(t => EV.push({ t, type: 'lid', pan: .5 }));
 EV.push({ t: TL.cta, type: 'whoosh' });
-// music: a continuous 120 bpm chip groove (each count second = 2 beats), cut dead for the silence, impact on BLINK
-const P1 = [[50, 'min'], [46, 'maj'], [53, 'maj'], [48, 'maj']], P2 = [[53, 'maj'], [48, 'maj'], [50, 'min'], [46, 'maj']];
-EV.push({ t: 0, type: 'music', sections: [
-  { t0: 0, t1: TL.go, origin: -1, prog: P1, layers: ['kick', 'bass', 'pad'] },
-  { t0: TL.go, t1: 10.6, origin: -1, prog: P1, layers: ['kick', 'bass', 'pad', 'hat'] },
-  { t0: 10.6, t1: 14.4, origin: -1, prog: P1, layers: ['kick', 'bass', 'pad', 'hat', 'arp', 'snare'] },
-  { t0: 14.4, t1: TL.silence, origin: -1, prog: P1, layers: ['kick', 'bass', 'pad', 'hat', 'arp', 'build'] },
-  { t0: TL.blink, t1: TL.split, origin: TL.blink, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'arp'] },
-  { t0: TL.split, t1: TL.cta, origin: TL.blink, prog: P2, layers: ['half', 'kick', 'bass', 'pad', 'arp'] },
-  { t0: TL.cta, t1: TL.dur - .4, origin: TL.cta, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'lead'],
-    lead: [[77, 1], [81, 1], [84, 1], [81, .5], [79, .5], [77, 1], [76, 1], [74, 1], [77, 1]] },
-] });
+// score: written cue by cue against this film (score.py), fed the film's own timings
+EV.push({ t: 0, type: 'score', TL, CALM: CALM_BL, TALK: TALK_BL, SCREEN: SCREEN_BL });
 window.EV = EV; window.DUR = TL.dur;
 
 // lid openness from a list of blink times (close .07, hold .05, open .16)

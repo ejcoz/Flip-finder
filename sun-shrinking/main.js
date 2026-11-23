@@ -45,18 +45,8 @@ EV.push({ t: TL.core, type: 'whoosh' });
 for (let t = WALK[0]; t < WALK[1]; t += .09) EV.push({ t: +t.toFixed(2), type: 'bounce', k: seg(t, WALK[0], WALK[1]) });
 EV.push({ t: WALK[1], type: 'escape' });
 EV.push({ t: TL.cta, type: 'whoosh' });
-// music: a continuous 120 bpm chip groove (count ticks = every 2nd beat), cut dead at STOP, impact on the reveal
-const P1 = [[57, 'min'], [53, 'maj'], [48, 'maj'], [55, 'maj']], P2 = [[48, 'maj'], [55, 'maj'], [57, 'min'], [53, 'maj']];
-EV.push({ t: 0, type: 'music', sections: [
-  { t0: 0, t1: TL.go, origin: -.4, prog: P1, layers: ['kick', 'bass', 'pad'] },
-  { t0: TL.go, t1: 9.6, origin: -.4, prog: P1, layers: ['kick', 'bass', 'pad', 'hat'] },
-  { t0: 9.6, t1: TL.stop, origin: -.4, prog: P1, layers: ['kick', 'bass', 'pad', 'hat', 'arp', 'build'] },
-  { t0: TL.reveal, t1: TL.light, origin: TL.reveal, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'arp'] },
-  { t0: TL.light, t1: TL.core, origin: TL.reveal, prog: P2, layers: ['half', 'kick', 'bass', 'pad', 'arp'] },
-  { t0: TL.core, t1: TL.cta, origin: TL.reveal, prog: P1, layers: ['kick', 'bass', 'pad', 'hat', 'arp', 'build'] },
-  { t0: TL.cta, t1: TL.dur - .4, origin: TL.cta, prog: P2, layers: ['impact', 'kick', 'bass', 'pad', 'hat', 'snare', 'lead'],
-    lead: [[76, 1], [79, 1], [81, 1], [79, .5], [76, .5], [74, 1], [72, 1], [74, 1], [76, 2]] },
-] });
+// score: written cue by cue against this film (score.py), fed the film's own timings
+EV.push({ t: 0, type: 'score', TL, PYR, PHOTON, WALK });
 window.EV = EV; window.DUR = TL.dur;
 
 const capAt = t => CAPS.find(c => t >= c.t0 && t < c.t1);
