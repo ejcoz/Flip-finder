@@ -1,0 +1,15 @@
+The Sun Is Shrinking — a Pixel Countdown Science film · credits & licences
+
+ORIGINAL (made for this film, by code in this folder)
+- All pixel art: the Sun character and its cut-away, Earth, pyramids, the night sky (sun.js, main.js).
+- Captions and counters (font.js). Music and sound effects synthesised with numpy (mix.py); the end melody is original.
+
+CODE ADAPTED FROM LEMO-OPUSCAR (MIT licence, github.com/lemomo-ai/lemo-opuscar)
+- px.js and the 5×7 glyph table in font.js (from styles/pixel-rpg/demo); sound helpers from core/audio/sfx.py.
+
+PALETTE
+- ENDESGA 32 by ENDESGA (lospec.com/palette-list/endesga-32), plus custom sky/sun/yellow tones.
+
+FACTS: see TREATMENT.md for the figures and sources.
+
+No third-party images, fonts, samples or recordings. No voice.
