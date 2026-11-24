@@ -80,6 +80,10 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 **The soundtrack is the film's main driver, and it works by sonifying what is on screen, then paying it off with a cinematic swell.** This is the model of a genre video with 7M views whose top comment ("insane soundtrack") had 60k likes. Measured on it: almost no drums (8 % of the energy below 100 Hz), 88 % of the energy in 100 Hz–2 kHz, 95 % of frames tonal, near-mono, −14 LUFS. Code: `demo/studio.py`; one `score.py` per film, fed the film's timings from `main.js`.
 
 - **No voice.** Captions carry the words.
+- **Two layers, always.** The references have both at once: (1) **background music**, a steady backing track that never stops except for the true silence, and (2) **event sounds**, the punchy hits that follow the picture. Only music feels generic; only event sounds feels empty.
+  - **The backing (`backing`)**: 120 bpm, one chord per 4-beat bar: a soft kick on every beat, an off-beat hat, a chip bass (root 8ths with an octave pop), 8th-gated pulse chords with a breath at the bar end, a quiet 16th riff. Its harmony follows the film's beats (home for a statement, a tense chord such as ♭VI under a countdown, home again on the reveal; up a semitone each round).
+  - **Time the film to the grid**: sections are whole bars and events land on beats (a 3-2-1 countdown at one beat-pair per second; the reveal on a downbeat).
+  - **Hits stay on top**: the backing ducks under every hit (`Studio.hitduck`) and pumps with the kick; hits go through the dry bus.
 - **Notes are punchy and dry (`zap`)**: a fast downward pitch zap (about 10 ms) into a clear ringing tone, loud, on a bus with almost no reverb, over a bed kept quiet enough that there is dark space around every note. A soft ping buried in pad and reverb sounds like background, not like something happening.
 - **Sonify the process.** Every on-screen event the film counts is a note (`zap`, or the softer `ping`): a split, a second, a tonne, a blink, a step of a random walk. On a 120 bpm grid (one count per second = 2 beats):
   - **density follows the process**: the stream between counts goes 8ths → 16ths → 32nds as the thing grows, dries or speeds up;
@@ -91,8 +95,8 @@ Framing: captions own the top 20 %; the counter the band below; the hero the mid
 - **The pay-off is a cinematic swell (`swell`)**, not a drum drop: chip choir + two stacked detuned chord layers + a soft sine bass, slow attack, big reverb (RT ≈ 2.6 s). The key turns on the pay-off (dark build → bright relief, or minor awe → major warmth); the harmony then moves slowly (one chord per ~2 s). A lyrical lead line (long notes, delayed vibrato) and a high 16th arpeggio come in after it.
 - **Facts can be played**: "your brain hides blinks" → the track cuts out for 130 ms on every blink; "screens: 3× less" → a lively stream on the left, a flat hum and one lonely ping on the right.
 - **The CTA is the biggest swell**, with the opening slide's answer on top, ringing out.
-- **Drums**: only accents (a crash, a soft sub drop at a swell, a faint count click). No groove, no four-on-the-floor.
-- **Mix**: mid-range forward, low end small (≤ 10 % below 100 Hz), reverb mostly centred (`narrow`), near-mono (S/M ≈ 0.2–0.35), −14 LUFS, true peak ≤ −1 dB, grain 0.
+- **Drums**: the backing's soft kick and hats, plus accents (a crash, a sub drop at a swell). Keep the kick soft: it is a pulse, not the lead.
+- **Mix**: hits forward; the backing audible but under them; low end moderate (about 30–45 % below 100 Hz with the backing's kick and bass), reverb mostly centred (`narrow`), near-mono (S/M ≈ 0.2–0.35), −14 LUFS, true peak ≤ −1 dB, grain 0.
 
 ## 8. Native moves
 

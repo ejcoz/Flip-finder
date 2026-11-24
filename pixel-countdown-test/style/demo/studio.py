@@ -192,6 +192,12 @@ class Studio:
             g = np.where(env > thr, (thr + (env - thr) / ratio) / np.maximum(env, 1e-9), 1.0)
             return x * g[:, None]
         B = self.bus; duck = self.duck[:, None]
+        if getattr(self, 'hitduck', 0) > 0:                     # the backing dips under every hit
+            lvl = np.abs(B['hits']).max(1); blk = 256; L = lvl[:len(lvl) // blk * blk].reshape(-1, blk).max(1)
+            E = np.zeros(len(L)); e_ = 0.0
+            for i_, c_ in enumerate(L): e_ = c_ if c_ > e_ else e_ * .82; E[i_] = e_
+            env = np.repeat(E, blk); env = np.concatenate([env, np.full(len(lvl) - len(env), 0.0)])
+            duck = duck * (1 / (1 + self.hitduck * env))[:, None]
         drums = comp(B['drums'], .45, 2.5) * 1.35
         bass_ = B['bass'].mean(1, keepdims=True) * np.ones((1, 2)) * duck * 1.7      # mono bass, pumped
         chords = hp(chorus(B['chords']), 150) * (.35 + .65 * duck) * .6
@@ -280,3 +286,28 @@ def zap(m, v=1.0, d=.38, drop_=5.0):
     x = np.sin(2 * np.pi * ph) * .85 + blep_pulse(f, np.full(n, .5)) * .3 + .2 * np.sin(4 * np.pi * ph) * np.exp(-t / .05)
     env = np.exp(-t / (d / 2.6)); env[:ns(.0015)] *= np.linspace(0, 1, ns(.0015))
     return np.tanh(lp(x, 11000) * env * 1.3) * v
+
+
+# ———————— the backing track: background music under the event hits ————————
+MAJ, MIN, SUS = [0, 4, 7], [0, 3, 7], [0, 5, 7]
+def backing(st, t0, bars, g=1.0, kick=True, hats=True, bassline=True, chords=True, riff=True):
+    """A steady chip backing on the film's beat grid. bars = [(root_midi, intervals), …], one per 4-beat bar from t0.
+    Soft kick on every beat, an off-beat hat, a chip bass (root 8ths with an octave pop), 8th-gated pulse chords with a
+    breath at the bar end, and a quiet 16th riff on the chord tones. Keep it under the hits (see Studio.hitduck)."""
+    b = st.b
+    for bi, (root, iv) in enumerate(bars):
+        for beat in range(4):
+            tb = t0 + (bi * 4 + beat) * b
+            if kick: st.kick(tb, .55 * g, pump=.45)
+            if hats: st.hat(tb + b / 2, .3 * g); st.hat(tb + b / 4, .12 * g, pan=-.25); st.hat(tb + 3 * b / 4, .12 * g, pan=-.25)
+            if bassline:
+                st.put('bass', bass(root - 12, b / 2 * .8, cut=900), tb, .34 * g)
+                st.put('bass', bass(root - 12 + (12 if beat % 2 else 0), b / 2 * .6, cut=900), tb + b / 2, .28 * g)
+            if chords:
+                for j in range(2):
+                    if beat == 3 and j: continue
+                    st.put('chords', chordtone([root + x for x in iv], b / 2 * .62, duty=.25, cut=2800), tb + j * b / 2, .42 * g, .15 if j else -.15)
+            if riff:
+                tones = [root + 12 + x for x in iv] + [root + 24]
+                for j in range(4):
+                    st.put('chords', arp(tones[(beat * 4 + j) * 3 % 4], b / 4 * .7), tb + j * b / 4, .13 * g, .3 if j % 2 else -.3)

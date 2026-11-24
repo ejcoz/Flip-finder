@@ -6,15 +6,16 @@ import { lineC, bigNum } from './font.js';
 import { stage, hero, crowd, bigCrowd, pips, burst, shock, shift, confetti, HX, HY } from './who.js';
 
 const FPS = 30;
-const TL = { go: 4.0, per: 5.5, read: .8, rev: 3.3, sil: 31.5, fin: 32.0, sweep0: 32.3, sweep1: 33.3, cta: 36.0, dur: 41.0 };
+// 120 bpm grid (beat = 0.5 s): the hook is 2 bars, every round is 3 bars (instruction · countdown · reveal), all events on beats
+const TL = { go: 4.0, per: 6.0, read: 1.0, rev: 4.0, sil: 34.0, fin: 34.5, sweep0: 35.0, sweep1: 36.0, cta: 38.5, dur: 43.5 };
 const TESTS = [
-  { a: ['1. *ROLL* YOUR TONGUE'], b: '*~7 IN 10* CAN', pct: 70 },
-  { a: ['2. BEND YOUR *THUMB*', '*BACKWARDS*'], b: '*~3 IN 10* CAN', pct: 30 },
-  { a: ['3. *WIGGLE* YOUR EARS'], b: '*~2 IN 10* CAN', pct: 20 },
-  { a: ['4. MAKE A *CLOVER*', 'WITH YOUR TONGUE'], b: '*~1 IN 7* CAN', pct: 15 },
-  { a: ['5. TOUCH TONGUE', 'TO YOUR *NOSE*'], b: '*~1 IN 10* CAN', pct: 10 },
+  { a: ['1. *ROLL* YOUR TONGUE'], b: '*~7 IN 10*', pct: 70 },
+  { a: ['2. BEND YOUR *THUMB*', '*BACKWARDS*'], b: '*~3 IN 10*', pct: 30 },
+  { a: ['3. *WIGGLE* YOUR EARS'], b: '*~2 IN 10*', pct: 20 },
+  { a: ['4. MAKE A *CLOVER*', 'WITH YOUR TONGUE'], b: '*~1 IN 7*', pct: 15 },
+  { a: ['5. TOUCH TONGUE', 'TO YOUR *NOSE*'], b: '*~1 IN 10*', pct: 10 },
 ];
-TESTS.forEach((T, i) => { T.t0 = TL.go + i * TL.per; T.rev = T.t0 + TL.rev; T.ticks = [0, 1, 2].map(j => +(T.t0 + TL.read + j * (TL.rev - TL.read) / 3).toFixed(3)); T.d = Math.min(.012, .7 / T.pct); });
+TESTS.forEach((T, i) => { T.t0 = TL.go + i * TL.per; T.rev = T.t0 + TL.rev; T.ticks = [0, 1, 2].map(j => T.t0 + TL.read + j); T.d = Math.min(.012, .7 / T.pct); });
 const CAPS = [{ t0: 0, t1: TL.go, l: ['HOW *RARE* ARE YOU?', '5 TESTS. KEEP SCORE'] }];
 for (const T of TESTS) { CAPS.push({ t0: T.t0, t1: T.rev, l: T.a }); CAPS.push({ t0: T.rev, t1: T.t0 + TL.per, l: [T.b] }); }
 CAPS.push({ t0: TL.fin, t1: TL.cta, l: ['ALL FIVE? ROUGHLY', '*1 IN 1,600* PEOPLE'] });
