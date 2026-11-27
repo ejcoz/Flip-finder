@@ -1,0 +1,11 @@
+{
+ "page": "index.html",
+ "url": null,
+ "root": null,
+ "kind": "place",
+ "category": "hair salon and medical aesthetics",
+ "primary": "Book an appointment",
+ "rounds": 3,
+ "start": "2026-11-27T22:20:56.971Z",
+ "by": "gate.mjs --start"
+}

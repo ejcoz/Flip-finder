@@ -1,0 +1,1 @@
+[{ "check": "no-visual", "target": "section#visit", "reason": "at 390 the visit panel (two salons, hours, two booking links) fills the one phone screen; its photograph shows from 640px up, and a second phone screen would take the page past seven" }]
